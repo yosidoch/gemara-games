@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemara BM – Memory Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cyan: #0891b2;
+      --cyan-light: #cffafe;
+      --cyan-dark: #0e7490;
+      --orange: #f97316;
+      --orange-light: #fff7ed;
+      --orange-bg: #ffedd5;
+      --l1: #22c55e;
+      --l2: #3b82f6;
+      --l3: #f59e0b;
+      --l4: #ef4444;
+    }
+
+    body {
+      font-family: 'Rubik', sans-serif;
+      background: linear-gradient(135deg, #ecfeff 0%, #fff7ed 100%);
+      min-height: 100vh;
+      direction: ltr;
+    }
+
+    /* ===== LEVEL SELECT ===== */
+    #level-select-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .back-link {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      text-decoration: none;
+      color: var(--cyan-dark);
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: white;
+      border: 2px solid var(--cyan);
+      border-radius: 20px;
+      padding: 6px 14px;
+      transition: all 0.2s;
+      z-index: 100;
+    }
+    .back-link:hover { background: var(--cyan); color: white; }
+
+    .game-title {
+      text-align: center;
+      margin-bottom: 40px;
+      margin-top: 20px;
+    }
+    .game-title h1 {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--cyan-dark);
+      letter-spacing: -0.5px;
+    }
+    .game-title p {
+      color: #64748b;
+      margin-top: 6px;
+      font-size: 1rem;
+    }
+
+    .levels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .level-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: all 0.25s;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .level-card:not(.locked):hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+    }
+    .level-card.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .level-card .lc-number {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .level-card .lc-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+    .level-card .lc-subtitle {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 14px;
+    }
+    .level-card .lc-info {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+    .level-card .stars-display {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .star-icon { font-size: 1.3rem; }
+    .star-icon.filled { filter: none; }
+    .star-icon.empty { opacity: 0.2; }
+
+    .lock-icon {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-size: 1.4rem;
+    }
+
+    /* ===== GAME SCREEN ===== */
+    #game-screen { display: none; flex-direction: column; align-items: center; padding: 16px; min-height: 100vh; }
+
+    .top-bar {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .levels-btn {
+      text-decoration: none;
+      color: var(--cyan-dark);
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: white;
+      border: 2px solid var(--cyan);
+      border-radius: 20px;
+      padding: 5px 12px;
+      transition: all 0.2s;
+    }
+    .levels-btn:hover { background: var(--cyan); color: white; }
+
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .stat-pill {
+      background: white;
+      border-radius: 12px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1e293b;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      white-space: nowrap;
+    }
+    .stat-pill span { color: var(--cyan-dark); }
+
+    .level-badge {
+      background: var(--cyan);
+      color: white;
+      border-radius: 12px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    /* MEMORY GRID */
+    #memory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .memory-card {
+      width: 100%;
+      aspect-ratio: 1;
+      min-width: 0;
+      cursor: pointer;
+      perspective: 800px;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.35s ease;
+      border-radius: 12px;
+    }
+    .memory-card.flipped .card-inner { transform: rotateY(180deg); }
+    .memory-card.matched .card-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .card-back {
+      background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+      color: white;
+      font-size: 2rem;
+      font-weight: 900;
+      user-select: none;
+    }
+    .card-back::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(255,255,255,0.04) 0px,
+        rgba(255,255,255,0.04) 2px,
+        transparent 2px,
+        transparent 10px
+      );
+    }
+    .card-back-question { position: relative; z-index: 1; }
+
+    .card-front-aramaic {
+      background: white;
+      border: 3px solid #0891b2;
+      transform: rotateY(180deg);
+      padding: 8px;
+      text-align: center;
+    }
+    .card-front-aramaic .card-text {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: clamp(0.85rem, 2.5vw, 1.25rem);
+      color: #0e7490;
+      direction: rtl;
+      line-height: 1.3;
+    }
+    .card-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+
+    .card-front-english {
+      background: #fff7ed;
+      border: 3px solid var(--orange);
+      transform: rotateY(180deg);
+      padding: 8px;
+      text-align: center;
+    }
+    .card-front-english .card-text {
+      font-family: 'Rubik', sans-serif;
+      font-size: clamp(0.65rem, 2vw, 0.82rem);
+      color: #9a3412;
+      direction: ltr;
+      line-height: 1.3;
+      font-weight: 500;
+    }
+
+    .memory-card.matched .card-face.card-front-aramaic,
+    .memory-card.matched .card-face.card-front-english {
+      background: #dcfce7;
+      border-color: #22c55e;
+      animation: matchGlow 0.4s ease;
+    }
+    .memory-card.matched .card-text { color: #166534; }
+
+    @keyframes matchGlow {
+      0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+      50% { box-shadow: 0 0 20px 8px rgba(34,197,94,0.4); }
+      100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+    }
+
+    /* ===== RESULTS SCREEN ===== */
+    #results-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .results-card {
+      background: white;
+      border-radius: 20px;
+      padding: 36px 32px;
+      max-width: 540px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .results-title { font-size: 1.8rem; font-weight: 900; color: #1e293b; margin-bottom: 6px; }
+    .results-subtitle { color: #64748b; margin-bottom: 24px; }
+
+    .stars-big { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+    .star-big { font-size: 3rem; transition: transform 0.3s; }
+    .star-big.earned { animation: starPop 0.4s ease; }
+    .star-big.empty-star { opacity: 0.15; }
+    @keyframes starPop {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    .results-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .res-stat {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .res-stat-value { font-size: 1.6rem; font-weight: 900; color: var(--cyan-dark); }
+    .res-stat-label { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+    .results-table th {
+      background: #f1f5f9;
+      padding: 8px 10px;
+      color: #475569;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+    .results-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1e293b;
+    }
+    .results-table .ar-cell {
+      font-family: 'Frank Ruhl Libre', serif;
+      direction: rtl;
+      font-size: 1rem;
+      text-align: right;
+    }
+
+    .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--cyan-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Rubik', sans-serif;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(8,145,178,0.35); }
+    .btn-secondary {
+      background: white;
+      color: var(--cyan-dark);
+      border: 2px solid var(--cyan);
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Rubik', sans-serif;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-secondary:hover { background: var(--cyan); color: white; }
+
+    .best-badge {
+      display: inline-block;
+      background: #fef9c3;
+      color: #854d0e;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    /* ===== CONFETTI ===== */
+    #confetti-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* ===== LOCKED SCREEN ===== */
+    #locked-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .locked-card {
+      background: white;
+      border-radius: 20px;
+      padding: 48px 36px;
+      max-width: 400px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    .locked-icon { font-size: 4rem; margin-bottom: 16px; }
+    .locked-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+    .locked-desc { color: #64748b; margin-bottom: 24px; }
+
+    @media (max-width: 600px) {
+      #memory-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 7px;
+      }
+      .results-card { padding: 24px 16px; }
+      .game-title h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<a href="index.html" class="back-link">← Back to Games</a>
+<canvas id="confetti-canvas"></canvas>
+
+<!-- LEVEL SELECT -->
+<div id="level-select-screen">
+  <div class="game-title">
+    <h1>🃏 Memory Match</h1>
+    <p>Gemara Bava Metzia Vocabulary</p>
+  </div>
+  <div class="levels-grid" id="levels-grid"></div>
+</div>
+
+<!-- LOCKED -->
+<div id="locked-screen">
+  <div class="locked-card">
+    <div class="locked-icon">🔒</div>
+    <div class="locked-title">Level Locked</div>
+    <div class="locked-desc">Complete the previous level to unlock this one.</div>
+    <a href="game_memory.html" class="btn-secondary">← Choose Level</a>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-screen">
+  <div class="top-bar">
+    <a href="game_memory.html" class="levels-btn">⚙ Levels</a>
+    <div class="stats-row">
+      <div class="stat-pill">Moves: <span id="moves-count">0</span></div>
+      <div class="stat-pill">Pairs: <span id="pairs-count">0</span>/<span id="pairs-total">0</span></div>
+      <div class="stat-pill">⏱ <span id="timer-display">0:00</span></div>
+    </div>
+    <div class="level-badge" id="level-badge">Level 1</div>
+  </div>
+  <div id="memory-grid"></div>
+</div>
+
+<!-- RESULTS -->
+<div id="results-screen">
+  <div class="results-card">
+    <div class="results-title">Round Complete!</div>
+    <div class="results-subtitle" id="results-level-name"></div>
+    <div class="stars-big" id="stars-big"></div>
+    <div class="best-badge" id="best-badge"></div>
+    <div class="results-stats">
+      <div class="res-stat">
+        <div class="res-stat-value" id="res-moves">0</div>
+        <div class="res-stat-label">Moves Used</div>
+      </div>
+      <div class="res-stat">
+        <div class="res-stat-value" id="res-time">0:00</div>
+        <div class="res-stat-label">Time</div>
+      </div>
+    </div>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th style="text-align:right">Aramaic</th>
+          <th>English</th>
+        </tr>
+      </thead>
+      <tbody id="results-tbody"></tbody>
+    </table>
+    <div class="btn-row">
+      <button class="btn-primary" id="play-again-btn">Play Again</button>
+      <button class="btn-primary" id="next-level-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);">Next Level →</button>
+      <a href="game_memory.html" class="btn-secondary">All Levels</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== STORAGE =====
+  const STORAGE_KEY = 'gemara_bm_progress';
+  const GAME_ID = 'memory';
+
+  function getProgress() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  function saveProgress(gameId, level, stars) {
+    const p = getProgress();
+    if (!p[gameId]) p[gameId] = {};
+    if (!p[gameId][level] || stars > p[gameId][level]) p[gameId][level] = stars;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+  }
+  function isUnlocked(gameId, level) {
+    if (level === 1) return true;
+    const p = getProgress();
+    return !!(p[gameId] && p[gameId][level - 1] > 0);
+  }
+  function getStars(gameId, level) {
+    const p = getProgress();
+    return (p[gameId] && p[gameId][level]) || 0;
+  }
+
+  // ===== SOUND =====
+  function playSound(type) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      if (type === 'correct') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523, ctx.currentTime);
+        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.12);
+        osc.frequency.setValueAtTime(784, ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc.start(); osc.stop(ctx.currentTime + 0.5);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(250, ctx.currentTime);
+        osc.frequency.setValueAtTime(180, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.start(); osc.stop(ctx.currentTime + 0.3);
+      } else if (type === 'levelComplete') {
+        [523,659,784,1047].forEach((f,i) => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.type = 'sine'; o.frequency.value = f;
+          g.gain.setValueAtTime(0.25, ctx.currentTime + i*0.15);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.15 + 0.35);
+          o.start(ctx.currentTime + i*0.15); o.stop(ctx.currentTime + i*0.15 + 0.4);
+        });
+      }
+    } catch(e) {}
+  }
+
+  // ===== LEVELS DATA =====
+  const LEVELS_DATA = {
+    1: {
+      title: "Tied Doves & Vessel", subtitle: "Lesson 1",
+      color: "#22c55e",
+      words: [
+        { ar: "מַאי", en: "what?" },
+        { ar: "הֵיכִי דָמֵי", en: "what is the case?" },
+        { ar: "אִיבָּעֵית אֵימָא", en: "if you want to say" },
+        { ar: "תַּנְיָא", en: "it was taught (Baraita)" },
+        { ar: "פְּשִׁיטָא", en: "it's obvious!" },
+        { ar: "שָׁאנֵי", en: "it is different" },
+        { ar: "מִנָּא הָנֵי מִילֵּי", en: "from where do we know this?" },
+        { ar: "הִלְכָּךְ", en: "therefore" },
+        { ar: "דְּאָמְרִינַן", en: "as we say" },
+        { ar: "כְּלוֹמַר", en: "meaning / that is to say" }
+      ]
+    },
+    2: {
+      title: "Knot as Sign & Safek Hinuach", subtitle: "Lesson 2",
+      color: "#3b82f6",
+      words: [
+        { ar: "מַאי", en: "what?" }, { ar: "הֵיכִי דָמֵי", en: "what is the case?" },
+        { ar: "אִיבָּעֵית אֵימָא", en: "if you want to say" }, { ar: "תַּנְיָא", en: "it was taught (Baraita)" },
+        { ar: "פְּשִׁיטָא", en: "it's obvious!" }, { ar: "שָׁאנֵי", en: "it is different" },
+        { ar: "מִנָּא הָנֵי מִילֵּי", en: "from where do we know this?" }, { ar: "הִלְכָּךְ", en: "therefore" },
+        { ar: "דְּאָמְרִינַן", en: "as we say" }, { ar: "כְּלוֹמַר", en: "meaning / that is to say" },
+        { ar: "דְּהַיְינוּ", en: "that is / that is the same as" }, { ar: "לָא קַשְׁיָא", en: "no contradiction" },
+        { ar: "אִיכָּא לְמֵימַר", en: "there is room to say" }, { ar: "וּרְמִינְהוּ", en: "we raise a contradiction" },
+        { ar: "בִּשְׁלָמָא", en: "it is understandable" }, { ar: "אֶלָּא", en: "but / rather" },
+        { ar: "וְהָא", en: "but isn't it...?" }, { ar: "תִּיקוּ", en: "unresolved / let it stand" }
+      ]
+    },
+    3: {
+      title: "Rav Zvid's Answer", subtitle: "Lesson 3",
+      color: "#f59e0b",
+      words: [
+        { ar: "מַאי", en: "what?" }, { ar: "הֵיכִי דָמֵי", en: "what is the case?" },
+        { ar: "אִיבָּעֵית אֵימָא", en: "if you want to say" }, { ar: "תַּנְיָא", en: "it was taught (Baraita)" },
+        { ar: "פְּשִׁיטָא", en: "it's obvious!" }, { ar: "שָׁאנֵי", en: "it is different" },
+        { ar: "מִנָּא הָנֵי מִילֵּי", en: "from where do we know this?" }, { ar: "הִלְכָּךְ", en: "therefore" },
+        { ar: "דְּאָמְרִינַן", en: "as we say" }, { ar: "כְּלוֹמַר", en: "meaning / that is to say" },
+        { ar: "דְּהַיְינוּ", en: "that is / that is the same as" }, { ar: "לָא קַשְׁיָא", en: "no contradiction" },
+        { ar: "אִיכָּא לְמֵימַר", en: "there is room to say" }, { ar: "וּרְמִינְהוּ", en: "we raise a contradiction" },
+        { ar: "בִּשְׁלָמָא", en: "it is understandable" }, { ar: "אֶלָּא", en: "but / rather" },
+        { ar: "וְהָא", en: "but isn't it...?" }, { ar: "תִּיקוּ", en: "unresolved / let it stand" },
+        { ar: "כּוּבֵּי וְכָסֵי", en: "cups and bowls" }, { ar: "סַכִּינֵי וְהֶמְנֵיק", en: "knives and a belt" }
+      ]
+    },
+    4: {
+      title: "Rav Papa's Answer", subtitle: "Lesson 4",
+      color: "#ef4444",
+      words: [
+        { ar: "מַאי", en: "what?" }, { ar: "הֵיכִי דָמֵי", en: "what is the case?" },
+        { ar: "אִיבָּעֵית אֵימָא", en: "if you want to say" }, { ar: "תַּנְיָא", en: "it was taught (Baraita)" },
+        { ar: "פְּשִׁיטָא", en: "it's obvious!" }, { ar: "שָׁאנֵי", en: "it is different" },
+        { ar: "מִנָּא הָנֵי מִילֵּי", en: "from where do we know this?" }, { ar: "הִלְכָּךְ", en: "therefore" },
+        { ar: "דְּאָמְרִינַן", en: "as we say" }, { ar: "כְּלוֹמַר", en: "meaning / that is to say" },
+        { ar: "דְּהַיְינוּ", en: "that is / that is the same as" }, { ar: "לָא קַשְׁיָא", en: "no contradiction" },
+        { ar: "אִיכָּא לְמֵימַר", en: "there is room to say" }, { ar: "וּרְמִינְהוּ", en: "we raise a contradiction" },
+        { ar: "בִּשְׁלָמָא", en: "it is understandable" }, { ar: "אֶלָּא", en: "but / rather" },
+        { ar: "וְהָא", en: "but isn't it...?" }, { ar: "תִּיקוּ", en: "unresolved / let it stand" },
+        { ar: "כּוּבֵּי וְכָסֵי", en: "cups and bowls" }, { ar: "סַכִּינֵי וְהֶמְנֵיק", en: "knives and a belt" },
+        { ar: "עֲשׂוּיָה לִפַּנּוֹת", en: "meant to be cleared out" },
+        { ar: "אֵינָהּ עֲשׂוּיָה לִפַּנּוֹת", en: "not meant to be cleared out" },
+        { ar: "אֲבֵידָה מִדַּעַת", en: "an intentional loss" }
+      ]
+    }
+  };
+
+  // ===== STATE =====
+  let currentLevel = null;
+  let cards = [];
+  let firstCard = null;
+  let secondCard = null;
+  let lockBoard = false;
+  let moves = 0;
+  let matchCount = 0;
+  let totalPairs = 0;
+  let timerInterval = null;
+  let elapsedSeconds = 0;
+  let gameWords = [];
+
+  // ===== URL PARAM =====
+  const urlParams = new URLSearchParams(window.location.search);
+  const levelParam = parseInt(urlParams.get('level'));
+
+  // ===== INIT =====
+  if (levelParam >= 1 && levelParam <= 4) {
+    if (!isUnlocked(GAME_ID, levelParam)) {
+      showScreen('locked');
+    } else {
+      currentLevel = levelParam;
+      startGame(currentLevel);
+    }
+  } else {
+    showScreen('select');
+    renderLevelSelect();
+  }
+
+  function showScreen(name) {
+    document.getElementById('level-select-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'none';
+    document.getElementById('results-screen').style.display = 'none';
+    document.getElementById('locked-screen').style.display = 'none';
+    if (name === 'select') document.getElementById('level-select-screen').style.display = 'flex';
+    if (name === 'game') document.getElementById('game-screen').style.display = 'flex';
+    if (name === 'results') document.getElementById('results-screen').style.display = 'flex';
+    if (name === 'locked') document.getElementById('locked-screen').style.display = 'flex';
+  }
+
+  function renderLevelSelect() {
+    const grid = document.getElementById('levels-grid');
+    grid.innerHTML = '';
+    [1,2,3,4].forEach(lvl => {
+      const data = LEVELS_DATA[lvl];
+      const unlocked = isUnlocked(GAME_ID, lvl);
+      const stars = getStars(GAME_ID, lvl);
+      const card = document.createElement('div');
+      card.className = 'level-card' + (unlocked ? '' : ' locked');
+      card.style.borderColor = unlocked ? data.color : 'transparent';
+
+      const starsHtml = [1,2,3].map(s =>
+        `<span class="star-icon ${s <= stars ? 'filled' : 'empty'}">⭐</span>`
+      ).join('');
+
+      card.innerHTML = `
+        ${!unlocked ? '<div class="lock-icon">🔒</div>' : ''}
+        <div class="lc-number" style="color:${data.color}">Level ${lvl}</div>
+        <div class="lc-title">${data.title}</div>
+        <div class="lc-subtitle">${data.subtitle}</div>
+        <div class="stars-display">${starsHtml}</div>
+        <div class="lc-info">${data.words.length > 12 ? 12 : data.words.length} pairs · ${data.words.length > 12 ? 24 : data.words.length * 2} cards</div>
+      `;
+      if (unlocked) {
+        card.addEventListener('click', () => {
+          window.location.href = `game_memory.html?level=${lvl}`;
+        });
+      }
+      grid.appendChild(card);
+    });
+  }
+
+  // ===== GAME SETUP =====
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function startGame(level) {
+    const data = LEVELS_DATA[level];
+    let words = [...data.words];
+    if (words.length > 12) {
+      words = shuffle(words).slice(0, 12);
+    }
+    gameWords = words;
+    totalPairs = words.length;
+    moves = 0;
+    matchCount = 0;
+    elapsedSeconds = 0;
+    firstCard = null;
+    secondCard = null;
+    lockBoard = false;
+
+    // Update UI
+    const lc = LEVELS_DATA[level];
+    document.getElementById('level-badge').textContent = `Level ${level}`;
+    document.getElementById('level-badge').style.background = lc.color;
+    document.getElementById('pairs-total').textContent = totalPairs;
+    document.getElementById('pairs-count').textContent = 0;
+    document.getElementById('moves-count').textContent = 0;
+    document.getElementById('timer-display').textContent = '0:00';
+
+    // Build card pairs
+    const cardDefs = [];
+    words.forEach((word, idx) => {
+      cardDefs.push({ type: 'aramaic', text: word.ar, pairIndex: idx });
+      cardDefs.push({ type: 'english', text: word.en, pairIndex: idx });
+    });
+    cards = shuffle(cardDefs);
+
+    renderGrid(cards);
+    showScreen('game');
+    startTimer();
+  }
+
+  function renderGrid(cardData) {
+    const grid = document.getElementById('memory-grid');
+    grid.innerHTML = '';
+
+    cardData.forEach((cd, i) => {
+      const card = document.createElement('div');
+      card.className = 'memory-card';
+      card.dataset.index = i;
+      card.dataset.pairIndex = cd.pairIndex;
+      card.dataset.type = cd.type;
+
+      const inner = document.createElement('div');
+      inner.className = 'card-inner';
+
+      const back = document.createElement('div');
+      back.className = 'card-face card-back';
+      back.innerHTML = '<span class="card-back-question">?</span>';
+
+      const front = document.createElement('div');
+      if (cd.type === 'aramaic') {
+        front.className = 'card-face card-front-aramaic';
+        front.innerHTML = `<div><div class="card-label">Aramaic</div><div class="card-text">${cd.text}</div></div>`;
+      } else {
+        front.className = 'card-face card-front-english';
+        front.innerHTML = `<div><div class="card-label">English</div><div class="card-text">${cd.text}</div></div>`;
+      }
+
+      inner.appendChild(back);
+      inner.appendChild(front);
+      card.appendChild(inner);
+      card.addEventListener('click', () => handleCardClick(card));
+      grid.appendChild(card);
+    });
+  }
+
+  function handleCardClick(card) {
+    if (lockBoard) return;
+    if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+    card.classList.add('flipped');
+
+    if (!firstCard) {
+      firstCard = card;
+      return;
+    }
+
+    secondCard = card;
+    lockBoard = true;
+    moves++;
+    document.getElementById('moves-count').textContent = moves;
+
+    const p1 = parseInt(firstCard.dataset.pairIndex);
+    const p2 = parseInt(secondCard.dataset.pairIndex);
+
+    if (p1 === p2 && firstCard.dataset.type !== secondCard.dataset.type) {
+      // Match!
+      playSound('correct');
+      firstCard.classList.add('matched');
+      secondCard.classList.add('matched');
+      matchCount++;
+      document.getElementById('pairs-count').textContent = matchCount;
+      resetTurn(false);
+
+      if (matchCount === totalPairs) {
+        setTimeout(onGameComplete, 500);
+      }
+    } else {
+      playSound('wrong');
+      setTimeout(() => {
+        firstCard.classList.remove('flipped');
+        secondCard.classList.remove('flipped');
+        resetTurn(true);
+      }, 1000);
+    }
+  }
+
+  function resetTurn(unlock) {
+    firstCard = null;
+    secondCard = null;
+    if (unlock) lockBoard = false;
+    else lockBoard = false;
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      elapsedSeconds++;
+      const m = Math.floor(elapsedSeconds / 60);
+      const s = elapsedSeconds % 60;
+      document.getElementById('timer-display').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    }, 1000);
+  }
+
+  function calcMemoryStars(moves, n) {
+    if (moves <= n + 3) return 3;
+    if (moves <= n * 2) return 2;
+    return 1;
+  }
+
+  function getBestScore(level) {
+    return parseInt(localStorage.getItem(`memory_best_level_${level}`) || '0');
+  }
+  function setBestScore(level, moves) {
+    const best = getBestScore(level);
+    if (best === 0 || moves < best) {
+      localStorage.setItem(`memory_best_level_${level}`, moves);
+      return true;
+    }
+    return false;
+  }
+
+  function onGameComplete() {
+    clearInterval(timerInterval);
+    playSound('levelComplete');
+
+    const stars = calcMemoryStars(moves, totalPairs);
+    saveProgress(GAME_ID, currentLevel, stars);
+    const isNewBest = setBestScore(currentLevel, moves);
+    const best = getBestScore(currentLevel);
+
+    launchConfetti();
+    showResults(stars, isNewBest, best);
+  }
+
+  function showResults(stars, isNewBest, best) {
+    const data = LEVELS_DATA[currentLevel];
+    document.getElementById('results-level-name').textContent = `Level ${currentLevel}: ${data.title}`;
+
+    const starsEl = document.getElementById('stars-big');
+    starsEl.innerHTML = '';
+    [1,2,3].forEach((s, i) => {
+      const span = document.createElement('span');
+      span.className = 'star-big ' + (s <= stars ? 'earned' : 'empty-star');
+      span.textContent = '⭐';
+      span.style.animationDelay = `${i * 0.15}s`;
+      starsEl.appendChild(span);
+    });
+
+    document.getElementById('res-moves').textContent = moves;
+    const m = Math.floor(elapsedSeconds / 60);
+    const s = elapsedSeconds % 60;
+    document.getElementById('res-time').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+
+    const bestBadge = document.getElementById('best-badge');
+    if (isNewBest) {
+      bestBadge.textContent = '🏆 New Best Score!';
+      bestBadge.style.display = 'inline-block';
+    } else {
+      bestBadge.textContent = `Best: ${best} moves`;
+      bestBadge.style.display = 'inline-block';
+    }
+
+    const tbody = document.getElementById('results-tbody');
+    tbody.innerHTML = '';
+    gameWords.forEach(word => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="ar-cell">${word.ar}</td>
+        <td>${word.en}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Next level button
+    const nextBtn = document.getElementById('next-level-btn');
+    if (currentLevel < 4) {
+      nextBtn.style.display = 'inline-block';
+      nextBtn.onclick = () => { window.location.href = `game_memory.html?level=${currentLevel + 1}`; };
+    } else {
+      nextBtn.style.display = 'none';
+    }
+
+    document.getElementById('play-again-btn').onclick = () => {
+      window.location.href = `game_memory.html?level=${currentLevel}`;
+    };
+
+    showScreen('results');
+  }
+
+  // ===== CONFETTI =====
+  function launchConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const colors = ['#0891b2','#f97316','#22c55e','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
+    const particles = [];
+    const count = 150;
+
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: canvas.width / 2 + (Math.random() - 0.5) * 200,
+        y: canvas.height / 2 + (Math.random() - 0.5) * 100,
+        vx: (Math.random() - 0.5) * 14,
+        vy: Math.random() * -14 - 5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: Math.random() * 8 + 4,
+        rotation: Math.random() * 360,
+        rotSpeed: (Math.random() - 0.5) * 8,
+        shape: Math.random() > 0.5 ? 'rect' : 'circle',
+        alpha: 1,
+        gravity: 0.4
+      });
+    }
+
+    let frame;
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+      particles.forEach(p => {
+        p.vy += p.gravity;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rotation += p.rotSpeed;
+        p.alpha -= 0.012;
+        if (p.alpha > 0) {
+          alive = true;
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, p.alpha);
+          ctx.fillStyle = p.color;
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          if (p.shape === 'rect') {
+            ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+          } else {
+            ctx.beginPath();
+            ctx.arc(0, 0, p.size/2, 0, Math.PI*2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+      });
+      if (alive) { frame = requestAnimationFrame(animate); }
+      else { ctx.clearRect(0,0,canvas.width,canvas.height); }
+    }
+    animate();
+  }
+</script>
+</body>
+</html>
