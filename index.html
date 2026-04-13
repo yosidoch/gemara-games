@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>גְּמָרָא בָּבָא מְצִיעָא — Vocabulary Games</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: linear-gradient(135deg, #f8faff 0%, #fff8f0 50%, #f0fff8 100%);
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 16px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-hover: 0 12px 40px rgba(0,0,0,0.15);
+      --font-ui: 'Rubik', sans-serif;
+      --font-he: 'Frank Ruhl Libre', serif;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-ui);
+      background: var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      direction: ltr; /* page-level LTR; Hebrew elements override */
+    }
+
+    /* ─── Top Rainbow Bar ──────────────────────────────────────────── */
+    .rainbow-bar {
+      height: 5px;
+      background: linear-gradient(
+        90deg,
+        #f97316, #eab308, #22c55e,
+        #06b6d4, #3b82f6, #8b5cf6, #ec4899
+      );
+    }
+
+    /* ─── Header ───────────────────────────────────────────────────── */
+    .site-header {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px 24px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .header-titles { text-align: center; flex: 1; }
+
+    .title-he {
+      font-family: var(--font-he);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      color: #1e293b;
+      direction: rtl;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    .title-sub {
+      font-family: var(--font-ui);
+      font-size: clamp(0.9rem, 2vw, 1.1rem);
+      color: var(--muted);
+      margin-top: 6px;
+      font-weight: 400;
+    }
+
+    .dashboard-link {
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #4f46e5;
+      text-decoration: none;
+      white-space: nowrap;
+      padding: 8px 14px;
+      border: 1.5px solid #c7d2fe;
+      border-radius: 999px;
+      background: #eef2ff;
+      transition: background 0.2s, box-shadow 0.2s;
+      align-self: flex-start;
+      margin-top: 8px;
+    }
+    .dashboard-link:hover { background: #e0e7ff; box-shadow: 0 2px 8px rgba(79,70,229,0.2); }
+
+    /* ─── Section Label ────────────────────────────────────────────── */
+    .section-label {
+      max-width: 1200px;
+      margin: 0 auto 16px;
+      padding: 0 24px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ─── Game Grid ────────────────────────────────────────────────── */
+    .game-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 48px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    /* ─── Game Card ────────────────────────────────────────────────── */
+    .game-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      /* Stagger animation applied via JS */
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    .game-card.visible {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+    .game-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    /* Top accent strip */
+    .card-accent {
+      height: 6px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .card-body {
+      padding: 20px 20px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-emoji { font-size: 2.6rem; line-height: 1; }
+
+    .card-names { flex: 1; }
+    .card-name {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .card-name-he {
+      font-family: var(--font-he);
+      font-size: 1rem;
+      color: var(--muted);
+      direction: rtl;
+      display: block;
+      margin-top: 2px;
+    }
+
+    .card-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ─── Level Badges Row ─────────────────────────────────────────── */
+    .levels-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .level-badge {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 62px;
+      padding: 5px 4px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1.5px solid transparent;
+      transition: transform 0.15s, box-shadow 0.15s;
+      cursor: pointer;
+      line-height: 1.3;
+      gap: 2px;
+    }
+    .level-badge:hover:not(.locked) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    /* Completed level (has stars > 0) */
+    .level-badge.done {
+      background: #f0fdf4;
+      border-color: #22c55e;
+      color: #15803d;
+    }
+    /* Unlocked but not yet played */
+    .level-badge.unlocked {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+    }
+    /* Locked */
+    .level-badge.locked {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+      color: #94a3b8;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .badge-level-num { font-size: 10px; opacity: 0.75; }
+    .badge-stars { font-size: 12px; letter-spacing: -1px; }
+
+    /* ─── Play Button ──────────────────────────────────────────────── */
+    .card-footer { padding: 0 20px 18px; }
+    .play-btn {
+      display: block;
+      width: 100%;
+      padding: 10px 0;
+      border-radius: 10px;
+      border: none;
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: filter 0.2s, transform 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .play-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+    /* ─── Vocabulary Section ───────────────────────────────────────── */
+    .vocab-section {
+      max-width: 1200px;
+      margin: 0 auto 64px;
+      padding: 0 24px;
+    }
+
+    .vocab-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    /* Tabs */
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 0;
+      border-bottom: 2px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      transition: background 0.15s, color 0.15s;
+      position: relative;
+      bottom: -2px;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn:hover { background: #f1f5f9; color: var(--text); }
+    .tab-btn.active { color: var(--text); border-bottom-color: #4f46e5; background: #fff; }
+
+    /* Tab panels */
+    .tab-panel { display: none; padding: 24px 0 0; }
+    .tab-panel.active { display: block; }
+
+    /* Vocab table */
+    .vocab-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      background: #fff;
+    }
+    .vocab-table th {
+      padding: 12px 16px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      background: #f8fafc;
+      text-align: left;
+      border-bottom: 1.5px solid var(--border);
+    }
+    .vocab-table th.he-col { text-align: right; }
+
+    .vocab-table td {
+      padding: 11px 16px;
+      font-size: 0.92rem;
+      color: var(--text);
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+    .vocab-table tr:last-child td { border-bottom: none; }
+    .vocab-table tr:nth-child(even) td { background: #f8fafc; }
+
+    .vocab-he {
+      font-family: var(--font-he);
+      font-size: 1.2rem;
+      color: #1e40af;
+      direction: rtl;
+      text-align: right;
+      font-weight: 500;
+    }
+    .vocab-en {
+      color: #374151;
+      font-size: 0.9rem;
+    }
+
+    /* Concept box */
+    .concept-box {
+      margin-top: 20px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+      border: 1.5px solid #bfdbfe;
+      font-size: 0.92rem;
+      color: #1e3a5f;
+      line-height: 1.65;
+      font-family: var(--font-ui);
+    }
+    .concept-box strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+    .concept-box .concept-he {
+      font-family: var(--font-he);
+      font-size: 1.05rem;
+      direction: rtl;
+      color: #1e40af;
+    }
+
+    /* ─── Footer ───────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,0.6);
+    }
+    footer a { color: #4f46e5; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ─── Animations ───────────────────────────────────────────────── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .site-header { flex-direction: column; align-items: center; }
+      .dashboard-link { align-self: center; }
+      .game-grid { padding: 0 12px 40px; gap: 16px; }
+      .vocab-section { padding: 0 12px; }
+      .tab-btn { padding: 8px 12px; font-size: 0.82rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Rainbow accent bar -->
+  <div class="rainbow-bar"></div>
+
+  <!-- ── Site Header ──────────────────────────────────────────── -->
+  <header class="site-header">
+    <!-- Spacer so title stays centered on desktop -->
+    <div style="min-width:160px;"></div>
+
+    <div class="header-titles">
+      <h1 class="title-he">גְּמָרָא בָּבָא מְצִיעָא</h1>
+      <p class="title-sub">פֶּרֶק אֵלּוּ מְצִיאוֹת &mdash; Vocabulary Games</p>
+    </div>
+
+    <a class="dashboard-link" href="teacher_dashboard.html">📊 Teacher Dashboard →</a>
+  </header>
+
+  <!-- ── Game Grid ─────────────────────────────────────────────── -->
+  <p class="section-label">🎮 Choose a Game</p>
+  <main class="game-grid" id="gameGrid">
+    <!-- Cards are rendered by JS -->
+  </main>
+
+  <!-- ── Vocabulary Reference ──────────────────────────────────── -->
+  <section class="vocab-section" aria-label="Vocabulary Reference">
+    <h2 class="vocab-title">📖 Vocabulary Reference — All 4 Levels</h2>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav" role="tablist" aria-label="Vocabulary levels">
+      <button class="tab-btn active" role="tab" aria-selected="true"  aria-controls="tab-1" id="tabBtn-1" onclick="switchTab(1)">Level 1 — Tied Doves &amp; Vessel</button>
+      <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-2" id="tabBtn-2" onclick="switchTab(2)">Level 2 — Knot as Sign</button>
+      <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-3" id="tabBtn-3" onclick="switchTab(3)">Level 3 — Rav Zvid's Answer</button>
+      <button class="tab-btn"        role="tab" aria-selected="false" aria-controls="tab-4" id="tabBtn-4" onclick="switchTab(4)">Level 4 — Rav Papa's Answer</button>
+    </nav>
+
+    <!-- ── Level 1 ── -->
+    <div class="tab-panel active" id="tab-1" role="tabpanel" aria-labelledby="tabBtn-1">
+      <table class="vocab-table" aria-label="Level 1 vocabulary">
+        <thead>
+          <tr>
+            <th class="he-col">Aramaic / Hebrew</th>
+            <th>English</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="vocab-he">מַאי</td><td class="vocab-en">what?</td></tr>
+          <tr><td class="vocab-he">הֵיכִי דָמֵי</td><td class="vocab-en">what is the case? / what exactly are we talking about?</td></tr>
+          <tr><td class="vocab-he">אִיבָּעֵית אֵימָא</td><td class="vocab-en">if you want to say</td></tr>
+          <tr><td class="vocab-he">תַּנְיָא</td><td class="vocab-en">it was taught (in a Baraita)</td></tr>
+          <tr><td class="vocab-he">פְּשִׁיטָא</td><td class="vocab-en">it's obvious!</td></tr>
+          <tr><td class="vocab-he">שָׁאנֵי</td><td class="vocab-en">it is different</td></tr>
+          <tr><td class="vocab-he">מִנָּא הָנֵי מִילֵּי</td><td class="vocab-en">from where do we know this?</td></tr>
+          <tr><td class="vocab-he">הִלְכָּךְ</td><td class="vocab-en">therefore</td></tr>
+          <tr><td class="vocab-he">דְּאָמְרִינַן</td><td class="vocab-en">as we say</td></tr>
+          <tr><td class="vocab-he">כְּלוֹמַר</td><td class="vocab-en">meaning / that is to say</td></tr>
+        </tbody>
+      </table>
+
+      <div class="concept-box">
+        <strong>🕊️ Key Concept</strong>
+        <span class="concept-he">הִלְכָּךְ לִשְׁבְּקִינְהוּ</span> — Therefore leave them.<br>
+        No <span class="concept-he">סִימָן</span> inside the vessel = no obligation to announce it.
+      </div>
+    </div>
+
+    <!-- ── Level 2 ── -->
+    <div class="tab-panel" id="tab-2" role="tabpanel" aria-labelledby="tabBtn-2">
+      <table class="vocab-table" aria-label="Level 2 vocabulary">
+        <thead>
+          <tr>
+            <th class="he-col">Aramaic / Hebrew</th>
+            <th>English</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="vocab-he">דְּהַיְינוּ</td><td class="vocab-en">that is / that is the same as</td></tr>
+          <tr><td class="vocab-he">לָא קַשְׁיָא</td><td class="vocab-en">no contradiction</td></tr>
+          <tr><td class="vocab-he">אִיכָּא לְמֵימַר</td><td class="vocab-en">there is room to say</td></tr>
+          <tr><td class="vocab-he">וּרְמִינְהוּ</td><td class="vocab-en">we raise a contradiction</td></tr>
+          <tr><td class="vocab-he">בִּשְׁלָמָא</td><td class="vocab-en">it is understandable</td></tr>
+          <tr><td class="vocab-he">אֶלָּא</td><td class="vocab-en">but / rather</td></tr>
+          <tr><td class="vocab-he">וְהָא</td><td class="vocab-en">but isn't it...?</td></tr>
+          <tr><td class="vocab-he">תִּיקוּ</td><td class="vocab-en">unresolved / let it stand</td></tr>
+        </tbody>
+      </table>
+
+      <div class="concept-box">
+        <strong>🪢 Key Concept</strong>
+        A knot is <em>not</em> a <span class="concept-he">סִימָן</span> (distinguishing mark).<br>
+        A place is <em>not</em> a <span class="concept-he">סִימָן</span>.<br>
+        <span class="concept-he">סָפֵק הִינּוּחַ</span> = doubt whether the object was placed there intentionally.
+      </div>
+    </div>
+
+    <!-- ── Level 3 ── -->
+    <div class="tab-panel" id="tab-3" role="tabpanel" aria-labelledby="tabBtn-3">
+      <table class="vocab-table" aria-label="Level 3 vocabulary">
+        <thead>
+          <tr>
+            <th class="he-col">Aramaic / Hebrew</th>
+            <th>English</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="vocab-he">כּוּבֵּי וְכָסֵי</td><td class="vocab-en">cups and bowls (distinctive vessels)</td></tr>
+          <tr><td class="vocab-he">סַכִּינֵי וְהֶמְנֵיק</td><td class="vocab-en">knives and a belt (common objects)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="concept-box">
+        <strong>⚖️ Key Concept — Rav Zvid's Answer</strong>
+        <span class="concept-he">כּוּבֵּי וְכָסֵי</span> (cups and bowls — distinctive items) must be returned.<br>
+        <span class="concept-he">סַכִּינֵי וְהֶמְנֵיק</span> (knives and a belt — common items) need not be announced.
+      </div>
+    </div>
+
+    <!-- ── Level 4 ── -->
+    <div class="tab-panel" id="tab-4" role="tabpanel" aria-labelledby="tabBtn-4">
+      <table class="vocab-table" aria-label="Level 4 vocabulary">
+        <thead>
+          <tr>
+            <th class="he-col">Aramaic / Hebrew</th>
+            <th>English</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="vocab-he">עֲשׂוּיָה לִפַּנּוֹת</td><td class="vocab-en">meant to be cleared out</td></tr>
+          <tr><td class="vocab-he">אֵינָהּ עֲשׂוּיָה לִפַּנּוֹת</td><td class="vocab-en">not meant to be cleared out</td></tr>
+          <tr><td class="vocab-he">אֲבֵידָה מִדַּעַת</td><td class="vocab-en">an intentional loss (owner gave up hope)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="concept-box">
+        <strong>🗑️ Key Concept — Rav Papa's Answer</strong>
+        <span class="concept-he">עֲשׂוּיָה לִפַּנּוֹת</span> (a heap meant to be cleared) — you must take it and announce it.<br>
+        <span class="concept-he">אֵינָהּ עֲשׂוּיָה לִפַּנּוֹת</span> — leave it; the owner will return.<br>
+        <span class="concept-he">אֲבֵידָה מִדַּעַת</span> — an intentional loss; the owner gave up hope, so no obligation.
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── Footer ────────────────────────────────────────────────── -->
+  <footer>
+    Bava Metzia — Perek Elu Metziot &bull; 5th Grade Gemara &bull; Built with ❤️
+    &nbsp;|&nbsp; <a href="teacher_dashboard.html">📊 Teacher Dashboard</a>
+  </footer>
+
+
+  <script>
+    /* ══════════════════════════════════════════════════════════════
+       CONFIGURATION
+    ══════════════════════════════════════════════════════════════ */
+
+    const STORAGE_KEY = 'gemara_bm_progress';
+
+    /** 8 games */
+    const GAMES = [
+      { id: 'quiz',     file: 'game_quiz.html',     name: 'Quiz',           nameHe: 'חִידוֹן',               emoji: '🎯', color: '#4f46e5', desc: 'Multiple choice with countdown timer' },
+      { id: 'dragdrop', file: 'game_dragdrop.html', name: 'Drag & Drop',    nameHe: 'גְּרֹר וְשַׁחְרֵר',     emoji: '✋', color: '#7c3aed', desc: 'Drag Aramaic words onto their meanings' },
+      { id: 'memory',   file: 'game_memory.html',   name: 'Memory',         nameHe: 'זִכָּרוֹן',              emoji: '🃏', color: '#0891b2', desc: 'Flip cards to find matching pairs' },
+      { id: 'hangman',  file: 'game_hangman.html',  name: 'Hangman',        nameHe: 'תָּלוּי',                emoji: '✏️', color: '#dc2626', desc: 'Guess the Aramaic word letter by letter' },
+      { id: 'shooter',  file: 'game_shooter.html',  name: 'Space Shooter',  nameHe: 'יוֹרֶה חָלָל',          emoji: '🚀', color: '#2563eb', desc: 'Shoot the enemy with the correct word' },
+      { id: 'asteroid', file: 'game_asteroid.html', name: 'Asteroid Blast', nameHe: 'פּוֹצֵץ אַסְטֶרוֹאִיד', emoji: '☄️', color: '#9333ea', desc: 'Blast the correct Aramaic asteroid' },
+      { id: 'wordrace', file: 'game_wordrace.html', name: 'Word Race',      nameHe: 'מֵרוֹץ מִלִּים',         emoji: '🏎️', color: '#16a34a', desc: 'Race the AI — fastest correct answer wins!' },
+      { id: 'maze',     file: 'game_maze.html',     name: 'Maze Runner',    nameHe: 'רָץ בַּמְּבוּךְ',        emoji: '🗺️', color: '#d97706', desc: 'Navigate the maze to the correct word' },
+    ];
+
+    /** 4 levels */
+    const LEVEL_INFO = [
+      { level: 1, title: 'Tied Doves & Vessel',  subtitle: 'Lesson 1', color: '#22c55e' },
+      { level: 2, title: 'Knot as Sign',          subtitle: 'Lesson 2', color: '#3b82f6' },
+      { level: 3, title: "Rav Zvid's Answer",     subtitle: 'Lesson 3', color: '#f59e0b' },
+      { level: 4, title: "Rav Papa's Answer",     subtitle: 'Lesson 4', color: '#ef4444' },
+    ];
+
+    /* ══════════════════════════════════════════════════════════════
+       PROGRESS HELPERS
+    ══════════════════════════════════════════════════════════════ */
+
+    /** Read progress object from localStorage */
+    function getProgress() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
+    /** Returns star count (0–3) for a game + level */
+    function getStars(gameId, level) {
+      const p = getProgress();
+      return (p[gameId] && p[gameId][String(level)]) || 0;
+    }
+
+    /** A level is unlocked if it's level 1, or if the previous level has at least 1 star */
+    function isUnlocked(gameId, level) {
+      if (level === 1) return true;
+      return getStars(gameId, level - 1) > 0;
+    }
+
+    /** Returns filled/empty star HTML string for n stars out of 3 */
+    function starsHTML(n) {
+      return '★'.repeat(n) + '☆'.repeat(3 - n);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       RENDER CARDS
+    ══════════════════════════════════════════════════════════════ */
+
+    function buildCard(game, index) {
+      /* --- Build level badges --- */
+      const badgesHTML = LEVEL_INFO.map(({ level }) => {
+        const stars    = getStars(game.id, level);
+        const unlocked = isUnlocked(game.id, level);
+        const done     = stars > 0;
+
+        let cls, content;
+        if (!unlocked) {
+          cls     = 'locked';
+          content = `<span class="badge-level-num">L${level}</span><span class="badge-stars">🔒</span>`;
+        } else if (done) {
+          cls     = 'done';
+          content = `<span class="badge-level-num">L${level}</span><span class="badge-stars">${starsHTML(stars)}</span>`;
+        } else {
+          cls     = 'unlocked';
+          content = `<span class="badge-level-num">L${level}</span><span class="badge-stars">▶ Play</span>`;
+        }
+
+        if (unlocked) {
+          return `<a class="level-badge ${cls}" href="${game.file}?level=${level}" title="Level ${level} — ${LEVEL_INFO[level-1].title}">${content}</a>`;
+        } else {
+          return `<span class="level-badge ${cls}" aria-label="Level ${level} — locked" title="Complete Level ${level-1} to unlock">${content}</span>`;
+        }
+      }).join('');
+
+      /* --- Card HTML --- */
+      return `
+        <article class="game-card" style="animation-delay:${index * 0.08}s;" data-game="${game.id}">
+          <div class="card-accent" style="background:${game.color};"></div>
+          <div class="card-body">
+            <div class="card-header-row">
+              <span class="card-emoji" aria-hidden="true">${game.emoji}</span>
+              <div class="card-names">
+                <span class="card-name">${game.name}</span>
+                <span class="card-name-he" lang="he">${game.nameHe}</span>
+              </div>
+            </div>
+            <p class="card-desc">${game.desc}</p>
+            <div class="levels-row" aria-label="Level progress for ${game.name}">
+              ${badgesHTML}
+            </div>
+          </div>
+          <div class="card-footer">
+            <a class="play-btn" href="${game.file}?level=1" style="background:${game.color};">
+              Play Level 1 →
+            </a>
+          </div>
+        </article>`;
+    }
+
+    /** Render (or re-render) all cards in the grid */
+    function renderCards() {
+      const grid = document.getElementById('gameGrid');
+      grid.innerHTML = GAMES.map((g, i) => buildCard(g, i)).join('');
+
+      /* Trigger staggered fade-in animation */
+      requestAnimationFrame(() => {
+        grid.querySelectorAll('.game-card').forEach(card => card.classList.add('visible'));
+      });
+    }
+
+    /** Update ONLY the level badges without rebuilding whole DOM (called on storage event) */
+    function renderProgress() {
+      GAMES.forEach(game => {
+        const card = document.querySelector(`.game-card[data-game="${game.id}"]`);
+        if (!card) return;
+        const row = card.querySelector('.levels-row');
+        if (!row) return;
+
+        // Re-build only the badges portion
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = buildCard(game, 0);
+        const newRow = tempDiv.querySelector('.levels-row');
+        if (newRow) row.innerHTML = newRow.innerHTML;
+      });
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       TAB SWITCHER
+    ══════════════════════════════════════════════════════════════ */
+
+    /**
+     * Show the tab panel for `levelNum` (1–4) and deactivate the others.
+     * @param {number} levelNum
+     */
+    function switchTab(levelNum) {
+      // Update buttons
+      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        const active = (i + 1) === levelNum;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-selected', String(active));
+      });
+      // Update panels
+      document.querySelectorAll('.tab-panel').forEach((panel, i) => {
+        panel.classList.toggle('active', (i + 1) === levelNum);
+      });
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       INIT
+    ══════════════════════════════════════════════════════════════ */
+
+    // Initial render on page load
+    renderCards();
+
+    // Listen for localStorage changes (e.g. student finishes a game in another tab)
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY) {
+        renderProgress();
+      }
+    });
+  </script>
+</body>
+</html>
