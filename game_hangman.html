@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="he" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemara BM – Hangman</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #dbeafe;
+      --green: #16a34a;
+      --green-light: #d1fae5;
+      --yellow: #d97706;
+      --yellow-light: #fef3c7;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --l1: #22c55e;
+      --l2: #3b82f6;
+      --l3: #f59e0b;
+      --l4: #ef4444;
+      --l5: #8b5cf6;
+    }
+
+    body {
+      font-family: 'Rubik', sans-serif;
+      background: linear-gradient(135deg, #dbeafe 0%, #d1fae5 50%, #fef3c7 100%);
+      min-height: 100vh;
+      direction: ltr;
+    }
+
+    /* ===== BACK LINK ===== */
+    .back-link {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      text-decoration: none;
+      color: var(--primary-dark);
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: white;
+      border: 2px solid var(--primary);
+      border-radius: 20px;
+      padding: 6px 14px;
+      transition: all 0.2s;
+      z-index: 100;
+    }
+    .back-link:hover { background: var(--primary); color: white; }
+
+    /* ===== NAME INPUT SCREEN ===== */
+    #name-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .name-card {
+      background: white;
+      border-radius: 24px;
+      padding: 48px 40px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 8px 40px rgba(37,99,235,0.15);
+      text-align: center;
+    }
+    .name-card .game-icon { font-size: 4rem; margin-bottom: 16px; }
+    .name-card h2 {
+      font-size: 1.8rem; font-weight: 900; color: #1e293b;
+      margin-bottom: 6px;
+    }
+    .name-card .name-question {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 2rem; font-weight: 700;
+      color: var(--primary); margin-bottom: 8px; direction: rtl;
+    }
+    .name-card p { color: #64748b; margin-bottom: 28px; font-size: 0.95rem; }
+    .name-input {
+      width: 100%; padding: 14px 18px;
+      border: 2px solid #e2e8f0; border-radius: 12px;
+      font-size: 1.1rem; font-family: 'Rubik', sans-serif;
+      outline: none; transition: border-color 0.2s;
+      margin-bottom: 16px; text-align: center;
+    }
+    .name-input:focus { border-color: var(--primary); }
+    .btn-start-game {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white; border: none; border-radius: 12px;
+      font-size: 1.1rem; font-weight: 700;
+      cursor: pointer; font-family: 'Rubik', sans-serif;
+      transition: all 0.2s; margin-bottom: 12px;
+    }
+    .btn-start-game:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.35); }
+    .btn-hof {
+      background: transparent; color: var(--primary);
+      border: 2px solid var(--primary); border-radius: 12px;
+      padding: 10px 24px; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; font-family: 'Rubik', sans-serif; transition: all 0.2s;
+    }
+    .btn-hof:hover { background: var(--primary-light); }
+
+    /* ===== LEVEL SELECT ===== */
+    #level-select-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .game-title {
+      text-align: center;
+      margin-bottom: 32px;
+      margin-top: 20px;
+    }
+    .game-title h1 { font-size: 2.2rem; font-weight: 900; color: var(--primary-dark); letter-spacing: -0.5px; }
+    .game-title p { color: #64748b; margin-top: 6px; font-size: 1rem; }
+    .player-greeting {
+      background: white; border-radius: 12px;
+      padding: 8px 20px; margin-bottom: 20px;
+      font-size: 0.9rem; font-weight: 600; color: #1e293b;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .player-greeting span { color: var(--primary); }
+
+    .levels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 20px;
+    }
+
+    .level-card {
+      background: white;
+      border-radius: 16px;
+      padding: 22px;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: all 0.25s;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .level-card:not(.locked):hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.12); }
+    .level-card.locked { opacity: 0.5; cursor: not-allowed; }
+    .level-card .lc-number { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .level-card .lc-title { font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+    .level-card .lc-subtitle { font-size: 0.82rem; color: #64748b; margin-bottom: 12px; }
+    .level-card .lc-info { font-size: 0.78rem; color: #94a3b8; }
+    .level-card .stars-display { display: flex; gap: 4px; margin-bottom: 10px; }
+    .star-icon { font-size: 1.2rem; }
+    .star-icon.empty { opacity: 0.2; }
+    .lock-icon { position: absolute; top: 14px; right: 14px; font-size: 1.3rem; }
+
+    .hof-btn-wrap { margin-top: 4px; }
+
+    /* ===== LOCKED ===== */
+    #locked-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .locked-card {
+      background: white; border-radius: 20px; padding: 48px 36px;
+      max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    .locked-icon { font-size: 4rem; margin-bottom: 16px; }
+    .locked-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+    .locked-desc { color: #64748b; margin-bottom: 24px; }
+
+    /* ===== HALL OF FAME ===== */
+    #hof-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+    .hof-card {
+      background: white; border-radius: 20px;
+      padding: 32px 28px; max-width: 580px; width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    .hof-title { font-size: 1.8rem; font-weight: 900; color: #1e293b; margin-bottom: 4px; text-align: center; }
+    .hof-subtitle { color: #64748b; text-align: center; margin-bottom: 24px; font-size: 0.9rem; }
+    .hof-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    .hof-table th {
+      background: var(--primary-light); padding: 10px 12px;
+      color: var(--primary-dark); font-weight: 700;
+      font-size: 0.8rem; text-transform: uppercase;
+      text-align: left;
+    }
+    .hof-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 0.9rem; }
+    .hof-table tr:first-child td { font-weight: 700; }
+    .hof-rank { font-weight: 700; color: var(--primary); }
+    .hof-rank.gold { color: #d97706; }
+    .hof-rank.silver { color: #64748b; }
+    .hof-rank.bronze { color: #92400e; }
+    .hof-stars { color: #f59e0b; letter-spacing: 1px; }
+    .hof-empty { text-align: center; color: #94a3b8; padding: 32px; font-size: 0.95rem; }
+
+    /* Inline HOF on level select */
+    .inline-hof {
+      width: 100%;
+      max-width: 700px;
+      background: white;
+      border-radius: 20px;
+      padding: 24px 28px;
+      box-shadow: 0 4px 20px rgba(37,99,235,0.1);
+      margin-top: 8px;
+    }
+    .inline-hof-title {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #1e293b;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .inline-hof .hof-table th { background: var(--primary-light); }
+    .inline-hof .hof-empty { padding: 20px; }
+
+    /* ===== GAME SCREEN ===== */
+    #game-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 16px 32px;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .levels-btn {
+      text-decoration: none;
+      color: var(--primary-dark);
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: white;
+      border: 2px solid var(--primary);
+      border-radius: 20px;
+      padding: 5px 12px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .levels-btn:hover { background: var(--primary); color: white; }
+
+    .top-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .level-badge {
+      background: var(--primary);
+      color: white;
+      border-radius: 12px;
+      padding: 5px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .progress-pill {
+      background: white;
+      border-radius: 12px;
+      padding: 5px 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1e293b;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .progress-pill span { color: var(--primary-dark); font-weight: 800; }
+
+    .timer-pill {
+      background: white;
+      border-radius: 12px;
+      padding: 5px 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #1e293b;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      min-width: 70px;
+      text-align: center;
+    }
+    .timer-pill.fast { color: #16a34a; }
+    .timer-pill.medium { color: #d97706; }
+    .timer-pill.slow { color: var(--red); }
+
+    /* MAIN GAME LAYOUT */
+    .game-layout {
+      width: 100%;
+      max-width: 900px;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    /* HANGMAN SVG PANEL */
+    .hangman-panel {
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lives-display {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .life-heart { font-size: 1.1rem; transition: all 0.3s; }
+    .life-heart.lost { opacity: 0.2; filter: grayscale(1); }
+
+    #hangman-svg { width: 180px; height: 200px; }
+
+    .wrong-letters {
+      font-size: 0.8rem;
+      color: #ef4444;
+      font-weight: 600;
+      text-align: center;
+      min-height: 20px;
+      word-break: break-all;
+      max-width: 160px;
+      direction: rtl;
+    }
+
+    /* SCORE PANEL */
+    .score-panel {
+      background: var(--primary-light);
+      border: 2px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 10px 12px;
+      width: 100%;
+    }
+    .score-panel-title {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--primary-dark); margin-bottom: 6px;
+    }
+    .score-row { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 3px; }
+    .score-row span:first-child { color: #475569; }
+    .score-row span:last-child { font-weight: 700; color: #1e293b; }
+    .score-total { font-size: 1.1rem; font-weight: 900; color: var(--primary-dark); text-align: center; margin-top: 6px; }
+
+    /* WORD PANEL */
+    .word-panel {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .clue-box {
+      background: var(--yellow-light);
+      border: 2px solid #fcd34d;
+      border-radius: 12px;
+      padding: 12px 16px;
+      text-align: center;
+    }
+    .clue-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--yellow);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .clue-text {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    /* WORD BLANKS */
+    .blanks-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 6px;
+      direction: rtl;
+      padding: 10px 0;
+      min-height: 64px;
+    }
+
+    .word-group {
+      display: inline-flex;
+      flex-direction: row-reverse;
+      direction: ltr;
+      gap: 4px;
+      margin: 0 4px;
+    }
+
+    .letter-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 28px;
+    }
+    .letter-char {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.8rem;
+      line-height: 1;
+      color: #1e293b;
+      min-height: 40px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .letter-char.revealed { color: #1e293b; }
+    .letter-char.hint-revealed { color: var(--l1); }
+    .letter-char.newly-revealed { animation: letterPop 0.35s ease; }
+    .letter-char.wrong-final { color: var(--red); }
+    .letter-underline {
+      width: 100%;
+      height: 3px;
+      background: #cbd5e1;
+      border-radius: 2px;
+      margin-top: 2px;
+    }
+    .letter-underline.revealed { background: var(--primary); }
+    .letter-underline.wrong-final { background: var(--red); }
+
+    @keyframes letterPop {
+      0% { transform: scale(0) translateY(10px); opacity: 0; }
+      60% { transform: scale(1.3) translateY(-4px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    /* ROUND STATUS */
+    .round-status {
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 700;
+      min-height: 36px;
+      border-radius: 10px;
+      padding: 8px;
+      transition: all 0.3s;
+    }
+    .round-status.correct { background: #dcfce7; color: #166534; }
+    .round-status.wrong { background: #fee2e2; color: #991b1b; }
+
+    /* SCORE BREAKDOWN BOX */
+    .score-breakdown {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: none;
+      font-size: 0.82rem;
+    }
+    .score-breakdown.show { display: block; }
+    .sb-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+    .sb-row span:first-child { color: #64748b; }
+    .sb-row span:last-child { font-weight: 700; color: #1e293b; }
+    .sb-row.total { border-top: 1px solid #e2e8f0; padding-top: 5px; margin-top: 3px; }
+    .sb-row.total span { font-size: 0.9rem; color: var(--primary-dark); }
+
+    .full-word-reveal {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.5rem;
+      direction: rtl;
+      text-align: center;
+      color: var(--red);
+      display: none;
+    }
+
+    /* HEBREW KEYBOARD */
+    .keyboard-section { width: 100%; max-width: 900px; margin-top: 14px; }
+
+    .keyboard-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .kb-row {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      justify-content: center;
+      direction: rtl;
+    }
+
+    .kb-key {
+      width: 44px;
+      height: 44px;
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-family: 'Frank Ruhl Libre', serif;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1e293b;
+      font-weight: 700;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .kb-key:hover:not(.disabled) {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .kb-key.correct {
+      background: #dcfce7;
+      border-color: #22c55e;
+      color: #166534;
+      cursor: default;
+    }
+    .kb-key.wrong {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #cbd5e1;
+      cursor: default;
+    }
+    .kb-key.disabled { pointer-events: none; }
+
+    /* NEXT BTN */
+    .next-btn-wrap { text-align: center; margin-top: 8px; }
+    .btn-next {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 36px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Rubik', sans-serif;
+      transition: all 0.2s;
+      display: none;
+    }
+    .btn-next:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(37,99,235,0.35); }
+
+    /* ===== RESULTS ===== */
+    #results-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .results-card {
+      background: white;
+      border-radius: 20px;
+      padding: 36px 32px;
+      max-width: 660px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .results-title { font-size: 1.8rem; font-weight: 900; color: #1e293b; margin-bottom: 6px; }
+    .results-subtitle { color: #64748b; margin-bottom: 24px; }
+
+    .stars-big { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+    .star-big { font-size: 3rem; }
+    .star-big.earned { animation: starPop 0.4s ease forwards; }
+    .star-big.empty-star { opacity: 0.15; }
+    @keyframes starPop {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    .results-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .res-stat { background: #f8fafc; border-radius: 12px; padding: 14px; }
+    .res-stat-value { font-size: 1.5rem; font-weight: 900; color: var(--primary-dark); }
+    .res-stat-label { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+    .results-table th {
+      background: #f1f5f9;
+      padding: 8px 10px;
+      color: #475569;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+    .results-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
+    .results-table .ar-cell { font-family: 'Frank Ruhl Libre', serif; direction: rtl; font-size: 1rem; text-align: right; }
+    .solved-yes { color: #16a34a; font-weight: 700; }
+    .solved-no { color: var(--red); font-weight: 700; }
+
+    .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white; border: none; border-radius: 12px;
+      padding: 12px 28px; font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; font-family: 'Rubik', sans-serif;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(37,99,235,0.35); }
+    .btn-secondary {
+      background: white; color: var(--primary-dark); border: 2px solid var(--primary);
+      border-radius: 12px; padding: 12px 28px; font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; font-family: 'Rubik', sans-serif;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-secondary:hover { background: var(--primary); color: white; }
+
+    /* HINT DISPLAY */
+    .hint-info {
+      background: var(--green-light);
+      border: 1px solid #6ee7b7;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      color: #065f46;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    @media (max-width: 680px) {
+      .game-layout { grid-template-columns: 1fr; }
+      .hangman-panel {
+        flex-direction: row; flex-wrap: wrap;
+        justify-content: space-around; padding: 12px;
+      }
+      #hangman-svg { width: 120px; height: 150px; }
+      .letter-char { font-size: 1.4rem; min-height: 32px; }
+      .kb-key { width: 36px; height: 36px; font-size: 1.1rem; }
+      .results-stats { grid-template-columns: 1fr 1fr; }
+      .results-card { padding: 24px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<a href="index.html" class="back-link">← Back to Games</a>
+
+<!-- NAME INPUT -->
+<div id="name-screen">
+  <div class="name-card">
+    <div class="game-icon">✏️</div>
+    <h2>Hangman</h2>
+    <div class="name-question">מה שמך?</div>
+    <p>Enter your name to start playing and save your score to the Hall of Fame!</p>
+    <input type="text" class="name-input" id="player-name-input" placeholder="Your name..." maxlength="20" autocomplete="off">
+    <button class="btn-start-game" id="btn-enter-game">Start Game →</button>
+    <button class="btn-hof" id="btn-view-hof-from-name">🏆 Hall of Fame</button>
+  </div>
+</div>
+
+<!-- LEVEL SELECT -->
+<div id="level-select-screen">
+  <div class="game-title">
+    <h1>✏️ Hangman</h1>
+    <p>Gemara Aramaic Vocabulary</p>
+  </div>
+  <div class="player-greeting" id="player-greeting"></div>
+  <div class="levels-grid" id="levels-grid"></div>
+
+  <!-- HOF inline on level select -->
+  <div class="inline-hof" id="inline-hof">
+    <div class="inline-hof-title">🏆 Hall of Fame</div>
+    <table class="hof-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Score</th>
+          <th>Stars</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="inline-hof-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LOCKED -->
+<div id="locked-screen">
+  <div class="locked-card">
+    <div class="locked-icon">🔒</div>
+    <div class="locked-title">Level Locked</div>
+    <div class="locked-desc">Complete the previous level to unlock this one.</div>
+    <button class="btn-secondary" onclick="showScreen('select'); renderLevelSelect();">← Choose Level</button>
+  </div>
+</div>
+
+<!-- HALL OF FAME -->
+<div id="hof-screen">
+  <div class="hof-card">
+    <div class="hof-title">🏆 Hall of Fame</div>
+    <div class="hof-subtitle">Top 10 scores of all time</div>
+    <table class="hof-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Score</th>
+          <th>Stars</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="hof-tbody"></tbody>
+    </table>
+    <div class="btn-row">
+      <button class="btn-primary" id="btn-hof-back">← Back</button>
+      <button class="btn-secondary" id="btn-hof-clear">Clear Records</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-screen">
+  <div class="top-bar">
+    <button class="levels-btn" id="btn-to-levels">⚙ Levels</button>
+    <div class="top-right">
+      <div class="progress-pill">Word <span id="word-num">1</span>/<span id="word-total">10</span></div>
+      <div class="timer-pill" id="timer-display">⏱ 0s</div>
+      <div class="progress-pill">Score <span id="score-display">0</span></div>
+      <div class="level-badge" id="level-badge">Level 1</div>
+    </div>
+  </div>
+
+  <div class="game-layout">
+    <!-- Left: Hangman -->
+    <div class="hangman-panel">
+      <div class="lives-display" id="lives-display"></div>
+      <svg id="hangman-svg" viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Gallows (always visible) -->
+        <line x1="20" y1="230" x2="180" y2="230" stroke="#374151" stroke-width="5" stroke-linecap="round"/>
+        <line x1="60" y1="230" x2="60" y2="20" stroke="#374151" stroke-width="5" stroke-linecap="round"/>
+        <line x1="60" y1="20" x2="140" y2="20" stroke="#374151" stroke-width="5" stroke-linecap="round"/>
+        <line x1="60" y1="55" x2="88" y2="20" stroke="#374151" stroke-width="4" stroke-linecap="round"/>
+        <line x1="140" y1="20" x2="140" y2="46" stroke="#374151" stroke-width="4" stroke-linecap="round"/>
+        <!-- Stage 1: Head -->
+        <circle id="hm-head" cx="140" cy="66" r="20" stroke="#dc2626" stroke-width="4" display="none"/>
+        <!-- Stage 2: Body -->
+        <line id="hm-body" x1="140" y1="86" x2="140" y2="150" stroke="#dc2626" stroke-width="4" stroke-linecap="round" display="none"/>
+        <!-- Stage 3: Left arm -->
+        <line id="hm-larm" x1="140" y1="105" x2="112" y2="133" stroke="#dc2626" stroke-width="4" stroke-linecap="round" display="none"/>
+        <!-- Stage 4: Right arm -->
+        <line id="hm-rarm" x1="140" y1="105" x2="168" y2="133" stroke="#dc2626" stroke-width="4" stroke-linecap="round" display="none"/>
+        <!-- Stage 5: Left leg -->
+        <line id="hm-lleg" x1="140" y1="150" x2="114" y2="188" stroke="#dc2626" stroke-width="4" stroke-linecap="round" display="none"/>
+        <!-- Stage 6: Right leg -->
+        <line id="hm-rleg" x1="140" y1="150" x2="166" y2="188" stroke="#dc2626" stroke-width="4" stroke-linecap="round" display="none"/>
+      </svg>
+      <div class="wrong-letters" id="wrong-letters-display"></div>
+      <!-- Score panel inside hangman panel -->
+      <div class="score-panel">
+        <div class="score-panel-title">Score Panel</div>
+        <div class="score-row"><span>Lives left:</span><span id="sp-lives">7</span></div>
+        <div class="score-row"><span>Wrong guesses:</span><span id="sp-wrong">0</span></div>
+        <div class="score-row"><span>Time:</span><span id="sp-time">0s</span></div>
+        <div class="score-total" id="sp-total">Total: 0</div>
+      </div>
+    </div>
+
+    <!-- Right: Word panel -->
+    <div class="word-panel">
+      <div class="clue-box">
+        <div class="clue-label">Meaning</div>
+        <div class="clue-text" id="clue-text">—</div>
+      </div>
+      <div id="hint-box"></div>
+      <div class="blanks-container" id="blanks-container"></div>
+      <div class="round-status" id="round-status"></div>
+      <div class="score-breakdown" id="score-breakdown"></div>
+      <div class="full-word-reveal" id="full-word-reveal"></div>
+      <div class="next-btn-wrap">
+        <button class="btn-next" id="btn-next">Next Word →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard -->
+  <div class="keyboard-section">
+    <div class="keyboard-grid" id="keyboard-grid"></div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="results-screen">
+  <div class="results-card">
+    <div class="results-title">Level Complete!</div>
+    <div class="results-subtitle" id="results-level-name"></div>
+    <div class="stars-big" id="stars-big"></div>
+    <div class="results-stats">
+      <div class="res-stat">
+        <div class="res-stat-value" id="res-solved">0</div>
+        <div class="res-stat-label">Words Solved</div>
+      </div>
+      <div class="res-stat">
+        <div class="res-stat-value" id="res-total-words">0</div>
+        <div class="res-stat-label">Total Words</div>
+      </div>
+      <div class="res-stat">
+        <div class="res-stat-value" id="res-score">0</div>
+        <div class="res-stat-label">Final Score</div>
+      </div>
+    </div>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th style="text-align:right">Aramaic</th>
+          <th>English</th>
+          <th>Result</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody id="results-tbody"></tbody>
+    </table>
+    <div class="btn-row">
+      <button class="btn-primary" id="play-again-btn">Play Again</button>
+      <button class="btn-primary" id="next-level-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);display:none">Next Level →</button>
+      <button class="btn-secondary" id="btn-all-levels-results">All Levels</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== STORAGE =====
+  const STORAGE_KEY = 'gemara_bm_progress';
+  const HOF_KEY = 'gemara_hangman_hof';
+  const GAME_ID = 'hangman';
+
+  function getProgress() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  function saveProgress(gameId, level, stars) {
+    const p = getProgress();
+    if (!p[gameId]) p[gameId] = {};
+    if (!p[gameId][level] || stars > p[gameId][level]) p[gameId][level] = stars;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+  }
+  function isUnlocked(gameId, level) {
+    if (level === 1) return true;
+    const p = getProgress();
+    return !!(p[gameId] && p[gameId][level - 1] > 0);
+  }
+  function getStars(gameId, level) {
+    const p = getProgress();
+    return (p[gameId] && p[gameId][level]) || 0;
+  }
+  // maxScore per word = 100 base + 50 time + 70 accuracy (7 lives × 10) = 220
+  function calcStars(correct, total, score) {
+    const accuracy = correct / total;
+    const maxScore = total * 220;
+    const scorePct = score / maxScore;
+    // 3 stars: accurate AND fast
+    if (accuracy >= 0.8 && scorePct >= 0.55) return 3;
+    // 2 stars: decent accuracy AND reasonable speed
+    if (accuracy >= 0.5 && scorePct >= 0.25) return 2;
+    return 1;
+  }
+
+  // ===== HALL OF FAME =====
+  function getHOF() { return JSON.parse(localStorage.getItem(HOF_KEY) || '[]'); }
+  function saveHOF(entries) { localStorage.setItem(HOF_KEY, JSON.stringify(entries)); }
+  function addHOFEntry(name, score, stars) {
+    const entries = getHOF();
+    entries.push({
+      name,
+      score,
+      stars,
+      date: new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'numeric'})
+    });
+    entries.sort((a, b) => b.score - a.score);
+    if (entries.length > 10) entries.length = 10;
+    saveHOF(entries);
+  }
+
+  // ===== SOUND =====
+  function playSound(type) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      if (type === 'correct') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523, ctx.currentTime);
+        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.12);
+        osc.frequency.setValueAtTime(784, ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc.start(); osc.stop(ctx.currentTime + 0.5);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(250, ctx.currentTime);
+        osc.frequency.setValueAtTime(180, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.start(); osc.stop(ctx.currentTime + 0.3);
+      } else if (type === 'levelComplete') {
+        [523,659,784,1047].forEach((f,i) => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.type = 'sine'; o.frequency.value = f;
+          g.gain.setValueAtTime(0.25, ctx.currentTime + i*0.15);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.15 + 0.35);
+          o.start(ctx.currentTime + i*0.15); o.stop(ctx.currentTime + i*0.15 + 0.4);
+        });
+      }
+    } catch(e) {}
+  }
+
+  // ===== LEVELS DATA (50 words, 5 levels × 10) =====
+  const LEVELS_DATA = {
+    1: {
+      title: "מילות יסוד", subtitle: "Basic Terms", color: "#22c55e",
+      words: [
+        { ar: "מַאי",        en: "What" },
+        { ar: "אֶלָּא",      en: "But" },
+        { ar: "הֵיכִי",      en: "How" },
+        { ar: "אַמַּאי",     en: "Why" },
+        { ar: "הָכָא",       en: "Here" },
+        { ar: "הָתָם",       en: "There" },
+        { ar: "הַשְׁתָּא",   en: "Now" },
+        { ar: "אִיכָּא",     en: "There is" },
+        { ar: "לֵיכָּא",     en: "There is not" },
+        { ar: "לָאו",        en: "No / Not" }
+      ]
+    },
+    2: {
+      title: "מקורות וראיות", subtitle: "Sources & Proofs", color: "#3b82f6",
+      words: [
+        { ar: "תְּנַן",            en: "We learned in a Mishna" },
+        { ar: "תָּנוּ רַבָּנָן",   en: "The Chachamim learned" },
+        { ar: "דְּתַנְיָא",        en: "We learned the Baraita" },
+        { ar: "אִיתְמַר",          en: "It was said" },
+        { ar: "בִּשְׁלָמָא",       en: "It makes sense" },
+        { ar: "פְּשִׁיטָא",        en: "It is obvious" },
+        { ar: "דִּילְמָא",         en: "Maybe" },
+        { ar: "לְעוֹלָם",          en: "In truth" },
+        { ar: "אִי הָכִי",         en: "If so" },
+        { ar: "מַהוּ",             en: "What is the law?" }
+      ]
+    },
+    3: {
+      title: "לימוד ומסקנות", subtitle: "Learning & Conclusions", color: "#f59e0b",
+      words: [
+        { ar: "שְׁמַע מִינַהּ",       en: "Learn from this" },
+        { ar: "קָא מַשְׁמַע לָן",     en: "It comes to teach us" },
+        { ar: "תָּא שְׁמַע",          en: "Come and hear" },
+        { ar: "כָּל שֶׁכֵּן",         en: "Even more so" },
+        { ar: "לָא צְרִיכָא",         en: "No, it is needed" },
+        { ar: "צָרִיךְ",              en: "Needs" },
+        { ar: "אַטּוּ",               en: "Is it?" },
+        { ar: "אֵיתִיבֵיהּ",          en: "He asked a hard question" },
+        { ar: "קַשְׁיָא",             en: "It is a problem" },
+        { ar: "תִּיוּבְתָּא",         en: "A question (on an Amora)" }
+      ]
+    },
+    4: {
+      title: "ניתוח וסברה", subtitle: "Analysis & Reasoning", color: "#ef4444",
+      words: [
+        { ar: "נַפְקָא מִינַהּ",         en: "It does matter in case of..." },
+        { ar: "אָמַר מָר",               en: "The Chacham said" },
+        { ar: "הָכִי קָאָמַר",           en: "This is what he meant" },
+        { ar: "גּוּפָא",                 en: "The thing itself" },
+        { ar: "מִכָּל מָקוֹם",           en: "Anyway" },
+        { ar: "מִכְּדֵי",               en: "Since" },
+        { ar: "כְּמַאן",                en: "Like who?" },
+        { ar: "לֵימָא",                 en: "Let us suggest" },
+        { ar: "מִי דָמֵי",              en: "Is it the same?" },
+        { ar: "מַאי לָאו",              en: "Is it not?" }
+      ]
+    },
+    5: {
+      title: "רמה מתקדמת", subtitle: "Master Level", color: "#8b5cf6",
+      words: [
+        { ar: "סְבִירָא לֵיהּ",              en: "He thinks" },
+        { ar: "סָלְקָא דַעְתָּךְ",           en: "You might think" },
+        { ar: "אִיכָּא דְאָמְרִי",           en: "Some Chachamim say" },
+        { ar: "מְנָלַן",                     en: "Where do we know it from?" },
+        { ar: "הָכָא בְּמַאי עַסְקִינַן",    en: "What are we talking about here?" },
+        { ar: "מַאי בֵּינַיְהוּ",            en: "What is the difference?" },
+        { ar: "אִיבַּעְיָא לְהוּ",           en: "They asked a question" },
+        { ar: "אָמַר רַחְמָנָא",             en: "The Torah says" },
+        { ar: "תַּנְיָא כְּוָותֵיהּ",        en: "A Baraita says like him" },
+        { ar: "תֵּיקוּ",                     en: "The question stays open" }
+      ]
+    }
+  };
+
+  // ===== HEBREW HELPERS =====
+  const FINAL_MAP = {
+    '\u05DA': '\u05DB', // ך→כ
+    '\u05DD': '\u05DE', // ם→מ
+    '\u05DF': '\u05E0', // ן→נ
+    '\u05E3': '\u05E4', // ף→פ
+    '\u05E5': '\u05E6'  // ץ→צ
+  };
+
+  function isConsonant(ch) { return ch >= '\u05D0' && ch <= '\u05EA'; }
+  function isNikud(ch) { return ch >= '\u05B0' && ch <= '\u05C7'; }
+  function normalizeHebrew(ch) { return FINAL_MAP[ch] || ch; }
+
+  function parseWord(word) {
+    const segments = [];
+    const chars = [...word];
+    let i = 0;
+    while (i < chars.length) {
+      const ch = chars[i];
+      if (ch === ' ') {
+        segments.push({ isSpace: true });
+        i++;
+      } else if (isConsonant(ch)) {
+        let nikud = '';
+        let j = i + 1;
+        while (j < chars.length && isNikud(chars[j])) {
+          nikud += chars[j];
+          j++;
+        }
+        segments.push({ isSpace: false, consonant: ch, nikud: nikud });
+        i = j;
+      } else if (isNikud(ch)) {
+        i++;
+      } else {
+        segments.push({ isSpace: false, consonant: ch, nikud: '' });
+        i++;
+      }
+    }
+    return segments;
+  }
+
+  // ===== KEYBOARD LAYOUT =====
+  const KB_ROWS = [
+    ['א','ב','ג','ד','ה','ו','ז','ח','ט','י'],
+    ['כ','ל','מ','נ','ס','ע','פ','צ','ק'],
+    ['ר','ש','ת']
+  ];
+
+  // ===== URL PARAM =====
+  const urlParams = new URLSearchParams(window.location.search);
+  const levelParam = parseInt(urlParams.get('level'));
+
+  // ===== GAME STATE =====
+  let currentLevel = null;
+  let shuffledWords = [];
+  let wordIndex = 0;
+  let segments = [];
+  let guessedConsonants = new Set();
+  let wrongGuesses = [];
+  let livesLeft = 7;
+  let roundOver = false;
+  let gameResults = [];
+  let totalScore = 0;
+  let playerName = localStorage.getItem('gemara_player_name') || '';
+  let wordStartTime = 0;
+  let timerInterval = null;
+  let elapsedSeconds = 0;
+  let hofReturnTo = 'select'; // where to go back from HOF
+
+  const HANGMAN_PARTS = ['hm-head','hm-body','hm-larm','hm-rarm','hm-lleg','hm-rleg'];
+
+  // ===== INIT =====
+  if (levelParam >= 1 && levelParam <= 5) {
+    if (!playerName) {
+      showScreen('name');
+    } else if (!isUnlocked(GAME_ID, levelParam)) {
+      showScreen('locked');
+    } else {
+      currentLevel = levelParam;
+      startGame(currentLevel);
+    }
+  } else {
+    if (!playerName) {
+      showScreen('name');
+    } else {
+      showScreen('select');
+      renderLevelSelect();
+    }
+  }
+
+  // ===== SCREENS =====
+  function showScreen(name) {
+    ['level-select-screen','game-screen','results-screen','locked-screen','name-screen','hof-screen'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+    if (name === 'name')    document.getElementById('name-screen').style.display = 'flex';
+    if (name === 'select')  document.getElementById('level-select-screen').style.display = 'flex';
+    if (name === 'game')    document.getElementById('game-screen').style.display = 'flex';
+    if (name === 'results') document.getElementById('results-screen').style.display = 'flex';
+    if (name === 'locked')  document.getElementById('locked-screen').style.display = 'flex';
+    if (name === 'hof')     document.getElementById('hof-screen').style.display = 'flex';
+  }
+
+  // ===== NAME SCREEN =====
+  document.getElementById('btn-enter-game').addEventListener('click', () => {
+    const val = document.getElementById('player-name-input').value.trim();
+    if (!val) { document.getElementById('player-name-input').focus(); return; }
+    playerName = val;
+    localStorage.setItem('gemara_player_name', playerName);
+    if (levelParam >= 1 && levelParam <= 5) {
+      if (!isUnlocked(GAME_ID, levelParam)) {
+        showScreen('locked');
+      } else {
+        currentLevel = levelParam;
+        startGame(currentLevel);
+      }
+    } else {
+      showScreen('select');
+      renderLevelSelect();
+    }
+  });
+  document.getElementById('player-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btn-enter-game').click();
+  });
+  document.getElementById('btn-view-hof-from-name').addEventListener('click', () => {
+    hofReturnTo = 'name';
+    renderHOF();
+    showScreen('hof');
+  });
+
+  // ===== LEVEL SELECT =====
+  function renderLevelSelect() {
+    document.getElementById('player-greeting').innerHTML =
+      `Hello, <span>${playerName}</span>! Choose your level:`;
+    renderInlineHOF();
+    const grid = document.getElementById('levels-grid');
+    grid.innerHTML = '';
+    [1,2,3,4,5].forEach(lvl => {
+      const data = LEVELS_DATA[lvl];
+      const unlocked = isUnlocked(GAME_ID, lvl);
+      const stars = getStars(GAME_ID, lvl);
+      const card = document.createElement('div');
+      card.className = 'level-card' + (unlocked ? '' : ' locked');
+      card.style.borderColor = unlocked ? data.color : 'transparent';
+
+      const starsHtml = [1,2,3].map(s =>
+        `<span class="star-icon ${s <= stars ? 'filled' : 'empty'}">⭐</span>`
+      ).join('');
+
+      const modeLabel = lvl === 1 ? 'First letter hint' : lvl === 5 ? 'Hard mode' : 'Standard';
+
+      card.innerHTML = `
+        ${!unlocked ? '<div class="lock-icon">🔒</div>' : ''}
+        <div class="lc-number" style="color:${data.color}">Level ${lvl}</div>
+        <div class="lc-title">${data.title}</div>
+        <div class="lc-subtitle">${data.subtitle}</div>
+        <div class="stars-display">${starsHtml}</div>
+        <div class="lc-info">10 words · ${modeLabel}</div>
+      `;
+      if (unlocked) {
+        card.addEventListener('click', () => {
+          currentLevel = lvl;
+          startGame(lvl);
+        });
+      }
+      grid.appendChild(card);
+    });
+  }
+
+  function renderInlineHOF() {
+    const entries = getHOF();
+    const tbody = document.getElementById('inline-hof-tbody');
+    tbody.innerHTML = '';
+    if (entries.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="hof-empty">No scores yet — play to get on the board!</td></tr>';
+      return;
+    }
+    entries.forEach((e, i) => {
+      const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+      const starsStr = '⭐'.repeat(e.stars) + '☆'.repeat(Math.max(0, 3 - e.stars));
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="hof-rank ${rankClass}">${medal}</span></td>
+        <td><strong>${escapeHtml(e.name)}</strong></td>
+        <td><strong>${e.score}</strong></td>
+        <td><span class="hof-stars">${starsStr}</span></td>
+        <td>${e.date}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+  document.getElementById('btn-to-levels').addEventListener('click', () => {
+    stopTimer();
+    showScreen('select');
+    renderLevelSelect();
+  });
+  document.getElementById('btn-all-levels-results').addEventListener('click', () => {
+    showScreen('select');
+    renderLevelSelect();
+  });
+
+  // ===== HALL OF FAME =====
+  function renderHOF() {
+    const entries = getHOF();
+    const tbody = document.getElementById('hof-tbody');
+    tbody.innerHTML = '';
+    if (entries.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="hof-empty">No scores yet — be the first!</td></tr>';
+      return;
+    }
+    entries.forEach((e, i) => {
+      const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+      const starsStr = '⭐'.repeat(e.stars) + '☆'.repeat(Math.max(0, 3 - e.stars));
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="hof-rank ${rankClass}">${i+1}</span></td>
+        <td><strong>${escapeHtml(e.name)}</strong></td>
+        <td><strong>${e.score}</strong></td>
+        <td><span class="hof-stars">${starsStr}</span></td>
+        <td>${e.date}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+  function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.getElementById('btn-hof-back').addEventListener('click', () => {
+    if (hofReturnTo === 'name') {
+      showScreen('name');
+    } else {
+      showScreen('select');
+      renderLevelSelect();
+    }
+  });
+  document.getElementById('btn-hof-clear').addEventListener('click', () => {
+    if (confirm('Clear all Hall of Fame records?')) {
+      saveHOF([]);
+      renderHOF();
+    }
+  });
+
+  // ===== TIMER =====
+  function startTimer() {
+    stopTimer();
+    wordStartTime = Date.now();
+    elapsedSeconds = 0;
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+      elapsedSeconds = Math.floor((Date.now() - wordStartTime) / 1000);
+      updateTimerDisplay();
+      document.getElementById('sp-time').textContent = elapsedSeconds + 's';
+    }, 500);
+  }
+
+  function stopTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  }
+
+  function updateTimerDisplay() {
+    const el = document.getElementById('timer-display');
+    el.textContent = '⏱ ' + elapsedSeconds + 's';
+    el.className = 'timer-pill';
+    if (elapsedSeconds < 10) el.classList.add('fast');
+    else if (elapsedSeconds < 20) el.classList.add('medium');
+    else el.classList.add('slow');
+  }
+
+  function calcWordScore(solved, livesRemaining, wrongCount, seconds) {
+    if (!solved) return { base:0, timeBonus:0, accuracyBonus:0, penalty:0, total:0, seconds };
+    const base = 100;
+    let timeBonus = 0;
+    if (seconds < 10) timeBonus = 50;
+    else if (seconds < 20) timeBonus = 30;
+    else if (seconds < 30) timeBonus = 10;
+    const accuracyBonus = livesRemaining * 10;
+    const penalty = wrongCount * 5;
+    const total = Math.max(0, base + timeBonus + accuracyBonus - penalty);
+    return { base, timeBonus, accuracyBonus, penalty, total, seconds };
+  }
+
+  // ===== GAME =====
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function startGame(level) {
+    const data = LEVELS_DATA[level];
+    shuffledWords = shuffle([...data.words]);
+    wordIndex = 0;
+    gameResults = [];
+    totalScore = 0;
+
+    document.getElementById('level-badge').textContent = `Level ${level}`;
+    document.getElementById('level-badge').style.background = data.color;
+    document.getElementById('word-total').textContent = shuffledWords.length;
+    document.getElementById('score-display').textContent = 0;
+    document.getElementById('sp-total').textContent = 'Total: 0';
+
+    buildKeyboard();
+    showScreen('game');
+    loadWord(0);
+  }
+
+  function loadWord(idx) {
+    const word = shuffledWords[idx];
+    segments = parseWord(word.ar);
+    guessedConsonants = new Set();
+    wrongGuesses = [];
+    livesLeft = 7;
+    roundOver = false;
+
+    document.getElementById('word-num').textContent = idx + 1;
+    document.getElementById('clue-text').textContent = word.en;
+
+    // Reset hangman
+    HANGMAN_PARTS.forEach(id => {
+      document.getElementById(id).setAttribute('display', 'none');
+    });
+
+    renderLives();
+    updateScorePanel();
+
+    // Hint
+    const hintBox = document.getElementById('hint-box');
+    if (currentLevel === 1) {
+      const firstConsonant = segments.find(s => !s.isSpace && isConsonant(s.consonant));
+      if (firstConsonant) {
+        guessedConsonants.add(normalizeHebrew(firstConsonant.consonant));
+        hintBox.innerHTML = `<div class="hint-info">💡 Hint: First letter revealed</div>`;
+      }
+    } else if (currentLevel === 5) {
+      const consonants = segments.filter(s => !s.isSpace && isConsonant(s.consonant));
+      const uniqueCount = new Set(consonants.map(s => normalizeHebrew(s.consonant))).size;
+      hintBox.innerHTML = `<div class="hint-info">Hard mode – ${uniqueCount} unique consonants</div>`;
+    } else {
+      hintBox.innerHTML = '';
+    }
+
+    document.getElementById('wrong-letters-display').textContent = '';
+
+    const status = document.getElementById('round-status');
+    status.className = 'round-status';
+    status.textContent = '';
+
+    const breakdown = document.getElementById('score-breakdown');
+    breakdown.className = 'score-breakdown';
+    breakdown.innerHTML = '';
+
+    const fwr = document.getElementById('full-word-reveal');
+    fwr.style.display = 'none';
+    fwr.textContent = '';
+
+    document.getElementById('btn-next').style.display = 'none';
+
+    document.querySelectorAll('.kb-key').forEach(btn => {
+      btn.classList.remove('correct', 'wrong', 'disabled');
+    });
+
+    renderBlanks();
+    startTimer();
+  }
+
+  function updateScorePanel() {
+    document.getElementById('sp-lives').textContent = livesLeft;
+    document.getElementById('sp-wrong').textContent = wrongGuesses.length;
+    document.getElementById('sp-time').textContent = elapsedSeconds + 's';
+    document.getElementById('sp-total').textContent = 'Total: ' + totalScore;
+  }
+
+  function renderLives() {
+    const el = document.getElementById('lives-display');
+    el.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+      const span = document.createElement('span');
+      span.className = 'life-heart' + (i >= livesLeft ? ' lost' : '');
+      span.textContent = '❤️';
+      el.appendChild(span);
+    }
+  }
+
+  // Build word groups — RTL: each group renders letters left-to-right in DOM
+  // but the container is dir=rtl so groups flow right-to-left naturally.
+  // Within a group, the first character in the Hebrew word should appear rightmost.
+  // We render the group's letters in natural order (index 0 = rightmost in RTL flow).
+  function buildGroups() {
+    const groups = [];
+    let cur = [];
+    segments.forEach(seg => {
+      if (seg.isSpace) {
+        if (cur.length > 0) { groups.push(cur); cur = []; }
+      } else {
+        cur.push(seg);
+      }
+    });
+    if (cur.length > 0) groups.push(cur);
+    return groups;
+  }
+
+  function renderBlanks() {
+    const container = document.getElementById('blanks-container');
+    container.innerHTML = '';
+    const groups = buildGroups();
+
+    groups.forEach(group => {
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'word-group';
+
+      group.forEach(seg => {
+        groupDiv.appendChild(makeSlot(seg, false, false));
+      });
+
+      container.appendChild(groupDiv);
+    });
+  }
+
+  function renderBlanksWithAnimation(newNormed) {
+    const container = document.getElementById('blanks-container');
+    container.innerHTML = '';
+    const groups = buildGroups();
+
+    groups.forEach(group => {
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'word-group';
+
+      group.forEach(seg => {
+        groupDiv.appendChild(makeSlot(seg, false, normalizeHebrew(seg.consonant) === newNormed));
+      });
+
+      container.appendChild(groupDiv);
+    });
+  }
+
+  function revealAllBlanksRed() {
+    const container = document.getElementById('blanks-container');
+    container.innerHTML = '';
+    const groups = buildGroups();
+
+    groups.forEach(group => {
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'word-group';
+
+      group.forEach(seg => {
+        groupDiv.appendChild(makeSlot(seg, true, false));
+      });
+
+      container.appendChild(groupDiv);
+    });
+  }
+
+  function makeSlot(seg, forceReveal, isNew) {
+    const slot = document.createElement('div');
+    slot.className = 'letter-slot';
+
+    const charDiv = document.createElement('div');
+    charDiv.className = 'letter-char';
+
+    const normed = normalizeHebrew(seg.consonant);
+    const isRevealed = forceReveal || !isConsonant(seg.consonant) || guessedConsonants.has(normed);
+    const wasAlreadyRevealed = !forceReveal && isRevealed && !isNew;
+    const isFail = forceReveal && !guessedConsonants.has(normed) && isConsonant(seg.consonant);
+
+    if (isRevealed) {
+      charDiv.textContent = seg.consonant + seg.nikud;
+      charDiv.classList.add(isFail ? 'wrong-final' : 'revealed');
+      if (isNew) charDiv.classList.add('newly-revealed');
+    }
+
+    const underline = document.createElement('div');
+    underline.className = 'letter-underline' + (isFail ? ' wrong-final' : isRevealed ? ' revealed' : '');
+
+    slot.appendChild(charDiv);
+    slot.appendChild(underline);
+    return slot;
+  }
+
+  function buildKeyboard() {
+    const grid = document.getElementById('keyboard-grid');
+    grid.innerHTML = '';
+    KB_ROWS.forEach(row => {
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'kb-row';
+      row.forEach(letter => {
+        const btn = document.createElement('button');
+        btn.className = 'kb-key';
+        btn.textContent = letter;
+        btn.dataset.letter = letter;
+        btn.addEventListener('click', () => handleGuess(letter));
+        rowDiv.appendChild(btn);
+      });
+      grid.appendChild(rowDiv);
+    });
+  }
+
+  function handleGuess(letter) {
+    if (roundOver) return;
+    const normed = normalizeHebrew(letter);
+    if (guessedConsonants.has(normed)) return;
+
+    guessedConsonants.add(normed);
+
+    const consonantsInWord = segments
+      .filter(s => !s.isSpace && isConsonant(s.consonant))
+      .map(s => normalizeHebrew(s.consonant));
+
+    const isCorrect = consonantsInWord.includes(normed);
+
+    document.querySelectorAll('.kb-key').forEach(btn => {
+      if (normalizeHebrew(btn.dataset.letter) === normed) {
+        btn.classList.add(isCorrect ? 'correct' : 'wrong', 'disabled');
+      }
+    });
+
+    if (isCorrect) {
+      playSound('correct');
+      renderBlanksWithAnimation(normed);
+      checkWin();
+    } else {
+      playSound('wrong');
+      wrongGuesses.push(letter);
+      livesLeft--;
+      renderLives();
+
+      const partIdx = wrongGuesses.length - 1;
+      if (partIdx < HANGMAN_PARTS.length) {
+        document.getElementById(HANGMAN_PARTS[partIdx]).setAttribute('display', 'inline');
+      }
+
+      document.getElementById('wrong-letters-display').textContent = wrongGuesses.join(' ');
+      updateScorePanel();
+
+      if (livesLeft <= 0) onRoundFail();
+    }
+  }
+
+  function checkWin() {
+    const allRevealed = segments
+      .filter(s => !s.isSpace && isConsonant(s.consonant))
+      .every(s => guessedConsonants.has(normalizeHebrew(s.consonant)));
+    if (allRevealed) onRoundSolve();
+  }
+
+  function onRoundSolve() {
+    roundOver = true;
+    stopTimer();
+    const seconds = Math.floor((Date.now() - wordStartTime) / 1000);
+
+    const status = document.getElementById('round-status');
+    status.className = 'round-status correct';
+    status.textContent = '✓ Correct!';
+    playSound('levelComplete');
+
+    const sc = calcWordScore(true, livesLeft, wrongGuesses.length, seconds);
+    totalScore += sc.total;
+    document.getElementById('score-display').textContent = totalScore;
+    document.getElementById('sp-total').textContent = 'Total: ' + totalScore;
+
+    // Score breakdown
+    showScoreBreakdown(sc);
+
+    gameResults.push({
+      word: shuffledWords[wordIndex].ar,
+      en: shuffledWords[wordIndex].en,
+      solved: true,
+      wrongCount: wrongGuesses.length,
+      wordScore: sc.total,
+      seconds
+    });
+
+    const nextBtn = document.getElementById('btn-next');
+    nextBtn.style.display = 'inline-block';
+    nextBtn.textContent = wordIndex + 1 < shuffledWords.length ? 'Next Word →' : 'See Results';
+    nextBtn.onclick = advanceWord;
+  }
+
+  function onRoundFail() {
+    roundOver = true;
+    stopTimer();
+    const seconds = Math.floor((Date.now() - wordStartTime) / 1000);
+
+    const status = document.getElementById('round-status');
+    status.className = 'round-status wrong';
+    status.textContent = 'The word was:';
+
+    const fwr = document.getElementById('full-word-reveal');
+    fwr.style.display = 'block';
+    fwr.textContent = shuffledWords[wordIndex].ar;
+
+    revealAllBlanksRed();
+
+    const sc = calcWordScore(false, livesLeft, wrongGuesses.length, seconds);
+    showScoreBreakdown(sc);
+
+    gameResults.push({
+      word: shuffledWords[wordIndex].ar,
+      en: shuffledWords[wordIndex].en,
+      solved: false,
+      wrongCount: wrongGuesses.length,
+      wordScore: 0,
+      seconds
+    });
+
+    const nextBtn = document.getElementById('btn-next');
+    nextBtn.style.display = 'inline-block';
+    nextBtn.textContent = wordIndex + 1 < shuffledWords.length ? 'Next Word →' : 'See Results';
+    nextBtn.onclick = advanceWord;
+  }
+
+  function showScoreBreakdown(sc) {
+    const el = document.getElementById('score-breakdown');
+    if (!sc.total && !sc.base) { el.className = 'score-breakdown'; return; }
+    el.className = 'score-breakdown show';
+    el.innerHTML = `
+      <div class="sb-row"><span>Base points:</span><span>+${sc.base}</span></div>
+      <div class="sb-row"><span>Time bonus (${sc.seconds}s):</span><span>+${sc.timeBonus}</span></div>
+      <div class="sb-row"><span>Accuracy bonus:</span><span>+${sc.accuracyBonus}</span></div>
+      <div class="sb-row"><span>Penalty (${sc.penalty > 0 ? Math.round(sc.penalty/5) : 0} wrong):</span><span style="color:#dc2626">-${sc.penalty}</span></div>
+      <div class="sb-row total"><span><strong>Word score:</strong></span><span><strong>+${sc.total}</strong></span></div>
+    `;
+  }
+
+  function advanceWord() {
+    wordIndex++;
+    if (wordIndex >= shuffledWords.length) {
+      showResults();
+    } else {
+      loadWord(wordIndex);
+    }
+  }
+
+  function showResults() {
+    stopTimer();
+    const solved = gameResults.filter(r => r.solved).length;
+    const total = gameResults.length;
+    const stars = calcStars(solved, total, totalScore);
+
+    saveProgress(GAME_ID, currentLevel, stars);
+    addHOFEntry(playerName, totalScore, stars);
+    playSound('levelComplete');
+
+    document.getElementById('results-level-name').textContent =
+      `Level ${currentLevel}: ${LEVELS_DATA[currentLevel].title}`;
+
+    const starsEl = document.getElementById('stars-big');
+    starsEl.innerHTML = '';
+    [1,2,3].forEach((s, i) => {
+      const span = document.createElement('span');
+      span.className = 'star-big ' + (s <= stars ? 'earned' : 'empty-star');
+      span.textContent = '⭐';
+      span.style.animationDelay = `${i * 0.15}s`;
+      starsEl.appendChild(span);
+    });
+
+    document.getElementById('res-solved').textContent = solved;
+    document.getElementById('res-total-words').textContent = total;
+    document.getElementById('res-score').textContent = totalScore;
+
+    const tbody = document.getElementById('results-tbody');
+    tbody.innerHTML = '';
+    gameResults.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td class="ar-cell">${r.word}</td>
+        <td>${r.en}</td>
+        <td class="${r.solved ? 'solved-yes' : 'solved-no'}">${r.solved ? '✓' : '✗'}</td>
+        <td>${r.wordScore} pts</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const nextBtn = document.getElementById('next-level-btn');
+    if (currentLevel < 5) {
+      nextBtn.style.display = 'inline-block';
+      nextBtn.onclick = () => {
+        currentLevel++;
+        if (!isUnlocked(GAME_ID, currentLevel)) {
+          showScreen('locked');
+        } else {
+          startGame(currentLevel);
+        }
+      };
+    } else {
+      nextBtn.style.display = 'none';
+    }
+
+    document.getElementById('play-again-btn').onclick = () => startGame(currentLevel);
+
+    showScreen('results');
+  }
+
+  // ===== KEYBOARD INPUT =====
+  document.addEventListener('keydown', (e) => {
+    const screen = document.getElementById('game-screen');
+    if (screen.style.display === 'none') return;
+    if (roundOver) return;
+    const allKeys = KB_ROWS.flat();
+    if (allKeys.includes(e.key)) handleGuess(e.key);
+  });
+</script>
+</body>
+</html>
