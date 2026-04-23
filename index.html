@@ -568,17 +568,25 @@
       { id: 'hangman',  file: 'game_hangman.html',  name: 'Hangman',        nameHe: 'תָּלוּי',                emoji: '✏️', color: '#dc2626', desc: 'Guess the Aramaic word letter by letter' },
       { id: 'shooter',  file: 'game_shooter.html',  name: 'Space Shooter',  nameHe: 'יוֹרֶה חָלָל',          emoji: '🚀', color: '#2563eb', desc: 'Shoot the enemy with the correct word' },
       { id: 'asteroid', file: 'game_asteroid.html', name: 'Asteroid Blast', nameHe: 'פּוֹצֵץ אַסְטֶרוֹאִיד', emoji: '☄️', color: '#9333ea', desc: 'Blast the correct Aramaic asteroid' },
-      { id: 'wordrace', file: 'game_wordrace.html', name: 'Word Race',      nameHe: 'מֵרוֹץ מִלִּים',         emoji: '🏎️', color: '#16a34a', desc: 'Race the AI — fastest correct answer wins!' },
       { id: 'maze',     file: 'game_maze.html',     name: 'Maze Runner',    nameHe: 'רָץ בַּמְּבוּךְ',        emoji: '🗺️', color: '#d97706', desc: 'Navigate the maze to the correct word' },
+      { id: 'race_evo', file: 'game_wordrace_evolution_complete.html', name: 'Race Evolution', nameHe: 'מֵרוֹץ הִתְפַּתְּחוּת', emoji: '🏁', color: '#ea580c', desc: 'Race from Running to Formula 1 through 20 levels!' },
     ];
 
-    /** 4 levels */
+    /** 4 levels for most games, but Race Evolution has 20 */
     const LEVEL_INFO = [
       { level: 1, title: 'Tied Doves & Vessel',  subtitle: 'Lesson 1', color: '#22c55e' },
       { level: 2, title: 'Knot as Sign',          subtitle: 'Lesson 2', color: '#3b82f6' },
       { level: 3, title: "Rav Zvid's Answer",     subtitle: 'Lesson 3', color: '#f59e0b' },
       { level: 4, title: "Rav Papa's Answer",     subtitle: 'Lesson 4', color: '#ef4444' },
     ];
+
+    /** Special 20-level config for Race Evolution */
+    const RACE_EVO_LEVELS = Array.from({length: 20}, (_, i) => ({
+      level: i + 1,
+      title: `Level ${i + 1}`,
+      subtitle: i < 4 ? 'Running' : i < 8 ? 'Bicycle' : i < 12 ? 'Motorcycle' : i < 16 ? 'Sports Car' : 'Formula 1',
+      color: i < 4 ? '#22c55e' : i < 8 ? '#3b82f6' : i < 12 ? '#f59e0b' : i < 16 ? '#ef4444' : '#9333ea'
+    }));
 
     /* ══════════════════════════════════════════════════════════════
        PROGRESS HELPERS
@@ -615,8 +623,11 @@
     ══════════════════════════════════════════════════════════════ */
 
     function buildCard(game, index) {
+      /* --- Determine which level config to use --- */
+      const levelConfig = (game.id === 'race_evo') ? RACE_EVO_LEVELS : LEVEL_INFO;
+      
       /* --- Build level badges --- */
-      const badgesHTML = LEVEL_INFO.map(({ level }) => {
+      const badgesHTML = levelConfig.map(({ level }) => {
         const stars    = getStars(game.id, level);
         const unlocked = isUnlocked(game.id, level);
         const done     = stars > 0;
@@ -634,7 +645,8 @@
         }
 
         if (unlocked) {
-          return `<a class="level-badge ${cls}" href="${game.file}?level=${level}" title="Level ${level} — ${LEVEL_INFO[level-1].title}">${content}</a>`;
+          const levelTitle = levelConfig[level-1] ? levelConfig[level-1].title : `Level ${level}`;
+          return `<a class="level-badge ${cls}" href="${game.file}?level=${level}" title="Level ${level} — ${levelTitle}">${content}</a>`;
         } else {
           return `<span class="level-badge ${cls}" aria-label="Level ${level} — locked" title="Complete Level ${level-1} to unlock">${content}</span>`;
         }
