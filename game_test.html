@@ -204,14 +204,8 @@
 let sb = null;
 try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
 
-// ── Load test data ────────────────────────────────────────
-let testData = null;
-try {
-  const raw = localStorage.getItem('gm_active_test');
-  if (raw) testData = JSON.parse(raw);
-} catch(e) {}
-
 // ── State ─────────────────────────────────────────────────
+let testData = null;
 let words = [];
 let idx = 0;
 let results = [];     // {word, given, correct}
@@ -220,10 +214,45 @@ let timeLeft = 30;
 let answered = false;
 let studentName = '';
 
-// ── Init ──────────────────────────────────────────────────
-if (!testData || !testData.words || !testData.words.length) {
-  show('screenNoTest');
-} else {
+// ── Load test from Supabase by ID ─────────────────────────
+async function loadTestFromDB(testId) {
+  try {
+    const { data: test, error: testErr } = await sb.from('tests').select('*').eq('id', testId).single();
+    if (testErr || !test) throw testErr || new Error('Test not found');
+    const wordIds = Array.isArray(test.word_ids) ? test.word_ids : [];
+    const { data: wordRows, error: wordErr } = await sb.from('words').select('*').in('id', wordIds);
+    if (wordErr) throw wordErr;
+    testData = {
+      id: test.id,
+      blockId: test.block_id,
+      timerPerWord: test.timer_per_word,
+      direction: test.direction,
+      status: test.status,
+      wordIds: wordIds,
+      words: wordRows || [],
+      blockLabel: ''
+    };
+    initTestUI();
+  } catch(e) {
+    show('screenNoTest');
+  }
+}
+
+// ── Load test from localStorage ───────────────────────────
+function loadTestFromLocal() {
+  try {
+    const raw = localStorage.getItem('gm_active_test');
+    if (raw) testData = JSON.parse(raw);
+  } catch(e) {}
+  initTestUI();
+}
+
+// ── Init test UI after testData is ready ──────────────────
+function initTestUI() {
+  if (!testData || !testData.words || !testData.words.length) {
+    show('screenNoTest');
+    return;
+  }
   words = shuffle([...testData.words]);
   show('screenName');
   document.getElementById('splashBlock').textContent = testData.blockLabel ? 'Block · ' + testData.blockLabel : 'Vocabulary Test';
@@ -232,6 +261,16 @@ if (!testData || !testData.words || !testData.words.length) {
   document.getElementById('splashMeta').textContent =
     `${words.length} words · ${testData.timerPerWord}s per word · ${dir}`;
   document.getElementById('nameInput').focus();
+}
+
+// ── Init ──────────────────────────────────────────────────
+const testId = new URLSearchParams(location.search).get('test');
+if (testId) {
+  // fetch from Supabase via URL param
+  loadTestFromDB(testId);
+} else {
+  // localStorage fallback (existing behavior)
+  loadTestFromLocal();
 }
 
 function startTest() {

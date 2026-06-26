@@ -172,6 +172,7 @@
     </div>
   </div>
   <div id="dbBadge" class="db-badge loading">Connecting…</div>
+  <button class="btn btn-ghost btn-sm" id="classViewBtn" onclick="openClassView()" style="display:none">📊 Class View</button>
 </header>
 
 <div class="main-layout">
@@ -299,6 +300,15 @@
   </div>
 </div>
 
+<!-- MODAL: result detail -->
+<div class="modal-backdrop" id="resultDetailModal" style="display:none" onclick="closeMdl('resultDetailModal',event)">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h2 id="rdTitle">Student Result</h2><button class="modal-close" onclick="closeMdl('resultDetailModal')">×</button></div>
+    <div class="modal-body" id="rdBody"></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">Close</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -334,6 +344,7 @@ async function init() {
   }
   renderBlockList();
   if (blocks.length) selectBlock(blocks[0].id);
+  else updateClassViewBtn(null);
 }
 
 // ── Load from Supabase ────────────────────────────────────
@@ -460,6 +471,23 @@ function selectBlock(id) {
   editingWordId = null;
   renderBlockList();
   renderDetail(id);
+  updateClassViewBtn(id);
+}
+
+function updateClassViewBtn(id) {
+  const b = block(id);
+  const btn = document.getElementById('classViewBtn');
+  if (!btn) return;
+  const hasActive = b && (b.tests||[]).some(t => t.status === 'active');
+  btn.style.display = hasActive ? '' : 'none';
+}
+
+function openClassView() {
+  const b = block(activeId);
+  if (!b) return;
+  const activeTest = (b.tests||[]).find(t => t.status === 'active');
+  if (!activeTest) { toast('No active test in this block', 'err'); return; }
+  window.open(`class_overview.html?test=${activeTest.id}`, '_blank');
 }
 
 // ── Render: block list ────────────────────────────────────
@@ -835,12 +863,9 @@ async function startTestNow() {
   const t = await buildTest('active');
   if (!t) return;
   closeMdl('testModal');
-  const b = block(testBlockId);
-  const payload = { ...t, words: (b.words||[]).filter(w => t.wordIds.includes(w.id)), blockLabel: b.label };
-  localStorage.setItem('gm_active_test', JSON.stringify(payload));
   activeTab = 'tests';
   renderDetail(testBlockId); renderBlockList();
-  window.open('game_test.html', '_blank');
+  window.open(`game_test.html?test=${t.id}`, '_blank');
   toast('Test started — opened in new tab!');
 }
 
@@ -852,9 +877,7 @@ async function runTest(testId, blockId) {
   await sb.from('tests').update({ status: 'active' }).eq('id', testId);
   t.status = 'active';
   saveLocal();
-  const payload = { ...t, words: (b.words||[]).filter(w => t.wordIds.includes(w.id)), blockLabel: b.label };
-  localStorage.setItem('gm_active_test', JSON.stringify(payload));
-  window.open('game_test.html', '_blank');
+  window.open(`game_test.html?test=${testId}`, '_blank');
 }
 
 async function deleteTest(testId, blockId) {
@@ -883,13 +906,45 @@ function testCard(t) {
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <span class="test-status ${t.status}">${t.status}</span>
+      <button class="btn btn-ghost btn-sm" onclick="copyTestLink('${t.id}')" title="Copy shareable link">📋</button>
       <button class="btn btn-purple btn-sm" onclick="runTest('${t.id}','${t.blockId}')">▶ Run</button>
       <button class="btn btn-ghost btn-sm" onclick="deleteTest('${t.id}','${t.blockId}')">✕</button>
     </div>
   </div>`;
 }
 
+function copyTestLink(testId) {
+  const url = `https://yosidoch.github.io/gemara-games/game_test.html?test=${testId}`;
+  navigator.clipboard.writeText(url).then(() => toast('Link copied!'), () => toast('Copy failed', 'err'));
+}
+
 // ── Results tab ───────────────────────────────────────────
+let lastResults = [];
+
+function showResultDetail(r, blockId) {
+  const b = block(blockId);
+  const wordMap = {};
+  (b.words||[]).forEach(w => wordMap[w.id] = w);
+  const pct = Math.round(r.score / r.total * 100);
+  document.getElementById('rdTitle').textContent = `${r.student_name || 'Anonymous'} — ${r.score}/${r.total} (${pct}%)`;
+  const answers = Array.isArray(r.answers) ? r.answers : [];
+  document.getElementById('rdBody').innerHTML = answers.length ? `
+    <table class="word-table">
+      <thead><tr><th>Hebrew</th><th>Correct Answer</th><th>Student wrote</th><th style="width:36px"></th></tr></thead>
+      <tbody>${answers.map(a => {
+        const w = wordMap[a.word_id] || {};
+        const ok = a.correct;
+        return `<tr style="background:${ok?'#f0fdf4':'#fef2f2'}">
+          <td style="font-family:var(--font-he);font-size:18px;direction:rtl">${esc(w.hebrew||'')}</td>
+          <td>${esc(w.english||'')}</td>
+          <td style="color:${ok?'var(--green)':'var(--red)'}">${esc(a.given||'(no answer)')}</td>
+          <td>${ok?'✅':'❌'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>` : '<p style="color:var(--muted);padding:16px 0">No answer data available.</p>';
+  document.getElementById('resultDetailModal').style.display = 'flex';
+}
+
 async function loadAndRenderResults(blockId) {
   const b = block(blockId);
   const tc = document.getElementById('tcResults');
@@ -917,6 +972,7 @@ async function loadAndRenderResults(blockId) {
     }
 
     const avg = Math.round(data.reduce((s, r) => s + (r.score / r.total * 100), 0) / data.length);
+    lastResults = data;
 
     tc.innerHTML = `
       <div class="results-avg">
@@ -936,15 +992,15 @@ async function loadAndRenderResults(blockId) {
           <th style="width:40px"></th>
         </tr></thead>
         <tbody>
-          ${data.map(r => {
+          ${data.map((r, i) => {
             const pct = Math.round(r.score / r.total * 100);
             const color = pct >= 90 ? '#16a34a' : pct >= 70 ? '#2563eb' : pct >= 50 ? '#a16207' : '#dc2626';
-            return `<tr>
+            return `<tr style="cursor:pointer" onclick="showResultDetail(lastResults[${i}], '${blockId}')">
               <td style="font-weight:600">${esc(r.student_name || 'Anonymous')}</td>
               <td>${r.score}/${r.total}</td>
               <td><span style="font-weight:700;color:${color}">${pct}%</span></td>
               <td style="font-size:12px;color:var(--muted)">${fmtDate((r.completed_at||'').slice(0,10))}</td>
-              <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteResult('${r.id}','${blockId}')">✕</button></td>
+              <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="event.stopPropagation();deleteResult('${r.id}','${blockId}')">✕</button></td>
             </tr>`;
           }).join('')}
         </tbody>
