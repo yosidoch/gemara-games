@@ -330,7 +330,7 @@ async function init() {
     loadLocal();
     document.getElementById('dbBadge').textContent = 'Offline (cached)';
     document.getElementById('dbBadge').className = 'db-badge local';
-    toast('Using cached data — offline mode', 'err');
+    toast('Offline: ' + (e.message || e.code || String(e)), 'err');
   }
   renderBlockList();
   if (blocks.length) selectBlock(blocks[0].id);
