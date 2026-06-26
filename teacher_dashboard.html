@@ -811,7 +811,7 @@ async function buildTest(status) {
     id: t.id, block_id: t.blockId, timer_per_word: t.timerPerWord,
     direction: t.direction, status: t.status, word_ids: t.wordIds
   });
-  if (error) { toast('Failed to save test', 'err'); return null; }
+  if (error) { toast('Failed to save test: ' + (error.message || error.code || JSON.stringify(error)), 'err'); return null; }
 
   block(testBlockId).tests = block(testBlockId).tests || [];
   block(testBlockId).tests.push(t);

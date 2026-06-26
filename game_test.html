@@ -418,7 +418,7 @@ async function saveResultToDB() {
     badge.textContent = '✓ Result saved';
     badge.className = 'saved-badge visible';
   } catch(e) {
-    badge.textContent = '⚠ Could not save result';
+    badge.textContent = '⚠ ' + (e.message || e.code || JSON.stringify(e));
     badge.className = 'saved-badge visible error';
   }
 }
