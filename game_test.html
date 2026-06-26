@@ -293,7 +293,7 @@ function submitAnswer() {
   }
 
   document.getElementById('submitBtn').style.display = 'none';
-  document.getElementById('nextBtn').style.display = '';
+  document.getElementById('nextBtn').style.display = 'block';
   document.getElementById('nextBtn').textContent = idx < words.length - 1 ? 'Next →' : 'See Results →';
   document.getElementById('nextBtn').focus();
 }
@@ -340,7 +340,7 @@ function startTimer(seconds) {
         fb.innerHTML = `⏱ Time's up! The answer was: <span class="correct-answer">${esc(correct)}</span>`;
 
         document.getElementById('submitBtn').style.display = 'none';
-        document.getElementById('nextBtn').style.display = '';
+        document.getElementById('nextBtn').style.display = 'block';
         document.getElementById('nextBtn').textContent = idx < words.length - 1 ? 'Next →' : 'See Results →';
       }
     }
