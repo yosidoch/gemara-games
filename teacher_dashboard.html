@@ -336,7 +336,7 @@ async function init() {
 // ── Load from Supabase ────────────────────────────────────
 async function loadFromDB() {
   const [{ data: bData, error: bErr }, { data: wData }, { data: tData }] = await Promise.all([
-    sb.from('blocks').select('*').order('num'),
+    sb.from('blocks').select('*').order('block_number'),
     sb.from('words').select('*'),
     sb.from('tests').select('*').order('created_at')
   ]);
@@ -344,7 +344,7 @@ async function loadFromDB() {
 
   blocks = (bData || []).map(b => ({
     id: b.id,
-    block_number: b.num,
+    block_number: b.block_number,
     label: b.label || '',
     week_start: b.week_start || '',
     week_end: b.week_end || '',
@@ -397,7 +397,7 @@ async function addBlock() {
   const b = { id: uid(), block_number: num, label, week_start: ws, week_end: we, words: [], tests: [] };
   try {
     const { error } = await sb.from('blocks').insert({
-      id: b.id, num: b.block_number, label: b.label,
+      id: b.id, block_number: b.block_number, label: b.label,
       week_start: b.week_start || null, week_end: b.week_end || null
     });
     if (error) throw error;
@@ -437,7 +437,7 @@ async function saveEditBlock() {
   const we = document.getElementById('ebWeekEnd').value;
   try {
     const { error } = await sb.from('blocks').update({
-      num, label, week_start: ws || null, week_end: we || null
+      block_number: num, label, week_start: ws || null, week_end: we || null
     }).eq('id', editingBlockId);
     if (error) throw error;
     b.block_number = num; b.label = label; b.week_start = ws; b.week_end = we;
