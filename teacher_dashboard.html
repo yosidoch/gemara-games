@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase_config.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -33,6 +34,7 @@
     .db-badge::before { content: '●'; font-size: 8px; }
     .db-badge.connected { background: #dcfce7; color: #16a34a; }
     .db-badge.local { background: #fef9c3; color: #a16207; }
+    .db-badge.loading { background: #e0e7ff; color: #4338ca; }
 
     .main-layout { max-width: 1300px; margin: 0 auto; padding: 0 24px 60px; display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
 
@@ -124,15 +126,6 @@
     .dir-card .lbl { font-size: 13px; font-weight: 700; }
     .dir-card .desc { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-    .setup-banner { background: #fefce8; border: 1px solid #fde68a; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; }
-    .setup-banner h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-    .setup-banner p { font-size: 13px; color: var(--muted); line-height: 1.5; }
-    .setup-banner details { margin-top: 10px; }
-    .setup-banner summary { font-size: 13px; font-weight: 600; cursor: pointer; color: var(--blue); }
-    .setup-banner pre { margin-top: 10px; background: #1e293b; color: #e2e8f0; padding: 14px; border-radius: 8px; font-size: 11px; overflow-x: auto; white-space: pre; line-height: 1.5; }
-    .config-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-    .config-row input { flex: 1; min-width: 180px; font-size: 13px; }
-
     .empty-state { text-align: center; padding: 40px 24px; color: var(--muted); }
     .empty-state .ei { font-size: 36px; margin-bottom: 10px; }
     .empty-state p { font-size: 14px; line-height: 1.6; }
@@ -145,6 +138,8 @@
     .test-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
     .test-status.draft { background: #f1f5f9; color: var(--muted); }
     .test-status.active { background: #dcfce7; color: #16a34a; }
+
+    .results-avg { background: #eff6ff; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
 
     hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
@@ -173,12 +168,10 @@
       <p>Manage vocabulary blocks, words, and tests</p>
     </div>
   </div>
-  <div id="dbBadge" class="db-badge local">Local storage only</div>
+  <div id="dbBadge" class="db-badge loading">Connecting…</div>
 </header>
 
 <div class="main-layout">
-
-  <!-- LEFT: block list -->
   <div>
     <div class="card">
       <div class="card-header">
@@ -192,14 +185,13 @@
         <div class="form-group"><label>Week End</label><input type="date" id="nbWeekEnd" /></div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
           <button class="btn btn-ghost btn-sm" onclick="toggleAddBlockForm()">Cancel</button>
-          <button class="btn btn-primary btn-sm" onclick="addBlock()">Save Block</button>
+          <button class="btn btn-primary btn-sm" id="addBlockBtn" onclick="addBlock()">Save Block</button>
         </div>
       </div>
       <div class="block-list" id="blockList"></div>
     </div>
   </div>
 
-  <!-- RIGHT: block detail -->
   <div id="detailPanel">
     <div class="card">
       <div class="card-body empty-state">
@@ -208,7 +200,6 @@
       </div>
     </div>
   </div>
-
 </div>
 
 <!-- MODAL: edit block -->
@@ -244,7 +235,7 @@
     <div class="modal-footer">
       <span id="previewCount" style="font-size:13px;color:var(--muted);margin-right:auto"></span>
       <button class="btn btn-ghost" onclick="closeMdl('bulkModal')">Cancel</button>
-      <button class="btn btn-green" onclick="confirmBulk()">✓ Insert All Words</button>
+      <button class="btn btn-green" id="confirmBulkBtn" onclick="confirmBulk()">✓ Insert All Words</button>
     </div>
   </div>
 </div>
@@ -290,7 +281,7 @@
   </div>
 </div>
 
-<!-- MODAL: delete word confirmation -->
+<!-- MODAL: delete word -->
 <div class="modal-backdrop" id="delModal" style="display:none" onclick="closeMdl('delModal',event)">
   <div class="modal modal-sm">
     <div class="modal-header"><h2>Delete Word</h2><button class="modal-close" onclick="closeMdl('delModal')">×</button></div>
@@ -308,69 +299,78 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Supabase init ─────────────────────────────────────────
+// ── Supabase ──────────────────────────────────────────────
 let sb = null;
-(function() {
-  const url = localStorage.getItem('gm_sb_url');
-  const key = localStorage.getItem('gm_sb_key');
-  if (url && key) tryConnectSB(url, key);
-})();
-
-function tryConnectSB(url, key) {
-  try {
-    sb = supabase.createClient(url, key);
-    document.getElementById('dbBadge').textContent = 'Connected to Supabase';
-    document.getElementById('dbBadge').className = 'db-badge connected';
-    return true;
-  } catch(e) { sb = null; return false; }
-}
 
 // ── State ─────────────────────────────────────────────────
 let blocks = [];
-let activeId = null;       // active block id
+let activeId = null;
 let editingWordId = null;
 let editingBlockId = null;
 let pendingDelWordId = null;
-let bulkRows = [];         // parsed bulk upload rows
+let bulkRows = [];
 let bulkBlockId = null;
 let testBlockId = null;
 let testDir = 'he_to_en';
-let testWordSel = {};      // wordId → bool
+let testWordSel = {};
 let activeTab = 'words';
 
-// ── Storage ───────────────────────────────────────────────
-function load() {
+// ── Init ──────────────────────────────────────────────────
+async function init() {
+  try {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    await loadFromDB();
+    document.getElementById('dbBadge').textContent = 'Connected to Supabase';
+    document.getElementById('dbBadge').className = 'db-badge connected';
+  } catch(e) {
+    console.error('Supabase init failed:', e);
+    loadLocal();
+    document.getElementById('dbBadge').textContent = 'Offline (cached)';
+    document.getElementById('dbBadge').className = 'db-badge local';
+    toast('Using cached data — offline mode', 'err');
+  }
+  renderBlockList();
+  if (blocks.length) selectBlock(blocks[0].id);
+}
+
+// ── Load from Supabase ────────────────────────────────────
+async function loadFromDB() {
+  const [{ data: bData, error: bErr }, { data: wData }, { data: tData }] = await Promise.all([
+    sb.from('blocks').select('*').order('num'),
+    sb.from('words').select('*'),
+    sb.from('tests').select('*').order('created_at')
+  ]);
+  if (bErr) throw bErr;
+
+  blocks = (bData || []).map(b => ({
+    id: b.id,
+    block_number: b.num,
+    label: b.label || '',
+    week_start: b.week_start || '',
+    week_end: b.week_end || '',
+    words: (wData || []).filter(w => w.block_id === b.id).map(w => ({
+      id: w.id, hebrew: w.hebrew, type: w.type, english: w.english
+    })),
+    tests: (tData || []).filter(t => t.block_id === b.id).map(t => ({
+      id: t.id, blockId: t.block_id, timerPerWord: t.timer_per_word,
+      direction: t.direction, status: t.status,
+      wordIds: Array.isArray(t.word_ids) ? t.word_ids : [],
+      createdAt: t.created_at
+    }))
+  }));
+  saveLocal();
+}
+
+function loadLocal() {
   const raw = localStorage.getItem('gm_blocks');
   blocks = raw ? JSON.parse(raw) : [];
 }
-function save() { localStorage.setItem('gm_blocks', JSON.stringify(blocks)); }
-function block(id) { return blocks.find(b => b.id === id); }
 
-// ── Supabase helpers ──────────────────────────────────────
-async function sbUpsertBlock(b) {
-  if (!sb) return;
-  await sb.from('blocks').upsert({ id: b.id, block_number: b.block_number, label: b.label, week_start: b.week_start || null, week_end: b.week_end || null });
+function saveLocal() {
+  localStorage.setItem('gm_blocks', JSON.stringify(blocks));
 }
-async function sbUpsertWord(w, blockId) {
-  if (!sb) return;
-  await sb.from('words').upsert({ id: w.id, block_id: blockId, hebrew: w.hebrew, type: w.type, english: w.english });
-}
-async function sbBulkWords(words, blockId) {
-  if (!sb) return;
-  await sb.from('words').upsert(words.map(w => ({ id: w.id, block_id: blockId, hebrew: w.hebrew, type: w.type, english: w.english })));
-}
-async function sbDelWord(id) {
-  if (!sb) return;
-  await sb.from('words').delete().eq('id', id);
-}
-async function sbUpsertTest(t) {
-  if (!sb) return;
-  await sb.from('tests').upsert({ id: t.id, block_id: t.blockId, timer_per_word: t.timerPerWord, direction: t.direction, status: t.status, word_ids: t.wordIds });
-}
-async function sbDelTest(id) {
-  if (!sb) return;
-  await sb.from('tests').delete().eq('id', id);
-}
+
+function block(id) { return blocks.find(b => b.id === id); }
 
 // ── Block CRUD ────────────────────────────────────────────
 function toggleAddBlockForm() {
@@ -383,24 +383,39 @@ function toggleAddBlockForm() {
   }
 }
 
-function addBlock() {
+async function addBlock() {
   const num = parseInt(document.getElementById('nbNum').value);
   const label = document.getElementById('nbLabel').value.trim();
   const ws = document.getElementById('nbWeekStart').value;
   const we = document.getElementById('nbWeekEnd').value;
   if (!label) return toast('Enter a block label', 'err');
   if (!num || num < 1) return toast('Enter a valid block number', 'err');
+
+  const btn = document.getElementById('addBlockBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
   const b = { id: uid(), block_number: num, label, week_start: ws, week_end: we, words: [], tests: [] };
-  blocks.push(b);
-  blocks.sort((a, c) => a.block_number - c.block_number);
-  save(); sbUpsertBlock(b);
-  document.getElementById('nbLabel').value = '';
-  document.getElementById('nbWeekStart').value = '';
-  document.getElementById('nbWeekEnd').value = '';
-  toggleAddBlockForm();
-  renderBlockList();
-  selectBlock(b.id);
-  toast('Block added!');
+  try {
+    const { error } = await sb.from('blocks').insert({
+      id: b.id, num: b.block_number, label: b.label,
+      week_start: b.week_start || null, week_end: b.week_end || null
+    });
+    if (error) throw error;
+    blocks.push(b);
+    blocks.sort((a, c) => a.block_number - c.block_number);
+    saveLocal();
+    document.getElementById('nbLabel').value = '';
+    document.getElementById('nbWeekStart').value = '';
+    document.getElementById('nbWeekEnd').value = '';
+    toggleAddBlockForm();
+    renderBlockList();
+    selectBlock(b.id);
+    toast('Block added!');
+  } catch(e) {
+    toast('Failed to save block: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Block';
+  }
 }
 
 function openEditBlock(id) {
@@ -413,19 +428,27 @@ function openEditBlock(id) {
   document.getElementById('editBlockModal').style.display = 'flex';
 }
 
-function saveEditBlock() {
+async function saveEditBlock() {
   const num = parseInt(document.getElementById('ebNum').value);
   const label = document.getElementById('ebLabel').value.trim();
   if (!label || !num || num < 1) return toast('Number and label are required', 'err');
   const b = block(editingBlockId);
-  b.block_number = num; b.label = label;
-  b.week_start = document.getElementById('ebWeekStart').value;
-  b.week_end = document.getElementById('ebWeekEnd').value;
-  blocks.sort((a, c) => a.block_number - c.block_number);
-  save(); sbUpsertBlock(b);
-  closeMdl('editBlockModal');
-  renderBlockList(); renderDetail(editingBlockId);
-  toast('Block updated!');
+  const ws = document.getElementById('ebWeekStart').value;
+  const we = document.getElementById('ebWeekEnd').value;
+  try {
+    const { error } = await sb.from('blocks').update({
+      num, label, week_start: ws || null, week_end: we || null
+    }).eq('id', editingBlockId);
+    if (error) throw error;
+    b.block_number = num; b.label = label; b.week_start = ws; b.week_end = we;
+    blocks.sort((a, c) => a.block_number - c.block_number);
+    saveLocal();
+    closeMdl('editBlockModal');
+    renderBlockList(); renderDetail(editingBlockId);
+    toast('Block updated!');
+  } catch(e) {
+    toast('Failed to update block', 'err');
+  }
 }
 
 function selectBlock(id) {
@@ -479,12 +502,12 @@ function renderDetail(id) {
       <button class="btn btn-ghost btn-sm" onclick="openEditBlock('${b.id}')">✏️ Edit</button>
     </div>
     <div class="card-body">
-      ${!sb ? setupBanner() : ''}
       <div class="tabs">
         <div class="tab" id="tabWords" onclick="switchTab('words')">Words (${words.length})</div>
         <div class="tab" id="tabAdd" onclick="switchTab('add')">+ Add Word</div>
         <div class="tab" id="tabBulk" onclick="switchTab('bulk')">↑ Bulk Upload</div>
         ${tests.length ? `<div class="tab" id="tabTests" onclick="switchTab('tests')">Tests (${tests.length})</div>` : ''}
+        <div class="tab" id="tabResults" onclick="switchTab('results')">📊 Results</div>
       </div>
 
       <div id="tcWords">
@@ -525,6 +548,10 @@ function renderDetail(id) {
           : tests.map(t => testCard(t)).join('')}
       </div>
 
+      <div id="tcResults" style="display:none">
+        <div class="empty-state"><div class="ei">📊</div><p>Loading results…</p></div>
+      </div>
+
       ${words.length ? `<button class="btn btn-purple gen-btn" onclick="openTestModal('${b.id}')">✨ Generate Test from This Block (${words.length} words)</button>` : ''}
     </div>
   </div>`;
@@ -532,72 +559,19 @@ function renderDetail(id) {
   switchTab(activeTab, false);
 }
 
-function setupBanner() {
-  return `<div class="setup-banner">
-    <h3>⚡ Connect Supabase for persistent storage</h3>
-    <p>Words are currently saved in browser localStorage. Connect Supabase to persist across devices.</p>
-    <details>
-      <summary>Show SQL schema & connection setup</summary>
-      <pre>-- Run in your Supabase SQL editor:
-CREATE TABLE blocks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  block_number INT NOT NULL,
-  label TEXT NOT NULL,
-  week_start DATE, week_end DATE,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-CREATE TABLE words (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  block_id UUID REFERENCES blocks(id) ON DELETE CASCADE,
-  hebrew TEXT NOT NULL,
-  type TEXT CHECK (type IN ('shoresh','milah')) NOT NULL,
-  english TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-CREATE TABLE tests (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  block_id UUID REFERENCES blocks(id) ON DELETE CASCADE,
-  timer_per_word INT DEFAULT 30,
-  direction TEXT DEFAULT 'he_to_en',
-  status TEXT DEFAULT 'draft',
-  word_ids UUID[],
-  created_at TIMESTAMPTZ DEFAULT now()
-);</pre>
-      <div class="config-row">
-        <input type="text" id="sbUrl" placeholder="https://xxx.supabase.co" value="${esc(localStorage.getItem('gm_sb_url')||'')}" />
-        <input type="text" id="sbKey" placeholder="anon public key" value="${esc(localStorage.getItem('gm_sb_key')||'')}" />
-        <button class="btn btn-primary btn-sm" onclick="connectSB()">Connect</button>
-      </div>
-    </details>
-  </div>`;
-}
-
-function connectSB() {
-  const url = document.getElementById('sbUrl')?.value.trim();
-  const key = document.getElementById('sbKey')?.value.trim();
-  if (!url || !key) return toast('Enter both URL and key', 'err');
-  if (tryConnectSB(url, key)) {
-    localStorage.setItem('gm_sb_url', url);
-    localStorage.setItem('gm_sb_key', key);
-    renderDetail(activeId);
-    toast('Connected to Supabase!');
-  } else {
-    toast('Failed to connect — check credentials', 'err');
-  }
-}
-
 // ── Tab switching ─────────────────────────────────────────
 function switchTab(tab, setActive = true) {
   if (setActive) activeTab = tab;
-  ['words','add','bulk','tests'].forEach(t => {
+  ['words','add','bulk','tests','results'].forEach(t => {
     const tc = document.getElementById('tc' + cap(t));
     const tb = document.getElementById('tab' + cap(t));
     if (tc) tc.style.display = t === tab ? '' : 'none';
     if (tb) tb.classList.toggle('active', t === tab);
   });
+  if (tab === 'results' && activeId) loadAndRenderResults(activeId);
 }
 
-// ── Word row (read / edit) ─────────────────────────────────
+// ── Word row ──────────────────────────────────────────────
 function wordRow(w, idx, blockId) {
   if (editingWordId === w.id) {
     return `<tr class="edit-row" id="row-${w.id}">
@@ -624,22 +598,28 @@ function wordRow(w, idx, blockId) {
 }
 
 // ── Word CRUD ─────────────────────────────────────────────
-function addWord(blockId) {
+async function addWord(blockId) {
   const he = document.getElementById('awHe').value.trim();
   const type = document.getElementById('awType').value;
   const en = document.getElementById('awEn').value.trim();
   if (!he) return toast('Enter Hebrew/Aramaic text', 'err');
   if (!en) return toast('Enter English meaning', 'err');
+
   const w = { id: uid(), hebrew: he, type, english: en };
-  const b = block(blockId);
-  b.words.push(w);
-  save(); sbUpsertWord(w, blockId);
-  document.getElementById('awHe').value = '';
-  document.getElementById('awEn').value = '';
-  document.getElementById('awHe').focus();
-  activeTab = 'words';
-  renderDetail(blockId); renderBlockList();
-  toast('Word added!');
+  try {
+    const { error } = await sb.from('words').insert({ id: w.id, block_id: blockId, hebrew: w.hebrew, type: w.type, english: w.english });
+    if (error) throw error;
+    block(blockId).words.push(w);
+    saveLocal();
+    document.getElementById('awHe').value = '';
+    document.getElementById('awEn').value = '';
+    document.getElementById('awHe').focus();
+    activeTab = 'words';
+    renderDetail(blockId); renderBlockList();
+    toast('Word added!');
+  } catch(e) {
+    toast('Failed to save word', 'err');
+  }
 }
 
 function startEdit(wordId, blockId) {
@@ -653,18 +633,25 @@ function cancelEdit() {
   renderDetail(activeId);
 }
 
-function saveWord(wordId, blockId) {
+async function saveWord(wordId, blockId) {
   const he = document.getElementById(`eHe-${wordId}`)?.value.trim();
   const type = document.getElementById(`eTy-${wordId}`)?.value;
   const en = document.getElementById(`eEn-${wordId}`)?.value.trim();
   if (!he || !en) return toast('Hebrew and English are required', 'err');
-  const b = block(blockId);
-  const w = b.words.find(x => x.id === wordId);
-  if (w) { w.hebrew = he; w.type = type; w.english = en; }
-  save(); sbUpsertWord(w, blockId);
-  editingWordId = null;
-  renderDetail(blockId); renderBlockList();
-  toast('Word updated!');
+
+  try {
+    const { error } = await sb.from('words').update({ hebrew: he, type, english: en }).eq('id', wordId);
+    if (error) throw error;
+    const b = block(blockId);
+    const w = b.words.find(x => x.id === wordId);
+    if (w) { w.hebrew = he; w.type = type; w.english = en; }
+    saveLocal();
+    editingWordId = null;
+    renderDetail(blockId); renderBlockList();
+    toast('Word updated!');
+  } catch(e) {
+    toast('Failed to update word', 'err');
+  }
 }
 
 function promptDel(wordId, label) {
@@ -673,14 +660,20 @@ function promptDel(wordId, label) {
   document.getElementById('delModal').style.display = 'flex';
 }
 
-function confirmDelWord() {
-  const b = blocks.find(b => (b.words||[]).some(w => w.id === pendingDelWordId));
-  if (b) {
-    b.words = b.words.filter(w => w.id !== pendingDelWordId);
-    save(); sbDelWord(pendingDelWordId);
-    closeMdl('delModal');
-    renderDetail(b.id); renderBlockList();
-    toast('Word deleted');
+async function confirmDelWord() {
+  try {
+    const { error } = await sb.from('words').delete().eq('id', pendingDelWordId);
+    if (error) throw error;
+    const b = blocks.find(b => (b.words||[]).some(w => w.id === pendingDelWordId));
+    if (b) {
+      b.words = b.words.filter(w => w.id !== pendingDelWordId);
+      saveLocal();
+      closeMdl('delModal');
+      renderDetail(b.id); renderBlockList();
+      toast('Word deleted');
+    }
+  } catch(e) {
+    toast('Failed to delete word', 'err');
   }
 }
 
@@ -690,7 +683,7 @@ function parseBulk(blockId) {
   const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
   if (!lines.length) return toast('Paste some words first', 'err');
   const rows = []; let errs = 0;
-  lines.forEach((line, i) => {
+  lines.forEach(line => {
     const parts = line.split('|').map(p => p.trim());
     if (parts.length < 3) { errs++; return; }
     const [hebrew, typeRaw, english] = parts;
@@ -730,17 +723,29 @@ function removeBulkRow(id) {
   renderBulkPreview(bulkRows);
 }
 
-function confirmBulk() {
+async function confirmBulk() {
   if (!bulkRows.length) return toast('No words to insert', 'err');
-  const b = block(bulkBlockId);
+  const btn = document.getElementById('confirmBulkBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
   const newWords = bulkRows.map(r => ({ id: uid(), hebrew: r.hebrew, type: r.type, english: r.english }));
-  b.words = [...(b.words||[]), ...newWords];
-  save(); sbBulkWords(newWords, bulkBlockId);
-  closeMdl('bulkModal');
-  document.getElementById('bulkTA') && (document.getElementById('bulkTA').value = '');
-  activeTab = 'words';
-  renderDetail(bulkBlockId); renderBlockList();
-  toast(`${newWords.length} word${newWords.length!==1?'s':''} inserted!`);
+  const rows = newWords.map(w => ({ id: w.id, block_id: bulkBlockId, hebrew: w.hebrew, type: w.type, english: w.english }));
+
+  try {
+    const { error } = await sb.from('words').insert(rows);
+    if (error) throw error;
+    block(bulkBlockId).words.push(...newWords);
+    saveLocal();
+    closeMdl('bulkModal');
+    document.getElementById('bulkTA') && (document.getElementById('bulkTA').value = '');
+    activeTab = 'words';
+    renderDetail(bulkBlockId); renderBlockList();
+    toast(`${newWords.length} word${newWords.length!==1?'s':''} inserted!`);
+  } catch(e) {
+    toast('Failed to insert words: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = '✓ Insert All Words';
+  }
 }
 
 // ── Test generation ───────────────────────────────────────
@@ -796,20 +801,26 @@ function setDir(dir) {
   document.getElementById('dirEN').classList.toggle('on', dir === 'en_to_he');
 }
 
-function buildTest(status) {
+async function buildTest(status) {
   const wordIds = Object.entries(testWordSel).filter(([,v])=>v).map(([k])=>k);
   if (!wordIds.length) { toast('Select at least one word', 'err'); return null; }
   const timer = parseInt(document.getElementById('testTimer').value) || 30;
   const t = { id: uid(), blockId: testBlockId, timerPerWord: timer, direction: testDir, status, wordIds, createdAt: new Date().toISOString() };
-  const b = block(testBlockId);
-  b.tests = b.tests || [];
-  b.tests.push(t);
-  save(); sbUpsertTest(t);
+
+  const { error } = await sb.from('tests').insert({
+    id: t.id, block_id: t.blockId, timer_per_word: t.timerPerWord,
+    direction: t.direction, status: t.status, word_ids: t.wordIds
+  });
+  if (error) { toast('Failed to save test', 'err'); return null; }
+
+  block(testBlockId).tests = block(testBlockId).tests || [];
+  block(testBlockId).tests.push(t);
+  saveLocal();
   return t;
 }
 
-function saveTestDraft() {
-  const t = buildTest('draft');
+async function saveTestDraft() {
+  const t = await buildTest('draft');
   if (!t) return;
   closeMdl('testModal');
   activeTab = 'tests';
@@ -817,8 +828,8 @@ function saveTestDraft() {
   toast('Test saved as draft!');
 }
 
-function startTestNow() {
-  const t = buildTest('active');
+async function startTestNow() {
+  const t = await buildTest('active');
   if (!t) return;
   closeMdl('testModal');
   const b = block(testBlockId);
@@ -830,22 +841,32 @@ function startTestNow() {
   toast('Test started — opened in new tab!');
 }
 
-function runTest(testId, blockId) {
+async function runTest(testId, blockId) {
   const b = block(blockId);
   const t = (b.tests||[]).find(t => t.id === testId);
   if (!t) return;
+  // Mark as active in DB
+  await sb.from('tests').update({ status: 'active' }).eq('id', testId);
+  t.status = 'active';
+  saveLocal();
   const payload = { ...t, words: (b.words||[]).filter(w => t.wordIds.includes(w.id)), blockLabel: b.label };
   localStorage.setItem('gm_active_test', JSON.stringify(payload));
   window.open('game_test.html', '_blank');
 }
 
-function deleteTest(testId, blockId) {
+async function deleteTest(testId, blockId) {
   if (!confirm('Delete this test?')) return;
-  const b = block(blockId);
-  b.tests = (b.tests||[]).filter(t => t.id !== testId);
-  save(); sbDelTest(testId);
-  renderDetail(blockId); renderBlockList();
-  toast('Test deleted');
+  try {
+    const { error } = await sb.from('tests').delete().eq('id', testId);
+    if (error) throw error;
+    const b = block(blockId);
+    b.tests = (b.tests||[]).filter(t => t.id !== testId);
+    saveLocal();
+    renderDetail(blockId); renderBlockList();
+    toast('Test deleted');
+  } catch(e) {
+    toast('Failed to delete test', 'err');
+  }
 }
 
 function testCard(t) {
@@ -865,6 +886,83 @@ function testCard(t) {
   </div>`;
 }
 
+// ── Results tab ───────────────────────────────────────────
+async function loadAndRenderResults(blockId) {
+  const b = block(blockId);
+  const tc = document.getElementById('tcResults');
+  if (!tc) return;
+
+  const testIds = (b.tests||[]).map(t => t.id);
+  if (!testIds.length) {
+    tc.innerHTML = `<div class="empty-state"><div class="ei">📊</div><p>No tests yet for this block.</p></div>`;
+    return;
+  }
+
+  tc.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading results…</div>`;
+
+  try {
+    const { data, error } = await sb.from('test_results')
+      .select('*')
+      .in('test_id', testIds)
+      .order('completed_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || !data.length) {
+      tc.innerHTML = `<div class="empty-state"><div class="ei">📊</div><p>No student results yet.<br>Run a test so students can submit their answers.</p></div>`;
+      return;
+    }
+
+    const avg = Math.round(data.reduce((s, r) => s + (r.score / r.total * 100), 0) / data.length);
+
+    tc.innerHTML = `
+      <div class="results-avg">
+        <span style="font-size:28px">📊</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em">Class Average</div>
+          <div style="font-size:26px;font-weight:800">${avg}%</div>
+        </div>
+        <span style="margin-left:auto;font-size:13px;color:var(--muted)">${data.length} submission${data.length!==1?'s':''}</span>
+      </div>
+      <table class="word-table">
+        <thead><tr>
+          <th>Student</th>
+          <th style="width:90px">Score</th>
+          <th style="width:70px">%</th>
+          <th style="width:110px">Date</th>
+          <th style="width:40px"></th>
+        </tr></thead>
+        <tbody>
+          ${data.map(r => {
+            const pct = Math.round(r.score / r.total * 100);
+            const color = pct >= 90 ? '#16a34a' : pct >= 70 ? '#2563eb' : pct >= 50 ? '#a16207' : '#dc2626';
+            return `<tr>
+              <td style="font-weight:600">${esc(r.student_name || 'Anonymous')}</td>
+              <td>${r.score}/${r.total}</td>
+              <td><span style="font-weight:700;color:${color}">${pct}%</span></td>
+              <td style="font-size:12px;color:var(--muted)">${fmtDate((r.completed_at||'').slice(0,10))}</td>
+              <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteResult('${r.id}','${blockId}')">✕</button></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) {
+    tc.innerHTML = `<div class="empty-state"><div class="ei">⚠️</div><p>Failed to load results.</p></div>`;
+  }
+}
+
+async function deleteResult(resultId, blockId) {
+  if (!confirm('Delete this result?')) return;
+  try {
+    const { error } = await sb.from('test_results').delete().eq('id', resultId);
+    if (error) throw error;
+    loadAndRenderResults(blockId);
+    toast('Result deleted');
+  } catch(e) {
+    toast('Failed to delete result', 'err');
+  }
+}
+
 // ── Modal helper ──────────────────────────────────────────
 function closeMdl(id, e) {
   if (e && e.target !== e.currentTarget) return;
@@ -877,7 +975,7 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function fmtDate(d) {
   if (!d) return '';
-  try { return new Date(d + (d.length===10?'T00:00:00':'')).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+  try { return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
   catch { return d; }
 }
 function toast(msg, type = 'ok') {
@@ -887,10 +985,8 @@ function toast(msg, type = 'ok') {
   window._tt = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-// ── Init ──────────────────────────────────────────────────
-load();
-renderBlockList();
-if (blocks.length) selectBlock(blocks[0].id);
+// ── Start ─────────────────────────────────────────────────
+init();
 </script>
 </body>
 </html>

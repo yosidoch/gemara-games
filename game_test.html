@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase_config.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -113,6 +115,11 @@
     .btn-retry { background: var(--purple); color: #fff; } .btn-retry:hover { background: #7c3aed; }
     .btn-home { background: #f1f5f9; color: var(--text); } .btn-home:hover { background: #e2e8f0; }
 
+    /* ── Saved badge ── */
+    .saved-badge { display: none; align-items: center; gap: 6px; margin-top: 14px; padding: 8px 16px; background: #dcfce7; color: #15803d; border-radius: 8px; font-size: 13px; font-weight: 700; justify-content: center; }
+    .saved-badge.visible { display: flex; }
+    .saved-badge.error { background: #fee2e2; color: #dc2626; }
+
     /* ── No test ── */
     .no-test-card {
       background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
@@ -181,6 +188,7 @@
     <h2 id="resultTitle"></h2>
     <p class="sub" id="resultSub"></p>
     <div class="result-rows" id="resultRows"></div>
+    <div class="saved-badge" id="savedBadge"></div>
     <div class="result-actions">
       <button class="btn-retry" onclick="retryTest()">↺ Try Again</button>
       <button class="btn-home" onclick="goHome()">← Back</button>
@@ -189,6 +197,10 @@
 </div>
 
 <script>
+// ── Supabase ──────────────────────────────────────────────
+let sb = null;
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
+
 // ── Load test data ────────────────────────────────────────
 let testData = null;
 try {
@@ -382,6 +394,33 @@ function showResults() {
     </div>`).join('');
 
   show('screenResults');
+  saveResultToDB();
+}
+
+async function saveResultToDB() {
+  const badge = document.getElementById('savedBadge');
+  if (!sb || !testData || !testData.id) return;
+  try {
+    const answers = results.map(r => ({
+      word_id: r.word.id,
+      correct: r.isCorrect,
+      given: r.given
+    }));
+    const { error } = await sb.from('test_results').insert({
+      id: crypto.randomUUID(),
+      test_id: testData.id,
+      student_name: studentName,
+      score: results.filter(r => r.isCorrect).length,
+      total: results.length,
+      answers
+    });
+    if (error) throw error;
+    badge.textContent = '✓ Result saved';
+    badge.className = 'saved-badge visible';
+  } catch(e) {
+    badge.textContent = '⚠ Could not save result';
+    badge.className = 'saved-badge visible error';
+  }
 }
 
 function retryTest() {
