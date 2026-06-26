@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class Overview — Gemara Games</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://itkkiuxzbtircgifaoao.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0a2tpdXh6YnRpcmNnaWZhb2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NDg2NDUsImV4cCI6MjA5ODAyNDY0NX0.H2_Me-hSwaBaugj538Ks5myT_cgb-nA4Dk851XX7sNI';
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: linear-gradient(135deg, #f8faff 0%, #fff8f0 50%, #f0fff8 100%);
+      --card: #fff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+      --radius: 14px; --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --green: #22c55e; --blue: #3b82f6; --amber: #f59e0b;
+      --red: #ef4444; --purple: #8b5cf6;
+      --font-ui: 'Rubik', sans-serif; --font-he: 'Frank Ruhl Libre', serif;
+    }
+    html { font-size: 16px; }
+    body { font-family: var(--font-ui); background: var(--bg); background-attachment: fixed; color: var(--text); min-height: 100vh; }
+
+    .rainbow-bar { height: 5px; background: linear-gradient(90deg,#f97316,#eab308,#22c55e,#06b6d4,#3b82f6,#8b5cf6,#ec4899); }
+
+    .site-header { max-width: 900px; margin: 0 auto; padding: 28px 24px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .back-link { text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; transition: all .2s; }
+    .back-link:hover { background: #f1f5f9; color: var(--text); }
+    .site-title h1 { font-size: 22px; font-weight: 700; }
+    .site-title p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .refresh-note { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .refresh-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse-dot 2s ease-in-out infinite; }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .4; transform: scale(.7); }
+    }
+
+    main { max-width: 900px; margin: 0 auto; padding: 0 24px 60px; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .card-header h2 { font-size: 15px; font-weight: 700; }
+    .card-body { padding: 20px; }
+
+    /* Test info bar */
+    .test-info-bar { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+    .test-info-item { display: flex; flex-direction: column; gap: 2px; }
+    .test-info-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+    .test-info-value { font-size: 14px; font-weight: 600; }
+
+    /* Avg card */
+    .avg-card { text-align: center; padding: 32px 24px; }
+    .avg-number { font-size: 72px; font-weight: 800; line-height: 1; margin-bottom: 8px; }
+    .avg-label { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+    .avg-sub { font-size: 13px; color: var(--muted); }
+
+    /* Student list */
+    .student-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .student-table th { text-align: left; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding: 10px 12px; background: #f8faff; border-bottom: 1px solid var(--border); }
+    .student-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .student-table tr:last-child td { border-bottom: none; }
+    .student-table tbody tr:hover td { background: #f8faff; }
+
+    .score-bar-wrap { background: #e2e8f0; border-radius: 999px; height: 8px; width: 100%; min-width: 60px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 999px; transition: width .4s; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 48px 24px; }
+    .empty-state .ei { font-size: 40px; margin-bottom: 14px; }
+    .empty-state p { font-size: 15px; color: var(--muted); line-height: 1.6; }
+    .waiting-dots { display: inline-flex; gap: 6px; margin-top: 16px; }
+    .waiting-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); opacity: .3; animation: waiting-pulse 1.4s ease-in-out infinite; }
+    .waiting-dots span:nth-child(2) { animation-delay: .2s; }
+    .waiting-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes waiting-pulse {
+      0%, 80%, 100% { opacity: .3; transform: scale(.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    .error-state { text-align: center; padding: 48px 24px; }
+    .error-state .ei { font-size: 40px; margin-bottom: 14px; }
+    .error-state p { font-size: 15px; color: var(--muted); }
+    .error-state a { display: inline-block; margin-top: 16px; color: var(--blue); text-decoration: none; font-weight: 600; }
+
+    @media (max-width: 600px) {
+      .test-info-bar { gap: 12px; }
+      .avg-number { font-size: 56px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="rainbow-bar"></div>
+
+<header class="site-header">
+  <div class="header-left">
+    <a class="back-link" href="teacher_dashboard.html">← Dashboard</a>
+    <div class="site-title">
+      <h1>📊 Live Class View</h1>
+      <p id="headerSub">Loading test…</p>
+    </div>
+  </div>
+  <div class="refresh-note">
+    <span class="refresh-dot"></span>
+    Auto-refreshing every 10s
+  </div>
+</header>
+
+<main>
+  <div class="card" id="testInfoCard" style="display:none">
+    <div class="card-body">
+      <div class="test-info-bar" id="testInfoBar"></div>
+    </div>
+  </div>
+
+  <div class="card" id="avgCard">
+    <div class="avg-card">
+      <div class="empty-state">
+        <div class="ei">⏳</div>
+        <p>Loading…</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="studentListCard" style="display:none">
+    <div class="card-header"><h2>Student Results</h2></div>
+    <div id="studentListBody"></div>
+  </div>
+</main>
+
+<script>
+// ── Supabase ──────────────────────────────────────────────
+let sb = null;
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
+
+// ── State ─────────────────────────────────────────────────
+const testId = new URLSearchParams(location.search).get('test');
+let testRow = null;
+
+// ── Utilities ─────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function pctColor(pct) {
+  if (pct >= 90) return { text: '#16a34a', bg: '#dcfce7' };
+  if (pct >= 70) return { text: '#2563eb', bg: '#dbeafe' };
+  if (pct >= 50) return { text: '#a16207', bg: '#fef9c3' };
+  return { text: '#dc2626', bg: '#fee2e2' };
+}
+
+// ── Render ─────────────────────────────────────────────────
+function renderResults(results) {
+  const avgCard = document.getElementById('avgCard');
+  const studentListCard = document.getElementById('studentListCard');
+  const studentListBody = document.getElementById('studentListBody');
+
+  if (!results || !results.length) {
+    avgCard.innerHTML = `<div class="avg-card">
+      <div class="empty-state">
+        <div class="ei">📭</div>
+        <p>Waiting for submissions…</p>
+        <div class="waiting-dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>`;
+    studentListCard.style.display = 'none';
+    return;
+  }
+
+  const avg = Math.round(results.reduce((s, r) => s + (r.score / r.total * 100), 0) / results.length);
+  const col = pctColor(avg);
+
+  avgCard.innerHTML = `<div class="avg-card">
+    <div class="avg-number" style="color:${col.text}">${avg}%</div>
+    <div class="avg-label">Class Average</div>
+    <div class="avg-sub">${results.length} student${results.length !== 1 ? 's' : ''} submitted</div>
+  </div>`;
+
+  studentListCard.style.display = '';
+  studentListBody.innerHTML = `
+    <table class="student-table">
+      <thead><tr>
+        <th>Student</th>
+        <th style="width:90px">Score</th>
+        <th style="width:60px">%</th>
+        <th style="width:140px">Progress</th>
+      </tr></thead>
+      <tbody>
+        ${results.map(r => {
+          const pct = Math.round(r.score / r.total * 100);
+          const c = pctColor(pct);
+          return `<tr>
+            <td style="font-weight:600">${esc(r.student_name || 'Anonymous')}</td>
+            <td>${r.score}/${r.total}</td>
+            <td><span style="font-weight:700;color:${c.text}">${pct}%</span></td>
+            <td>
+              <div class="score-bar-wrap">
+                <div class="score-bar-fill" style="width:${pct}%;background:${c.text}"></div>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── Fetch & Render ─────────────────────────────────────────
+async function fetchAndRender() {
+  try {
+    const { data: results, error } = await sb.from('test_results')
+      .select('*')
+      .eq('test_id', testId)
+      .order('score', { ascending: false });
+    if (error) throw error;
+    renderResults(results || []);
+  } catch(e) {
+    // silently keep old state on poll errors
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────
+async function init() {
+  if (!testId) {
+    document.getElementById('avgCard').innerHTML = `<div class="error-state">
+      <div class="ei">❌</div>
+      <p>No test ID provided.</p>
+      <a href="teacher_dashboard.html">← Back to Dashboard</a>
+    </div>`;
+    return;
+  }
+
+  if (!sb) {
+    document.getElementById('avgCard').innerHTML = `<div class="error-state">
+      <div class="ei">⚠️</div>
+      <p>Could not connect to database.</p>
+      <a href="teacher_dashboard.html">← Back to Dashboard</a>
+    </div>`;
+    return;
+  }
+
+  // Fetch test info
+  try {
+    const { data: test, error: testErr } = await sb.from('tests').select('*').eq('id', testId).single();
+    if (testErr || !test) throw testErr || new Error('Test not found');
+    testRow = test;
+
+    // Update header subtitle
+    const wordCount = Array.isArray(test.word_ids) ? test.word_ids.length : 0;
+    const dir = test.direction === 'he_to_en' ? 'Hebrew → English' : 'English → Hebrew';
+    document.getElementById('headerSub').textContent = `${wordCount} words · ${test.timer_per_word}s/word · ${dir}`;
+
+    // Show test info bar
+    const infoCard = document.getElementById('testInfoCard');
+    infoCard.style.display = '';
+    document.getElementById('testInfoBar').innerHTML = `
+      <div class="test-info-item">
+        <span class="test-info-label">Direction</span>
+        <span class="test-info-value">${esc(dir)}</span>
+      </div>
+      <div class="test-info-item">
+        <span class="test-info-label">Words</span>
+        <span class="test-info-value">${wordCount}</span>
+      </div>
+      <div class="test-info-item">
+        <span class="test-info-label">Timer</span>
+        <span class="test-info-value">${test.timer_per_word}s per word</span>
+      </div>
+      <div class="test-info-item">
+        <span class="test-info-label">Status</span>
+        <span class="test-info-value" style="color:${test.status === 'active' ? '#16a34a' : 'var(--muted)'}">${esc(test.status)}</span>
+      </div>`;
+  } catch(e) {
+    document.getElementById('avgCard').innerHTML = `<div class="error-state">
+      <div class="ei">❌</div>
+      <p>Test not found or failed to load.</p>
+      <a href="teacher_dashboard.html">← Back to Dashboard</a>
+    </div>`;
+    return;
+  }
+
+  // Initial fetch
+  await fetchAndRender();
+
+  // Poll every 10 seconds
+  setInterval(fetchAndRender, 10000);
+}
+
+init();
+</script>
+</body>
+</html>
