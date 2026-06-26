@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vocabulary Test — Gemara Games</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://itkkiuxzbtircgifaoao.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0a2tpdXh6YnRpcmNnaWZhb2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NDg2NDUsImV4cCI6MjA5ODAyNDY0NX0.H2_Me-hSwaBaugj538Ks5myT_cgb-nA4Dk851XX7sNI';
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: linear-gradient(135deg, #f8faff 0%, #fff8f0 50%, #f0fff8 100%);
+      --card: #fff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+      --radius: 16px; --shadow: 0 8px 32px rgba(0,0,0,0.1);
+      --green: #22c55e; --blue: #3b82f6; --red: #ef4444; --purple: #8b5cf6;
+      --font-ui: 'Rubik', sans-serif; --font-he: 'Frank Ruhl Libre', serif;
+    }
+    html { font-size: 16px; }
+    body { font-family: var(--font-ui); background: var(--bg); background-attachment: fixed; color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    .rainbow-bar { height: 5px; background: linear-gradient(90deg,#f97316,#eab308,#22c55e,#06b6d4,#3b82f6,#8b5cf6,#ec4899); flex-shrink: 0; }
+
+    /* ── Screens ── */
+    .screen { display: none; flex: 1; align-items: center; justify-content: center; padding: 24px; }
+    .screen.active { display: flex; }
+
+    /* ── Splash / Name entry ── */
+    .splash-card {
+      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 48px 40px; text-align: center; max-width: 460px; width: 100%;
+    }
+    .splash-card .block-label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
+    .splash-card h1 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+    .splash-card .meta { font-size: 14px; color: var(--muted); margin-bottom: 32px; line-height: 1.6; }
+    .name-input { width: 100%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; font-family: var(--font-ui); font-size: 16px; text-align: center; outline: none; transition: border-color .15s; margin-bottom: 16px; }
+    .name-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,.1); }
+    .start-btn { width: 100%; padding: 14px; background: var(--purple); color: #fff; border: none; border-radius: 10px; font-family: var(--font-ui); font-size: 16px; font-weight: 700; cursor: pointer; transition: background .15s; }
+    .start-btn:hover { background: #7c3aed; }
+    .start-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Question ── */
+    .q-wrap { width: 100%; max-width: 600px; }
+
+    .progress-bar-wrap { background: #e2e8f0; border-radius: 999px; height: 6px; margin-bottom: 10px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--purple); border-radius: 999px; transition: width .4s; }
+    .progress-label { font-size: 13px; color: var(--muted); text-align: right; margin-bottom: 24px; }
+
+    .q-card {
+      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 40px 36px; text-align: center; position: relative; overflow: hidden;
+    }
+
+    /* Timer ring */
+    .timer-ring-wrap { position: absolute; top: 16px; right: 20px; }
+    .timer-ring { display: block; }
+    .timer-bg { fill: none; stroke: #e2e8f0; stroke-width: 4; }
+    .timer-arc { fill: none; stroke: var(--purple); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset .9s linear, stroke .3s; transform: rotate(-90deg); transform-origin: center; }
+    .timer-arc.warning { stroke: var(--red); }
+    .timer-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--text); }
+
+    .q-direction { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 20px; }
+    .q-prompt { margin-bottom: 32px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+    .q-prompt .he-text { font-family: var(--font-he); font-size: 42px; font-weight: 700; direction: rtl; line-height: 1.3; }
+    .q-prompt .en-text { font-size: 28px; font-weight: 700; line-height: 1.4; }
+    .q-type-hint { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+
+    .answer-input {
+      width: 100%; padding: 14px 18px; border: 2px solid var(--border); border-radius: 12px;
+      font-family: var(--font-ui); font-size: 18px; text-align: center; outline: none;
+      transition: border-color .15s; margin-bottom: 16px;
+    }
+    .answer-input.he-answer { font-family: var(--font-he); font-size: 22px; direction: rtl; }
+    .answer-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
+    .answer-input.correct { border-color: var(--green); background: #f0fdf4; }
+    .answer-input.wrong { border-color: var(--red); background: #fef2f2; }
+
+    .submit-btn { width: 100%; padding: 14px; background: var(--purple); color: #fff; border: none; border-radius: 10px; font-family: var(--font-ui); font-size: 16px; font-weight: 700; cursor: pointer; transition: background .15s; }
+    .submit-btn:hover { background: #7c3aed; }
+    .submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .feedback { margin-top: 14px; padding: 12px 16px; border-radius: 10px; font-size: 15px; font-weight: 600; text-align: center; display: none; }
+    .feedback.correct { background: #dcfce7; color: #15803d; display: block; }
+    .feedback.wrong { background: #fee2e2; color: #dc2626; display: block; }
+    .feedback .correct-answer { font-family: var(--font-he); font-size: 18px; direction: rtl; display: block; margin-top: 4px; }
+
+    .next-btn { width: 100%; margin-top: 12px; padding: 12px; background: #1e293b; color: #fff; border: none; border-radius: 10px; font-family: var(--font-ui); font-size: 15px; font-weight: 700; cursor: pointer; transition: background .15s; display: none; }
+    .next-btn:hover { background: #334155; }
+
+    /* ── Results ── */
+    .results-card {
+      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 48px 40px; text-align: center; max-width: 500px; width: 100%;
+    }
+    .results-card .score-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; margin: 0 auto 24px; font-size: 36px; font-weight: 800; }
+    .score-a { background: #dcfce7; color: #15803d; }
+    .score-b { background: #dbeafe; color: #1e40af; }
+    .score-c { background: #fef9c3; color: #a16207; }
+    .score-d { background: #fee2e2; color: #dc2626; }
+    .results-card h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .results-card .sub { font-size: 15px; color: var(--muted); margin-bottom: 28px; }
+
+    .result-rows { text-align: left; margin-bottom: 28px; }
+    .result-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .result-row:last-child { border-bottom: none; }
+    .result-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .result-row .he { font-family: var(--font-he); font-size: 18px; direction: rtl; }
+    .result-row .en { font-size: 13px; color: var(--muted); }
+    .result-row .given { font-size: 13px; color: var(--red); }
+
+    .result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .result-actions button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-family: var(--font-ui); font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s; }
+    .btn-retry { background: var(--purple); color: #fff; } .btn-retry:hover { background: #7c3aed; }
+    .btn-home { background: #f1f5f9; color: var(--text); } .btn-home:hover { background: #e2e8f0; }
+
+    /* ── Saved badge ── */
+    .saved-badge { display: none; align-items: center; gap: 6px; margin-top: 14px; padding: 8px 16px; background: #dcfce7; color: #15803d; border-radius: 8px; font-size: 13px; font-weight: 700; justify-content: center; }
+    .saved-badge.visible { display: flex; }
+    .saved-badge.error { background: #fee2e2; color: #dc2626; }
+
+    /* ── No test ── */
+    .no-test-card {
+      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 48px 40px; text-align: center; max-width: 440px; width: 100%;
+    }
+    .no-test-card .ei { font-size: 48px; margin-bottom: 16px; }
+    .no-test-card p { font-size: 15px; color: var(--muted); line-height: 1.6; }
+    .no-test-card a { display: inline-block; margin-top: 20px; padding: 11px 24px; background: var(--purple); color: #fff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="rainbow-bar"></div>
+
+<!-- Screen: no test configured -->
+<div class="screen active" id="screenNoTest">
+  <div class="no-test-card">
+    <div class="ei">📋</div>
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">No Active Test</h2>
+    <p>A teacher needs to start a test from the Teacher Dashboard first.</p>
+    <a href="teacher_dashboard.html">← Teacher Dashboard</a>
+  </div>
+</div>
+
+<!-- Screen: name entry -->
+<div class="screen" id="screenName">
+  <div class="splash-card">
+    <div class="block-label" id="splashBlock"></div>
+    <h1 id="splashTitle">Vocabulary Test</h1>
+    <p class="meta" id="splashMeta"></p>
+    <input class="name-input" id="nameInput" type="text" placeholder="Enter your name…" maxlength="40" onkeydown="if(event.key==='Enter')startTest()" />
+    <button class="start-btn" id="startBtn" onclick="startTest()">Start Test →</button>
+  </div>
+</div>
+
+<!-- Screen: question -->
+<div class="screen" id="screenQ">
+  <div class="q-wrap">
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel"></div>
+    <div class="q-card">
+      <!-- Timer -->
+      <div class="timer-ring-wrap">
+        <svg class="timer-ring" width="52" height="52" viewBox="0 0 52 52">
+          <circle class="timer-bg" cx="26" cy="26" r="22" />
+          <circle class="timer-arc" id="timerArc" cx="26" cy="26" r="22" />
+        </svg>
+        <div class="timer-num" id="timerNum">30</div>
+      </div>
+
+      <div class="q-direction" id="qDirection"></div>
+      <div class="q-prompt" id="qPrompt"></div>
+      <div class="q-type-hint" id="qTypeHint"></div>
+      <input class="answer-input" id="answerInput" type="text" placeholder="Type your answer…" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')submitAnswer()" />
+      <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">Submit →</button>
+      <div class="feedback" id="feedback"></div>
+      <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Screen: results -->
+<div class="screen" id="screenResults">
+  <div class="results-card">
+    <div class="score-circle" id="scoreCircle"></div>
+    <h2 id="resultTitle"></h2>
+    <p class="sub" id="resultSub"></p>
+    <div class="result-rows" id="resultRows"></div>
+    <div class="saved-badge" id="savedBadge"></div>
+    <div class="result-actions">
+      <button class="btn-retry" onclick="retryTest()">↺ Try Again</button>
+      <button class="btn-home" onclick="goHome()">← Back</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Supabase ──────────────────────────────────────────────
+let sb = null;
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
+
+// ── Load test data ────────────────────────────────────────
+let testData = null;
+try {
+  const raw = localStorage.getItem('gm_active_test');
+  if (raw) testData = JSON.parse(raw);
+} catch(e) {}
+
+// ── State ─────────────────────────────────────────────────
+let words = [];
+let idx = 0;
+let results = [];     // {word, given, correct}
+let timerInterval = null;
+let timeLeft = 30;
+let answered = false;
+let studentName = '';
+
+// ── Init ──────────────────────────────────────────────────
+if (!testData || !testData.words || !testData.words.length) {
+  show('screenNoTest');
+} else {
+  words = shuffle([...testData.words]);
+  show('screenName');
+  document.getElementById('splashBlock').textContent = testData.blockLabel ? 'Block · ' + testData.blockLabel : 'Vocabulary Test';
+  document.getElementById('splashTitle').textContent = 'Vocabulary Test';
+  const dir = testData.direction === 'he_to_en' ? 'Hebrew → English' : 'English → Hebrew';
+  document.getElementById('splashMeta').textContent =
+    `${words.length} words · ${testData.timerPerWord}s per word · ${dir}`;
+  document.getElementById('nameInput').focus();
+}
+
+function startTest() {
+  studentName = document.getElementById('nameInput').value.trim() || 'Student';
+  idx = 0; results = [];
+  showQuestion();
+  show('screenQ');
+}
+
+// ── Question flow ─────────────────────────────────────────
+function showQuestion() {
+  answered = false;
+  const w = words[idx];
+  const total = words.length;
+  const pct = (idx / total) * 100;
+
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `Question ${idx + 1} of ${total}`;
+
+  const isHeEn = testData.direction === 'he_to_en';
+  document.getElementById('qDirection').textContent = isHeEn ? 'What is the English meaning?' : 'What is the Hebrew/Aramaic?';
+
+  const promptEl = document.getElementById('qPrompt');
+  if (isHeEn) {
+    promptEl.innerHTML = `<span class="he-text">${esc(w.hebrew)}</span>`;
+  } else {
+    promptEl.innerHTML = `<span class="en-text">${esc(w.english)}</span>`;
+  }
+
+  const typeHintEl = document.getElementById('qTypeHint');
+  typeHintEl.textContent = w.type === 'shoresh' ? 'שורש — root' : 'מילה — word';
+
+  const ansInput = document.getElementById('answerInput');
+  ansInput.value = '';
+  ansInput.className = 'answer-input' + (!isHeEn ? ' he-answer' : '');
+  ansInput.placeholder = isHeEn ? 'Type English meaning…' : 'הקלד/י בעברית…';
+  ansInput.disabled = false;
+  ansInput.style.borderColor = '';
+  ansInput.style.background = '';
+
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('nextBtn').style.display = 'none';
+  document.getElementById('submitBtn').style.display = '';
+  document.getElementById('submitBtn').disabled = false;
+
+  startTimer(testData.timerPerWord);
+  setTimeout(() => ansInput.focus(), 50);
+}
+
+function submitAnswer() {
+  if (answered) return;
+  clearTimer();
+  answered = true;
+
+  const w = words[idx];
+  const isHeEn = testData.direction === 'he_to_en';
+  const given = document.getElementById('answerInput').value.trim();
+  const correct = isHeEn ? w.english : w.hebrew;
+  const isCorrect = normalize(given) === normalize(correct);
+
+  results.push({ word: w, given, correct, isCorrect });
+
+  const ansInput = document.getElementById('answerInput');
+  ansInput.disabled = true;
+  ansInput.classList.add(isCorrect ? 'correct' : 'wrong');
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
+  if (isCorrect) {
+    fb.textContent = '✓ Correct!';
+  } else {
+    fb.innerHTML = `✗ Not quite. The answer is: <span class="correct-answer">${esc(correct)}</span>`;
+  }
+
+  document.getElementById('submitBtn').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'block';
+  document.getElementById('nextBtn').textContent = idx < words.length - 1 ? 'Next →' : 'See Results →';
+  document.getElementById('nextBtn').focus();
+}
+
+function nextQuestion() {
+  idx++;
+  if (idx < words.length) {
+    showQuestion();
+  } else {
+    showResults();
+  }
+}
+
+// ── Timer ─────────────────────────────────────────────────
+function startTimer(seconds) {
+  clearTimer();
+  timeLeft = seconds;
+  const arc = document.getElementById('timerArc');
+  const num = document.getElementById('timerNum');
+  const r = 22;
+  const circ = 2 * Math.PI * r;
+  arc.style.strokeDasharray = circ;
+
+  function tick() {
+    const frac = timeLeft / seconds;
+    arc.style.strokeDashoffset = circ * (1 - frac);
+    num.textContent = timeLeft;
+    arc.classList.toggle('warning', timeLeft <= Math.ceil(seconds * 0.25));
+    if (timeLeft <= 0) {
+      clearTimer();
+      if (!answered) {
+        const w = words[idx];
+        const isHeEn = testData.direction === 'he_to_en';
+        const correct = isHeEn ? w.english : w.hebrew;
+        results.push({ word: w, given: '', correct, isCorrect: false });
+        answered = true;
+
+        const ansInput = document.getElementById('answerInput');
+        ansInput.disabled = true;
+        ansInput.classList.add('wrong');
+
+        const fb = document.getElementById('feedback');
+        fb.className = 'feedback wrong';
+        fb.innerHTML = `⏱ Time's up! The answer was: <span class="correct-answer">${esc(correct)}</span>`;
+
+        document.getElementById('submitBtn').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'block';
+        document.getElementById('nextBtn').textContent = idx < words.length - 1 ? 'Next →' : 'See Results →';
+      }
+    }
+  }
+
+  tick();
+  timerInterval = setInterval(() => { timeLeft--; tick(); }, 1000);
+}
+
+function clearTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+// ── Results ───────────────────────────────────────────────
+function showResults() {
+  clearTimer();
+  const correct = results.filter(r => r.isCorrect).length;
+  const total = results.length;
+  const pct = Math.round((correct / total) * 100);
+  const isHeEn = testData.direction === 'he_to_en';
+
+  const scoreEl = document.getElementById('scoreCircle');
+  scoreEl.innerHTML = `<span>${pct}%</span>`;
+  scoreEl.className = 'score-circle ' + (pct >= 90 ? 'score-a' : pct >= 70 ? 'score-b' : pct >= 50 ? 'score-c' : 'score-d');
+
+  document.getElementById('resultTitle').textContent = pct >= 90 ? 'Excellent!' : pct >= 70 ? 'Good job!' : pct >= 50 ? 'Keep practicing!' : 'Keep it up!';
+  document.getElementById('resultSub').textContent = `${studentName} · ${correct} of ${total} correct`;
+
+  document.getElementById('resultRows').innerHTML = results.map(r => `
+    <div class="result-row">
+      <span class="result-icon">${r.isCorrect ? '✅' : '❌'}</span>
+      <div style="flex:1;min-width:0">
+        <div class="he">${esc(r.word.hebrew)}</div>
+        <div class="en">${esc(r.word.english)}</div>
+        ${!r.isCorrect && r.given ? `<div class="given">You wrote: "${esc(r.given)}"</div>` : ''}
+        ${!r.isCorrect && !r.given ? `<div class="given">No answer / time expired</div>` : ''}
+      </div>
+    </div>`).join('');
+
+  show('screenResults');
+  saveResultToDB();
+}
+
+async function saveResultToDB() {
+  const badge = document.getElementById('savedBadge');
+  if (!sb || !testData || !testData.id) return;
+  try {
+    const answers = results.map(r => ({
+      word_id: r.word.id,
+      correct: r.isCorrect,
+      given: r.given
+    }));
+    const { error } = await sb.from('test_results').insert({
+      id: crypto.randomUUID(),
+      test_id: testData.id,
+      student_name: studentName,
+      score: results.filter(r => r.isCorrect).length,
+      total: results.length,
+      answers
+    });
+    if (error) throw error;
+    badge.textContent = '✓ Result saved';
+    badge.className = 'saved-badge visible';
+  } catch(e) {
+    badge.textContent = '⚠ ' + (e.message || e.code || JSON.stringify(e));
+    badge.className = 'saved-badge visible error';
+  }
+}
+
+function retryTest() {
+  words = shuffle([...testData.words]);
+  idx = 0; results = [];
+  showQuestion();
+  show('screenQ');
+}
+
+function goHome() {
+  window.location.href = 'index.html';
+}
+
+// ── Utilities ─────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function normalize(s) {
+  return String(s||'').toLowerCase().trim()
+    .replace(/[֑-ׇ]/g, '')  // strip Hebrew nikud/cantillation
+    .replace(/\s+/g, ' ');
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+</script>
+</body>
+</html>

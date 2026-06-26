@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Dashboard — Gemara Games</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://itkkiuxzbtircgifaoao.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0a2tpdXh6YnRpcmNnaWZhb2FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NDg2NDUsImV4cCI6MjA5ODAyNDY0NX0.H2_Me-hSwaBaugj538Ks5myT_cgb-nA4Dk851XX7sNI';
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: linear-gradient(135deg, #f8faff 0%, #fff8f0 50%, #f0fff8 100%);
+      --card: #fff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+      --radius: 14px; --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --green: #22c55e; --blue: #3b82f6; --amber: #f59e0b;
+      --red: #ef4444; --purple: #8b5cf6;
+      --font-ui: 'Rubik', sans-serif; --font-he: 'Frank Ruhl Libre', serif;
+    }
+    html { font-size: 16px; }
+    body { font-family: var(--font-ui); background: var(--bg); background-attachment: fixed; color: var(--text); min-height: 100vh; }
+
+    .rainbow-bar { height: 5px; background: linear-gradient(90deg,#f97316,#eab308,#22c55e,#06b6d4,#3b82f6,#8b5cf6,#ec4899); }
+
+    .site-header { max-width: 1300px; margin: 0 auto; padding: 28px 24px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .back-link { text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; transition: all .2s; }
+    .back-link:hover { background: #f1f5f9; color: var(--text); }
+    .site-title h1 { font-size: 22px; font-weight: 700; }
+    .site-title p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .db-badge { font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 999px; display: flex; align-items: center; gap: 6px; }
+    .db-badge::before { content: '●'; font-size: 8px; }
+    .db-badge.connected { background: #dcfce7; color: #16a34a; }
+    .db-badge.local { background: #fef9c3; color: #a16207; }
+    .db-badge.loading { background: #e0e7ff; color: #4338ca; }
+
+    .main-layout { max-width: 1300px; margin: 0 auto; padding: 0 24px 60px; display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-header h2 { font-size: 15px; font-weight: 700; }
+    .card-body { padding: 20px; }
+
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-family: var(--font-ui); font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; white-space: nowrap; }
+    .btn-primary { background: var(--blue); color: #fff; } .btn-primary:hover { background: #2563eb; }
+    .btn-green { background: var(--green); color: #fff; } .btn-green:hover { background: #16a34a; }
+    .btn-red { background: var(--red); color: #fff; } .btn-red:hover { background: #dc2626; }
+    .btn-purple { background: var(--purple); color: #fff; } .btn-purple:hover { background: #7c3aed; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: #f1f5f9; color: var(--text); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+    input[type=text], input[type=number], input[type=date], select, textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font-ui); font-size: 14px; color: var(--text); background: #fff; outline: none; transition: border-color .15s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+    .he-input { font-family: var(--font-he); font-size: 16px; direction: rtl; }
+
+    .block-list { display: flex; flex-direction: column; }
+    .block-item { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .block-item:last-child { border-bottom: none; }
+    .block-item:hover { background: #f8faff; }
+    .block-item.active { background: #eff6ff; border-right: 3px solid var(--blue); }
+    .block-item-left { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .block-item-num { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    .block-item-label { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .block-item-meta { font-size: 11px; color: var(--muted); }
+    .block-item-badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0; }
+    .badge { background: #f1f5f9; color: var(--muted); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+    .badge-purple { background: #ede9fe; color: #6d28d9; }
+
+    .add-block-form { padding: 16px; border-top: 1px solid var(--border); background: #f8faff; display: none; }
+    .add-block-form.open { display: block; }
+
+    .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; gap: 0; overflow-x: auto; }
+    .tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; margin-bottom: -1px; white-space: nowrap; }
+    .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    .word-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .word-table th { text-align: left; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding: 10px 12px; background: #f8faff; border-bottom: 1px solid var(--border); }
+    .word-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .word-table tr:last-child td { border-bottom: none; }
+    .word-table tbody tr:hover td { background: #f8faff; }
+    .word-he { font-family: var(--font-he); font-size: 18px; direction: rtl; }
+    .type-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .type-shoresh { background: #fef3c7; color: #92400e; }
+    .type-milah { background: #dbeafe; color: #1e40af; }
+    .edit-row td { background: #f0f9ff !important; padding: 6px 8px !important; }
+    .edit-row input, .edit-row select { padding: 5px 8px; font-size: 13px; }
+
+    .bulk-textarea { font-family: var(--font-he); font-size: 15px; min-height: 160px; resize: vertical; direction: ltr; }
+
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .modal { background: #fff; border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0,0,0,.2); max-height: 90vh; overflow-y: auto; width: 100%; max-width: 760px; }
+    .modal-lg { max-width: 960px; }
+    .modal-sm { max-width: 440px; }
+    .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 1; }
+    .modal-header h2 { font-size: 18px; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted); line-height: 1; padding: 2px 6px; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; background: #fff; }
+
+    .preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .preview-table th { text-align: left; padding: 8px 10px; background: #f8faff; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    .preview-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    .preview-table tr:last-child td { border-bottom: none; }
+    .preview-table input, .preview-table select { padding: 4px 8px; font-size: 13px; }
+
+    .word-selection { display: flex; flex-direction: column; max-height: 280px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+    .wsr { display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
+    .wsr:last-child { border-bottom: none; }
+    .wsr:hover { background: #f8faff; }
+    .wsr.off { opacity: .4; text-decoration: line-through; }
+    .wsr input[type=checkbox] { width: auto; margin: 0; cursor: pointer; flex-shrink: 0; }
+
+    .dir-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .dir-card { border: 2px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: all .15s; text-align: center; }
+    .dir-card:hover { border-color: var(--blue); }
+    .dir-card.on { border-color: var(--blue); background: #eff6ff; }
+    .dir-card .icon { font-size: 24px; margin-bottom: 6px; }
+    .dir-card .lbl { font-size: 13px; font-weight: 700; }
+    .dir-card .desc { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    .empty-state { text-align: center; padding: 40px 24px; color: var(--muted); }
+    .empty-state .ei { font-size: 36px; margin-bottom: 10px; }
+    .empty-state p { font-size: 14px; line-height: 1.6; }
+
+    .section-lbl { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
+
+    .test-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .test-card-info .title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+    .test-card-info .meta { font-size: 12px; color: var(--muted); }
+    .test-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+    .test-status.draft { background: #f1f5f9; color: var(--muted); }
+    .test-status.active { background: #dcfce7; color: #16a34a; }
+
+    .results-avg { background: #eff6ff; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+
+    hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 200; transform: translateY(80px); opacity: 0; transition: all .3s; pointer-events: none; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.ok { background: #1e293b; color: #fff; }
+    .toast.err { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+
+    .gen-btn { width: 100%; padding: 14px; font-size: 15px; border-radius: 10px; margin-top: 20px; justify-content: center; }
+
+    @media (max-width: 768px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .dir-options { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="rainbow-bar"></div>
+
+<header class="site-header">
+  <div class="header-left">
+    <a class="back-link" href="index.html">← Back to Games</a>
+    <div class="site-title">
+      <h1>📋 Teacher Dashboard</h1>
+      <p>Manage vocabulary blocks, words, and tests</p>
+    </div>
+  </div>
+  <div id="dbBadge" class="db-badge loading">Connecting…</div>
+</header>
+
+<div class="main-layout">
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h2>Vocabulary Blocks</h2>
+        <button class="btn btn-primary btn-sm" onclick="toggleAddBlockForm()">+ Add Block</button>
+      </div>
+      <div class="add-block-form" id="addBlockForm">
+        <div class="form-group"><label>Block #</label><input type="number" id="nbNum" min="1" /></div>
+        <div class="form-group"><label>Label / Title</label><input type="text" id="nbLabel" placeholder="e.g. Tied Doves & Vessel" /></div>
+        <div class="form-group"><label>Week Start</label><input type="date" id="nbWeekStart" /></div>
+        <div class="form-group"><label>Week End</label><input type="date" id="nbWeekEnd" /></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddBlockForm()">Cancel</button>
+          <button class="btn btn-primary btn-sm" id="addBlockBtn" onclick="addBlock()">Save Block</button>
+        </div>
+      </div>
+      <div class="block-list" id="blockList"></div>
+    </div>
+  </div>
+
+  <div id="detailPanel">
+    <div class="card">
+      <div class="card-body empty-state">
+        <div class="ei">📚</div>
+        <p>Select a block on the left<br>to manage its words and tests.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: edit block -->
+<div class="modal-backdrop" id="editBlockModal" style="display:none" onclick="closeMdl('editBlockModal',event)">
+  <div class="modal modal-sm">
+    <div class="modal-header"><h2>Edit Block</h2><button class="modal-close" onclick="closeMdl('editBlockModal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Block #</label><input type="number" id="ebNum" min="1" /></div>
+      <div class="form-group"><label>Label</label><input type="text" id="ebLabel" /></div>
+      <div class="form-group"><label>Week Start</label><input type="date" id="ebWeekStart" /></div>
+      <div class="form-group"><label>Week End</label><input type="date" id="ebWeekEnd" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMdl('editBlockModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditBlock()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: bulk preview -->
+<div class="modal-backdrop" id="bulkModal" style="display:none" onclick="closeMdl('bulkModal',event)">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h2>Preview Bulk Upload</h2><button class="modal-close" onclick="closeMdl('bulkModal')">×</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Edit any row before confirming. Click ✕ to remove a row.</p>
+      <div style="overflow-x:auto">
+        <table class="preview-table">
+          <thead><tr><th style="width:32px">#</th><th>Hebrew / Aramaic</th><th style="width:100px">Type</th><th>English</th><th style="width:36px"></th></tr></thead>
+          <tbody id="previewTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span id="previewCount" style="font-size:13px;color:var(--muted);margin-right:auto"></span>
+      <button class="btn btn-ghost" onclick="closeMdl('bulkModal')">Cancel</button>
+      <button class="btn btn-green" id="confirmBulkBtn" onclick="confirmBulk()">✓ Insert All Words</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: generate test -->
+<div class="modal-backdrop" id="testModal" style="display:none" onclick="closeMdl('testModal',event)">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h2>Generate Test</h2><button class="modal-close" onclick="closeMdl('testModal')">×</button></div>
+    <div class="modal-body">
+      <div class="section-lbl">1. Select words to include</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <button class="btn btn-ghost btn-sm" onclick="selAllWords(true)">Select all</button>
+        <button class="btn btn-ghost btn-sm" onclick="selAllWords(false)">Deselect all</button>
+        <span id="wordSelCount" style="font-size:13px;color:var(--muted);margin-left:auto"></span>
+      </div>
+      <div class="word-selection" id="testWordList"></div>
+      <hr />
+      <div class="section-lbl">2. Timer per word</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <input type="number" id="testTimer" value="30" min="5" max="120" style="width:90px" />
+        <span style="font-size:14px;color:var(--muted)">seconds per word</span>
+      </div>
+      <hr />
+      <div class="section-lbl">3. Test direction</div>
+      <div class="dir-options">
+        <div class="dir-card on" id="dirHE" onclick="setDir('he_to_en')">
+          <div class="icon">🔤</div>
+          <div class="lbl">Hebrew → English</div>
+          <div class="desc">Student sees Hebrew/Aramaic, types the English meaning</div>
+        </div>
+        <div class="dir-card" id="dirEN" onclick="setDir('en_to_he')">
+          <div class="icon">⌨️</div>
+          <div class="lbl">English → Hebrew</div>
+          <div class="desc">Student sees English, types Hebrew (requires Hebrew keyboard)</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMdl('testModal')">Cancel</button>
+      <button class="btn btn-ghost" onclick="saveTestDraft()">💾 Save as Draft</button>
+      <button class="btn btn-purple" onclick="startTestNow()">▶ Start Test Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: delete word -->
+<div class="modal-backdrop" id="delModal" style="display:none" onclick="closeMdl('delModal',event)">
+  <div class="modal modal-sm">
+    <div class="modal-header"><h2>Delete Word</h2><button class="modal-close" onclick="closeMdl('delModal')">×</button></div>
+    <div class="modal-body">
+      <p style="font-size:15px">Delete "<strong id="delWordLabel"></strong>"?</p>
+      <p style="font-size:13px;color:var(--muted);margin-top:8px">This cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMdl('delModal')">Cancel</button>
+      <button class="btn btn-red" onclick="confirmDelWord()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Supabase ──────────────────────────────────────────────
+let sb = null;
+
+// ── State ─────────────────────────────────────────────────
+let blocks = [];
+let activeId = null;
+let editingWordId = null;
+let editingBlockId = null;
+let pendingDelWordId = null;
+let bulkRows = [];
+let bulkBlockId = null;
+let testBlockId = null;
+let testDir = 'he_to_en';
+let testWordSel = {};
+let activeTab = 'words';
+
+// ── Init ──────────────────────────────────────────────────
+async function init() {
+  try {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    await loadFromDB();
+    document.getElementById('dbBadge').textContent = 'Connected to Supabase';
+    document.getElementById('dbBadge').className = 'db-badge connected';
+  } catch(e) {
+    console.error('Supabase init failed:', e);
+    loadLocal();
+    document.getElementById('dbBadge').textContent = 'Offline (cached)';
+    document.getElementById('dbBadge').className = 'db-badge local';
+    toast('Offline: ' + (e.message || e.code || String(e)), 'err');
+  }
+  renderBlockList();
+  if (blocks.length) selectBlock(blocks[0].id);
+}
+
+// ── Load from Supabase ────────────────────────────────────
+async function loadFromDB() {
+  const [{ data: bData, error: bErr }, { data: wData }, { data: tData }] = await Promise.all([
+    sb.from('blocks').select('*').order('block_number'),
+    sb.from('words').select('*'),
+    sb.from('tests').select('*').order('created_at')
+  ]);
+  if (bErr) throw bErr;
+
+  blocks = (bData || []).map(b => ({
+    id: b.id,
+    block_number: b.block_number,
+    label: b.label || '',
+    week_start: b.week_start || '',
+    week_end: b.week_end || '',
+    words: (wData || []).filter(w => w.block_id === b.id).map(w => ({
+      id: w.id, hebrew: w.hebrew, type: w.type, english: w.english
+    })),
+    tests: (tData || []).filter(t => t.block_id === b.id).map(t => ({
+      id: t.id, blockId: t.block_id, timerPerWord: t.timer_per_word,
+      direction: t.direction, status: t.status,
+      wordIds: Array.isArray(t.word_ids) ? t.word_ids : [],
+      createdAt: t.created_at
+    }))
+  }));
+  saveLocal();
+}
+
+function loadLocal() {
+  const raw = localStorage.getItem('gm_blocks');
+  blocks = raw ? JSON.parse(raw) : [];
+}
+
+function saveLocal() {
+  localStorage.setItem('gm_blocks', JSON.stringify(blocks));
+}
+
+function block(id) { return blocks.find(b => b.id === id); }
+
+// ── Block CRUD ────────────────────────────────────────────
+function toggleAddBlockForm() {
+  const f = document.getElementById('addBlockForm');
+  f.classList.toggle('open');
+  if (f.classList.contains('open')) {
+    const next = blocks.length ? Math.max(...blocks.map(b => b.block_number)) + 1 : 1;
+    document.getElementById('nbNum').value = next;
+    document.getElementById('nbLabel').focus();
+  }
+}
+
+async function addBlock() {
+  const num = parseInt(document.getElementById('nbNum').value);
+  const label = document.getElementById('nbLabel').value.trim();
+  const ws = document.getElementById('nbWeekStart').value;
+  const we = document.getElementById('nbWeekEnd').value;
+  if (!label) return toast('Enter a block label', 'err');
+  if (!num || num < 1) return toast('Enter a valid block number', 'err');
+
+  const btn = document.getElementById('addBlockBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const b = { id: uid(), block_number: num, label, week_start: ws, week_end: we, words: [], tests: [] };
+  try {
+    const { error } = await sb.from('blocks').insert({
+      id: b.id, block_number: b.block_number, label: b.label,
+      week_start: b.week_start || null, week_end: b.week_end || null
+    });
+    if (error) throw error;
+    blocks.push(b);
+    blocks.sort((a, c) => a.block_number - c.block_number);
+    saveLocal();
+    document.getElementById('nbLabel').value = '';
+    document.getElementById('nbWeekStart').value = '';
+    document.getElementById('nbWeekEnd').value = '';
+    toggleAddBlockForm();
+    renderBlockList();
+    selectBlock(b.id);
+    toast('Block added!');
+  } catch(e) {
+    toast('Failed to save block: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Block';
+  }
+}
+
+function openEditBlock(id) {
+  const b = block(id);
+  editingBlockId = id;
+  document.getElementById('ebNum').value = b.block_number;
+  document.getElementById('ebLabel').value = b.label;
+  document.getElementById('ebWeekStart').value = b.week_start || '';
+  document.getElementById('ebWeekEnd').value = b.week_end || '';
+  document.getElementById('editBlockModal').style.display = 'flex';
+}
+
+async function saveEditBlock() {
+  const num = parseInt(document.getElementById('ebNum').value);
+  const label = document.getElementById('ebLabel').value.trim();
+  if (!label || !num || num < 1) return toast('Number and label are required', 'err');
+  const b = block(editingBlockId);
+  const ws = document.getElementById('ebWeekStart').value;
+  const we = document.getElementById('ebWeekEnd').value;
+  try {
+    const { error } = await sb.from('blocks').update({
+      block_number: num, label, week_start: ws || null, week_end: we || null
+    }).eq('id', editingBlockId);
+    if (error) throw error;
+    b.block_number = num; b.label = label; b.week_start = ws; b.week_end = we;
+    blocks.sort((a, c) => a.block_number - c.block_number);
+    saveLocal();
+    closeMdl('editBlockModal');
+    renderBlockList(); renderDetail(editingBlockId);
+    toast('Block updated!');
+  } catch(e) {
+    toast('Failed to update block', 'err');
+  }
+}
+
+function selectBlock(id) {
+  activeId = id;
+  activeTab = 'words';
+  editingWordId = null;
+  renderBlockList();
+  renderDetail(id);
+}
+
+// ── Render: block list ────────────────────────────────────
+function renderBlockList() {
+  const el = document.getElementById('blockList');
+  if (!blocks.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:32px 16px"><div class="ei">📦</div><p>No blocks yet.<br>Click "+ Add Block" to create one.</p></div>`;
+    return;
+  }
+  el.innerHTML = blocks.map(b => {
+    const wc = (b.words||[]).length, tc = (b.tests||[]).length;
+    const meta = [b.week_start ? fmtDate(b.week_start) : '', b.week_end ? '→ '+fmtDate(b.week_end) : ''].filter(Boolean).join(' ');
+    return `<div class="block-item${b.id===activeId?' active':''}" onclick="selectBlock('${b.id}')">
+      <div class="block-item-left">
+        <span class="block-item-num">Block ${b.block_number}</span>
+        <span class="block-item-label">${esc(b.label)}</span>
+        ${meta ? `<span class="block-item-meta">${meta}</span>` : ''}
+      </div>
+      <div class="block-item-badges">
+        <span class="badge">${wc} word${wc!==1?'s':''}</span>
+        ${tc ? `<span class="badge badge-purple">${tc} test${tc!==1?'s':''}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Render: block detail ──────────────────────────────────
+function renderDetail(id) {
+  const b = block(id);
+  const panel = document.getElementById('detailPanel');
+  if (!b) { panel.innerHTML = `<div class="card"><div class="card-body empty-state"><div class="ei">📚</div><p>Select a block to manage its words.</p></div></div>`; return; }
+  const words = b.words || [];
+  const tests = b.tests || [];
+  const meta = [b.week_start ? fmtDate(b.week_start) : '', b.week_end ? '→ '+fmtDate(b.week_end) : ''].filter(Boolean).join(' ');
+
+  panel.innerHTML = `<div class="card">
+    <div class="card-header">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Block ${b.block_number}</div>
+        <h2 style="font-size:18px">${esc(b.label)}</h2>
+        ${meta ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${meta}</div>` : ''}
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="openEditBlock('${b.id}')">✏️ Edit</button>
+    </div>
+    <div class="card-body">
+      <div class="tabs">
+        <div class="tab" id="tabWords" onclick="switchTab('words')">Words (${words.length})</div>
+        <div class="tab" id="tabAdd" onclick="switchTab('add')">+ Add Word</div>
+        <div class="tab" id="tabBulk" onclick="switchTab('bulk')">↑ Bulk Upload</div>
+        ${tests.length ? `<div class="tab" id="tabTests" onclick="switchTab('tests')">Tests (${tests.length})</div>` : ''}
+        <div class="tab" id="tabResults" onclick="switchTab('results')">📊 Results</div>
+      </div>
+
+      <div id="tcWords">
+        ${!words.length ? `<div class="empty-state"><div class="ei">📝</div><p>No words yet. Use "+ Add Word" or "↑ Bulk Upload".</p></div>` : `
+        <table class="word-table"><thead><tr>
+          <th style="width:36px">#</th><th>Hebrew / Aramaic</th><th style="width:88px">Type</th><th>English</th><th style="width:90px"></th>
+        </tr></thead><tbody>
+          ${words.map((w,i) => wordRow(w, i+1, b.id)).join('')}
+        </tbody></table>`}
+      </div>
+
+      <div id="tcAdd" style="display:none">
+        <div class="form-group"><label>Hebrew / Aramaic</label><input class="he-input" type="text" id="awHe" placeholder="e.g. מַיִם or א.מ.ר" /></div>
+        <div class="form-group"><label>Type</label>
+          <select id="awType">
+            <option value="milah">מִלָּה — Milah (word)</option>
+            <option value="shoresh">שׁוֹרֶשׁ — Shoresh (root)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>English Meaning</label><input type="text" id="awEn" placeholder="e.g. Water" /></div>
+        <button class="btn btn-green" onclick="addWord('${b.id}')">+ Add Word</button>
+      </div>
+
+      <div id="tcBulk" style="display:none">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
+          One word per line: &nbsp;<code style="background:#f1f5f9;padding:2px 7px;border-radius:4px;font-size:12px">Hebrew | shoresh/milah | English</code>
+        </p>
+        <div class="form-group">
+          <label>Word List</label>
+          <textarea class="bulk-textarea" id="bulkTA" placeholder="א.מ.ר | shoresh | Say, Speak&#10;מַיִם | milah | Water&#10;כְּלִי | milah | Vessel"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="parseBulk('${b.id}')">Preview & Confirm →</button>
+      </div>
+
+      <div id="tcTests" style="display:none">
+        ${!tests.length
+          ? `<div class="empty-state"><div class="ei">📋</div><p>No tests yet.</p></div>`
+          : tests.map(t => testCard(t)).join('')}
+      </div>
+
+      <div id="tcResults" style="display:none">
+        <div class="empty-state"><div class="ei">📊</div><p>Loading results…</p></div>
+      </div>
+
+      ${words.length ? `<button class="btn btn-purple gen-btn" onclick="openTestModal('${b.id}')">✨ Generate Test from This Block (${words.length} words)</button>` : ''}
+    </div>
+  </div>`;
+
+  switchTab(activeTab, false);
+}
+
+// ── Tab switching ─────────────────────────────────────────
+function switchTab(tab, setActive = true) {
+  if (setActive) activeTab = tab;
+  ['words','add','bulk','tests','results'].forEach(t => {
+    const tc = document.getElementById('tc' + cap(t));
+    const tb = document.getElementById('tab' + cap(t));
+    if (tc) tc.style.display = t === tab ? '' : 'none';
+    if (tb) tb.classList.toggle('active', t === tab);
+  });
+  if (tab === 'results' && activeId) loadAndRenderResults(activeId);
+}
+
+// ── Word row ──────────────────────────────────────────────
+function wordRow(w, idx, blockId) {
+  if (editingWordId === w.id) {
+    return `<tr class="edit-row" id="row-${w.id}">
+      <td style="color:var(--muted);font-size:12px">${idx}</td>
+      <td><input class="he-input" style="width:100%" id="eHe-${w.id}" value="${esc(w.hebrew)}" /></td>
+      <td><select id="eTy-${w.id}"><option value="milah"${w.type==='milah'?' selected':''}>milah</option><option value="shoresh"${w.type==='shoresh'?' selected':''}>shoresh</option></select></td>
+      <td><input style="width:100%" id="eEn-${w.id}" value="${esc(w.english)}" /></td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn btn-green btn-sm" onclick="saveWord('${w.id}','${blockId}')">✓</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelEdit()">✕</button>
+      </div></td>
+    </tr>`;
+  }
+  return `<tr id="row-${w.id}">
+    <td style="color:var(--muted);font-size:12px">${idx}</td>
+    <td class="word-he">${esc(w.hebrew)}</td>
+    <td><span class="type-badge type-${w.type}">${w.type}</span></td>
+    <td>${esc(w.english)}</td>
+    <td><div style="display:flex;gap:4px">
+      <button class="btn btn-ghost btn-sm" onclick="startEdit('${w.id}','${blockId}')">✏️</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="promptDel('${w.id}','${esc(w.hebrew)}')">🗑</button>
+    </div></td>
+  </tr>`;
+}
+
+// ── Word CRUD ─────────────────────────────────────────────
+async function addWord(blockId) {
+  const he = document.getElementById('awHe').value.trim();
+  const type = document.getElementById('awType').value;
+  const en = document.getElementById('awEn').value.trim();
+  if (!he) return toast('Enter Hebrew/Aramaic text', 'err');
+  if (!en) return toast('Enter English meaning', 'err');
+
+  const w = { id: uid(), hebrew: he, type, english: en };
+  try {
+    const { error } = await sb.from('words').insert({ id: w.id, block_id: blockId, hebrew: w.hebrew, type: w.type, english: w.english });
+    if (error) throw error;
+    block(blockId).words.push(w);
+    saveLocal();
+    document.getElementById('awHe').value = '';
+    document.getElementById('awEn').value = '';
+    document.getElementById('awHe').focus();
+    activeTab = 'words';
+    renderDetail(blockId); renderBlockList();
+    toast('Word added!');
+  } catch(e) {
+    toast('Failed to save word', 'err');
+  }
+}
+
+function startEdit(wordId, blockId) {
+  editingWordId = wordId;
+  renderDetail(blockId);
+  document.getElementById(`eHe-${wordId}`)?.focus();
+}
+
+function cancelEdit() {
+  editingWordId = null;
+  renderDetail(activeId);
+}
+
+async function saveWord(wordId, blockId) {
+  const he = document.getElementById(`eHe-${wordId}`)?.value.trim();
+  const type = document.getElementById(`eTy-${wordId}`)?.value;
+  const en = document.getElementById(`eEn-${wordId}`)?.value.trim();
+  if (!he || !en) return toast('Hebrew and English are required', 'err');
+
+  try {
+    const { error } = await sb.from('words').update({ hebrew: he, type, english: en }).eq('id', wordId);
+    if (error) throw error;
+    const b = block(blockId);
+    const w = b.words.find(x => x.id === wordId);
+    if (w) { w.hebrew = he; w.type = type; w.english = en; }
+    saveLocal();
+    editingWordId = null;
+    renderDetail(blockId); renderBlockList();
+    toast('Word updated!');
+  } catch(e) {
+    toast('Failed to update word', 'err');
+  }
+}
+
+function promptDel(wordId, label) {
+  pendingDelWordId = wordId;
+  document.getElementById('delWordLabel').textContent = label;
+  document.getElementById('delModal').style.display = 'flex';
+}
+
+async function confirmDelWord() {
+  try {
+    const { error } = await sb.from('words').delete().eq('id', pendingDelWordId);
+    if (error) throw error;
+    const b = blocks.find(b => (b.words||[]).some(w => w.id === pendingDelWordId));
+    if (b) {
+      b.words = b.words.filter(w => w.id !== pendingDelWordId);
+      saveLocal();
+      closeMdl('delModal');
+      renderDetail(b.id); renderBlockList();
+      toast('Word deleted');
+    }
+  } catch(e) {
+    toast('Failed to delete word', 'err');
+  }
+}
+
+// ── Bulk upload ───────────────────────────────────────────
+function parseBulk(blockId) {
+  const raw = document.getElementById('bulkTA').value;
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return toast('Paste some words first', 'err');
+  const rows = []; let errs = 0;
+  lines.forEach(line => {
+    const parts = line.split('|').map(p => p.trim());
+    if (parts.length < 3) { errs++; return; }
+    const [hebrew, typeRaw, english] = parts;
+    const type = typeRaw.toLowerCase().includes('shoresh') ? 'shoresh' : 'milah';
+    rows.push({ hebrew, type, english: english.trim(), _id: uid() });
+  });
+  if (!rows.length) return toast(`All ${lines.length} lines had format errors`, 'err');
+  if (errs) toast(`${errs} line(s) skipped — wrong format`, 'err');
+  bulkRows = rows;
+  bulkBlockId = blockId;
+  renderBulkPreview(rows);
+  document.getElementById('bulkModal').style.display = 'flex';
+}
+
+function renderBulkPreview(rows) {
+  document.getElementById('previewTbody').innerHTML = rows.map((r, i) => `
+    <tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><input class="he-input" style="width:100%" value="${esc(r.hebrew)}" onchange="updateBulkRow('${r._id}','hebrew',this.value)" /></td>
+      <td><select onchange="updateBulkRow('${r._id}','type',this.value)">
+        <option value="milah"${r.type==='milah'?' selected':''}>milah</option>
+        <option value="shoresh"${r.type==='shoresh'?' selected':''}>shoresh</option>
+      </select></td>
+      <td><input style="width:100%" value="${esc(r.english)}" onchange="updateBulkRow('${r._id}','english',this.value)" /></td>
+      <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="removeBulkRow('${r._id}')">✕</button></td>
+    </tr>`).join('');
+  document.getElementById('previewCount').textContent = `${rows.length} word${rows.length!==1?'s':''} ready to insert`;
+}
+
+function updateBulkRow(id, field, val) {
+  const r = bulkRows.find(r => r._id === id);
+  if (r) r[field] = val;
+}
+
+function removeBulkRow(id) {
+  bulkRows = bulkRows.filter(r => r._id !== id);
+  renderBulkPreview(bulkRows);
+}
+
+async function confirmBulk() {
+  if (!bulkRows.length) return toast('No words to insert', 'err');
+  const btn = document.getElementById('confirmBulkBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const newWords = bulkRows.map(r => ({ id: uid(), hebrew: r.hebrew, type: r.type, english: r.english }));
+  const rows = newWords.map(w => ({ id: w.id, block_id: bulkBlockId, hebrew: w.hebrew, type: w.type, english: w.english }));
+
+  try {
+    const { error } = await sb.from('words').insert(rows);
+    if (error) throw error;
+    block(bulkBlockId).words.push(...newWords);
+    saveLocal();
+    closeMdl('bulkModal');
+    document.getElementById('bulkTA') && (document.getElementById('bulkTA').value = '');
+    activeTab = 'words';
+    renderDetail(bulkBlockId); renderBlockList();
+    toast(`${newWords.length} word${newWords.length!==1?'s':''} inserted!`);
+  } catch(e) {
+    toast('Failed to insert words: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = '✓ Insert All Words';
+  }
+}
+
+// ── Test generation ───────────────────────────────────────
+function openTestModal(blockId) {
+  testBlockId = blockId;
+  testDir = 'he_to_en';
+  const b = block(blockId);
+  testWordSel = {};
+  (b.words||[]).forEach(w => testWordSel[w.id] = true);
+
+  document.getElementById('testWordList').innerHTML = (b.words||[]).map(w => `
+    <div class="wsr" id="wsr-${w.id}" onclick="togWord('${w.id}')">
+      <input type="checkbox" checked id="chk-${w.id}" onclick="event.stopPropagation();togWord('${w.id}')" />
+      <span class="word-he" style="font-size:17px;flex:1">${esc(w.hebrew)}</span>
+      <span class="type-badge type-${w.type}" style="flex-shrink:0">${w.type}</span>
+      <span style="color:var(--muted);font-size:13px;min-width:120px;margin-left:8px">${esc(w.english)}</span>
+    </div>`).join('');
+
+  document.getElementById('testTimer').value = 30;
+  document.getElementById('dirHE').classList.add('on');
+  document.getElementById('dirEN').classList.remove('on');
+  updateWordSelCount();
+  document.getElementById('testModal').style.display = 'flex';
+}
+
+function togWord(id) {
+  testWordSel[id] = !testWordSel[id];
+  document.getElementById(`wsr-${id}`)?.classList.toggle('off', !testWordSel[id]);
+  const chk = document.getElementById(`chk-${id}`);
+  if (chk) chk.checked = testWordSel[id];
+  updateWordSelCount();
+}
+
+function selAllWords(val) {
+  Object.keys(testWordSel).forEach(id => {
+    testWordSel[id] = val;
+    document.getElementById(`wsr-${id}`)?.classList.toggle('off', !val);
+    const chk = document.getElementById(`chk-${id}`);
+    if (chk) chk.checked = val;
+  });
+  updateWordSelCount();
+}
+
+function updateWordSelCount() {
+  const sel = Object.values(testWordSel).filter(Boolean).length;
+  const tot = Object.keys(testWordSel).length;
+  document.getElementById('wordSelCount').textContent = `${sel} of ${tot} selected`;
+}
+
+function setDir(dir) {
+  testDir = dir;
+  document.getElementById('dirHE').classList.toggle('on', dir === 'he_to_en');
+  document.getElementById('dirEN').classList.toggle('on', dir === 'en_to_he');
+}
+
+async function buildTest(status) {
+  const wordIds = Object.entries(testWordSel).filter(([,v])=>v).map(([k])=>k);
+  if (!wordIds.length) { toast('Select at least one word', 'err'); return null; }
+  const timer = parseInt(document.getElementById('testTimer').value) || 30;
+  const t = { id: uid(), blockId: testBlockId, timerPerWord: timer, direction: testDir, status, wordIds, createdAt: new Date().toISOString() };
+
+  const { error } = await sb.from('tests').insert({
+    id: t.id, block_id: t.blockId, timer_per_word: t.timerPerWord,
+    direction: t.direction, status: t.status, word_ids: t.wordIds
+  });
+  if (error) { toast('Failed to save test: ' + (error.message || error.code || JSON.stringify(error)), 'err'); return null; }
+
+  block(testBlockId).tests = block(testBlockId).tests || [];
+  block(testBlockId).tests.push(t);
+  saveLocal();
+  return t;
+}
+
+async function saveTestDraft() {
+  const t = await buildTest('draft');
+  if (!t) return;
+  closeMdl('testModal');
+  activeTab = 'tests';
+  renderDetail(testBlockId); renderBlockList();
+  toast('Test saved as draft!');
+}
+
+async function startTestNow() {
+  const t = await buildTest('active');
+  if (!t) return;
+  closeMdl('testModal');
+  const b = block(testBlockId);
+  const payload = { ...t, words: (b.words||[]).filter(w => t.wordIds.includes(w.id)), blockLabel: b.label };
+  localStorage.setItem('gm_active_test', JSON.stringify(payload));
+  activeTab = 'tests';
+  renderDetail(testBlockId); renderBlockList();
+  window.open('game_test.html', '_blank');
+  toast('Test started — opened in new tab!');
+}
+
+async function runTest(testId, blockId) {
+  const b = block(blockId);
+  const t = (b.tests||[]).find(t => t.id === testId);
+  if (!t) return;
+  // Mark as active in DB
+  await sb.from('tests').update({ status: 'active' }).eq('id', testId);
+  t.status = 'active';
+  saveLocal();
+  const payload = { ...t, words: (b.words||[]).filter(w => t.wordIds.includes(w.id)), blockLabel: b.label };
+  localStorage.setItem('gm_active_test', JSON.stringify(payload));
+  window.open('game_test.html', '_blank');
+}
+
+async function deleteTest(testId, blockId) {
+  if (!confirm('Delete this test?')) return;
+  try {
+    const { error } = await sb.from('tests').delete().eq('id', testId);
+    if (error) throw error;
+    const b = block(blockId);
+    b.tests = (b.tests||[]).filter(t => t.id !== testId);
+    saveLocal();
+    renderDetail(blockId); renderBlockList();
+    toast('Test deleted');
+  } catch(e) {
+    toast('Failed to delete test', 'err');
+  }
+}
+
+function testCard(t) {
+  const dir = t.direction === 'he_to_en' ? 'Hebrew → English' : 'English → Hebrew';
+  const wc = (t.wordIds||[]).length;
+  const date = t.createdAt ? fmtDate(t.createdAt.slice(0,10)) : '';
+  return `<div class="test-card">
+    <div class="test-card-info">
+      <div class="title">${wc} word${wc!==1?'s':''} · ${t.timerPerWord}s/word · ${dir}</div>
+      <div class="meta">${date}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="test-status ${t.status}">${t.status}</span>
+      <button class="btn btn-purple btn-sm" onclick="runTest('${t.id}','${t.blockId}')">▶ Run</button>
+      <button class="btn btn-ghost btn-sm" onclick="deleteTest('${t.id}','${t.blockId}')">✕</button>
+    </div>
+  </div>`;
+}
+
+// ── Results tab ───────────────────────────────────────────
+async function loadAndRenderResults(blockId) {
+  const b = block(blockId);
+  const tc = document.getElementById('tcResults');
+  if (!tc) return;
+
+  const testIds = (b.tests||[]).map(t => t.id);
+  if (!testIds.length) {
+    tc.innerHTML = `<div class="empty-state"><div class="ei">📊</div><p>No tests yet for this block.</p></div>`;
+    return;
+  }
+
+  tc.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading results…</div>`;
+
+  try {
+    const { data, error } = await sb.from('test_results')
+      .select('*')
+      .in('test_id', testIds)
+      .order('completed_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || !data.length) {
+      tc.innerHTML = `<div class="empty-state"><div class="ei">📊</div><p>No student results yet.<br>Run a test so students can submit their answers.</p></div>`;
+      return;
+    }
+
+    const avg = Math.round(data.reduce((s, r) => s + (r.score / r.total * 100), 0) / data.length);
+
+    tc.innerHTML = `
+      <div class="results-avg">
+        <span style="font-size:28px">📊</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em">Class Average</div>
+          <div style="font-size:26px;font-weight:800">${avg}%</div>
+        </div>
+        <span style="margin-left:auto;font-size:13px;color:var(--muted)">${data.length} submission${data.length!==1?'s':''}</span>
+      </div>
+      <table class="word-table">
+        <thead><tr>
+          <th>Student</th>
+          <th style="width:90px">Score</th>
+          <th style="width:70px">%</th>
+          <th style="width:110px">Date</th>
+          <th style="width:40px"></th>
+        </tr></thead>
+        <tbody>
+          ${data.map(r => {
+            const pct = Math.round(r.score / r.total * 100);
+            const color = pct >= 90 ? '#16a34a' : pct >= 70 ? '#2563eb' : pct >= 50 ? '#a16207' : '#dc2626';
+            return `<tr>
+              <td style="font-weight:600">${esc(r.student_name || 'Anonymous')}</td>
+              <td>${r.score}/${r.total}</td>
+              <td><span style="font-weight:700;color:${color}">${pct}%</span></td>
+              <td style="font-size:12px;color:var(--muted)">${fmtDate((r.completed_at||'').slice(0,10))}</td>
+              <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteResult('${r.id}','${blockId}')">✕</button></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) {
+    tc.innerHTML = `<div class="empty-state"><div class="ei">⚠️</div><p>Failed to load results.</p></div>`;
+  }
+}
+
+async function deleteResult(resultId, blockId) {
+  if (!confirm('Delete this result?')) return;
+  try {
+    const { error } = await sb.from('test_results').delete().eq('id', resultId);
+    if (error) throw error;
+    loadAndRenderResults(blockId);
+    toast('Result deleted');
+  } catch(e) {
+    toast('Failed to delete result', 'err');
+  }
+}
+
+// ── Modal helper ──────────────────────────────────────────
+function closeMdl(id, e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById(id).style.display = 'none';
+}
+
+// ── Utilities ─────────────────────────────────────────────
+function uid() { return crypto.randomUUID(); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function fmtDate(d) {
+  if (!d) return '';
+  try { return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+  catch { return d; }
+}
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = `toast ${type} show`;
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Start ─────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
