@@ -213,6 +213,7 @@ let timerInterval = null;
 let timeLeft = 30;
 let answered = false;
 let studentName = '';
+let isRetry = false;
 
 // ── Load test from Supabase by ID ─────────────────────────
 async function loadTestFromDB(testId) {
@@ -441,6 +442,7 @@ function showResults() {
 
 async function saveResultToDB() {
   const badge = document.getElementById('savedBadge');
+  if (isRetry) { badge.textContent = '↺ Practice run — not saved'; badge.className = 'saved-badge visible'; return; }
   if (!sb || !testData || !testData.id) return;
   try {
     const answers = results.map(r => ({
@@ -466,6 +468,7 @@ async function saveResultToDB() {
 }
 
 function retryTest() {
+  isRetry = true;
   words = shuffle([...testData.words]);
   idx = 0; results = [];
   showQuestion();
