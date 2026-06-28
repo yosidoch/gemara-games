@@ -144,6 +144,20 @@
 
     .results-avg { background: #eff6ff; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
 
+    /* Students sidebar section */
+    .sidebar-section-lbl { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; padding: 12px 16px 6px; border-top: 1px solid var(--border); }
+    .student-item { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
+    .student-item:last-child { border-bottom: none; }
+    .student-item:hover { background: #f8faff; }
+    .student-item-name { font-weight: 600; flex: 1; min-width: 0; }
+    .student-item-nick { font-size: 12px; color: var(--muted); margin-left: 4px; font-weight: 400; }
+    .student-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .student-edit-row { padding: 8px 12px; border-bottom: 1px solid var(--border); background: #f8faff; }
+    .student-edit-row input { margin-bottom: 6px; }
+    .student-add-form { padding: 12px 16px; border-top: 1px solid var(--border); background: #f8faff; display: none; }
+    .student-add-form.open { display: block; }
+    .student-count-badge { font-size: 12px; color: var(--muted); }
+
     hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
     .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 200; transform: translateY(80px); opacity: 0; transition: all .3s; pointer-events: none; }
@@ -193,6 +207,23 @@
         </div>
       </div>
       <div class="block-list" id="blockList"></div>
+    </div>
+
+    <!-- Students card -->
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <h2>👥 Students <span class="student-count-badge" id="studentCountBadge"></span></h2>
+        <button class="btn btn-primary btn-sm" onclick="toggleAddStudentForm()">+ Add Student</button>
+      </div>
+      <div class="student-add-form" id="addStudentForm">
+        <div class="form-group"><label>Full Name *</label><input type="text" id="nsName" placeholder="e.g. Moshe Cohen" /></div>
+        <div class="form-group"><label>Nickname (optional)</label><input type="text" id="nsNick" placeholder="e.g. Moishy" /></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddStudentForm()">Cancel</button>
+          <button class="btn btn-green btn-sm" id="addStudentBtn" onclick="addStudent()">Save</button>
+        </div>
+      </div>
+      <div id="studentList"><div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Loading…</div></div>
     </div>
   </div>
 
@@ -273,8 +304,20 @@
         <div class="dir-card" id="dirEN" onclick="setDir('en_to_he')">
           <div class="icon">⌨️</div>
           <div class="lbl">English → Hebrew</div>
-          <div class="desc">Student sees English, types Hebrew (requires Hebrew keyboard)</div>
+          <div class="desc">Student sees English, types Hebrew (virtual keyboard provided)</div>
         </div>
+        <div class="dir-card" id="dirMIX" onclick="setDir('mixed')">
+          <div class="icon">🔀</div>
+          <div class="lbl">Mixed</div>
+          <div class="desc">Each question randomly switches direction — student uses the right keyboard</div>
+        </div>
+      </div>
+      <hr />
+      <div class="section-lbl">4. Score card display</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer"><input type="radio" name="scoreDisplay" value="fraction" checked /> X out of Y (e.g. 8/10)</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer"><input type="radio" name="scoreDisplay" value="percent" /> Percentage (e.g. 80%)</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer"><input type="radio" name="scoreDisplay" value="both" /> Both</label>
       </div>
     </div>
     <div class="modal-footer">
@@ -305,7 +348,7 @@
   <div class="modal modal-lg">
     <div class="modal-header"><h2 id="rdTitle">Student Result</h2><button class="modal-close" onclick="closeMdl('resultDetailModal')">×</button></div>
     <div class="modal-body" id="rdBody"></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">Close</button></div>
+    <div class="modal-footer" id="rdFooter"><button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">Close</button></div>
   </div>
 </div>
 
@@ -327,12 +370,16 @@ let testBlockId = null;
 let testDir = 'he_to_en';
 let testWordSel = {};
 let activeTab = 'words';
+let students = [];          // [{id, name, nickname}]
+let editingStudentId = null;
+let overrideResult = null;
 
 // ── Init ──────────────────────────────────────────────────
 async function init() {
   try {
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     await loadFromDB();
+    await loadStudents();
     document.getElementById('dbBadge').textContent = 'Connected to Supabase';
     document.getElementById('dbBadge').className = 'db-badge connected';
   } catch(e) {
@@ -798,6 +845,9 @@ function openTestModal(blockId) {
   document.getElementById('testTimer').value = 30;
   document.getElementById('dirHE').classList.add('on');
   document.getElementById('dirEN').classList.remove('on');
+  document.getElementById('dirMIX').classList.remove('on');
+  const fracRadio = document.querySelector('input[name="scoreDisplay"][value="fraction"]');
+  if (fracRadio) fracRadio.checked = true;
   updateWordSelCount();
   document.getElementById('testModal').style.display = 'flex';
 }
@@ -830,17 +880,20 @@ function setDir(dir) {
   testDir = dir;
   document.getElementById('dirHE').classList.toggle('on', dir === 'he_to_en');
   document.getElementById('dirEN').classList.toggle('on', dir === 'en_to_he');
+  document.getElementById('dirMIX').classList.toggle('on', dir === 'mixed');
 }
 
 async function buildTest(status) {
   const wordIds = Object.entries(testWordSel).filter(([,v])=>v).map(([k])=>k);
   if (!wordIds.length) { toast('Select at least one word', 'err'); return null; }
   const timer = parseInt(document.getElementById('testTimer').value) || 30;
-  const t = { id: uid(), blockId: testBlockId, timerPerWord: timer, direction: testDir, status, wordIds, createdAt: new Date().toISOString() };
+  const scoreDisplay = document.querySelector('input[name="scoreDisplay"]:checked')?.value || 'fraction';
+  const t = { id: uid(), blockId: testBlockId, timerPerWord: timer, direction: testDir, status, wordIds, scoreDisplay, createdAt: new Date().toISOString() };
 
   const { error } = await sb.from('tests').insert({
     id: t.id, block_id: t.blockId, timer_per_word: t.timerPerWord,
-    direction: t.direction, status: t.status, word_ids: t.wordIds
+    direction: t.direction, status: t.status, word_ids: t.wordIds,
+    score_display: t.scoreDisplay
   });
   if (error) { toast('Failed to save test: ' + (error.message || error.code || JSON.stringify(error)), 'err'); return null; }
 
@@ -918,31 +971,300 @@ function copyTestLink(testId) {
   navigator.clipboard.writeText(url).then(() => toast('Link copied!'), () => toast('Copy failed', 'err'));
 }
 
+// ── Students ───────────────────────────────────────────────
+async function loadStudents() {
+  try {
+    const { data, error } = await sb.from('students').select('*').order('name');
+    if (error) throw error;
+    students = (data || []).map(s => ({ id: s.id, name: s.name, nickname: s.nickname || '' }));
+  } catch(e) {
+    students = [];
+  }
+  renderStudentList();
+}
+
+function renderStudentList() {
+  const el = document.getElementById('studentList');
+  const badge = document.getElementById('studentCountBadge');
+  if (!el) return;
+  if (badge) badge.textContent = students.length ? `(${students.length})` : '';
+  if (!students.length) {
+    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">No students yet.<br>Add your class roster above.</div>`;
+    return;
+  }
+  el.innerHTML = students.map(s => {
+    if (editingStudentId === s.id) {
+      return `<div class="student-edit-row" id="sedit-${s.id}">
+        <input type="text" id="seName-${s.id}" value="${esc(s.name)}" placeholder="Full name" />
+        <input type="text" id="seNick-${s.id}" value="${esc(s.nickname)}" placeholder="Nickname (optional)" />
+        <div style="display:flex;gap:6px;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="cancelStudentEdit()">Cancel</button>
+          <button class="btn btn-green btn-sm" onclick="saveStudentEdit('${s.id}')">✓ Save</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="student-item" id="sitem-${s.id}">
+      <span class="student-item-name">${esc(s.name)}${s.nickname ? `<span class="student-item-nick">(${esc(s.nickname)})</span>` : ''}</span>
+      <div class="student-item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="startStudentEdit('${s.id}')">✏️</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteStudent('${s.id}','${esc(s.name)}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleAddStudentForm() {
+  const f = document.getElementById('addStudentForm');
+  f.classList.toggle('open');
+  if (f.classList.contains('open')) {
+    document.getElementById('nsName').value = '';
+    document.getElementById('nsNick').value = '';
+    document.getElementById('nsName').focus();
+  }
+}
+
+async function addStudent() {
+  const name = document.getElementById('nsName').value.trim();
+  const nick = document.getElementById('nsNick').value.trim();
+  if (!name) return toast('Name is required', 'err');
+  const btn = document.getElementById('addStudentBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const id = uid();
+    const { error } = await sb.from('students').insert({ id, name, nickname: nick || null });
+    if (error) throw error;
+    students.push({ id, name, nickname: nick });
+    students.sort((a, b) => a.name.localeCompare(b.name));
+    toggleAddStudentForm();
+    renderStudentList();
+    toast('Student added!');
+  } catch(e) {
+    toast('Failed to add student: ' + (e.message || ''), 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+}
+
+function startStudentEdit(id) {
+  editingStudentId = id;
+  renderStudentList();
+  const nameEl = document.getElementById(`seName-${id}`);
+  if (nameEl) nameEl.focus();
+}
+
+function cancelStudentEdit() {
+  editingStudentId = null;
+  renderStudentList();
+}
+
+async function saveStudentEdit(id) {
+  const name = document.getElementById(`seName-${id}`).value.trim();
+  const nick = document.getElementById(`seNick-${id}`).value.trim();
+  if (!name) return toast('Name is required', 'err');
+  try {
+    const { error } = await sb.from('students').update({ name, nickname: nick || null }).eq('id', id);
+    if (error) throw error;
+    const s = students.find(x => x.id === id);
+    if (s) { s.name = name; s.nickname = nick; }
+    students.sort((a, b) => a.name.localeCompare(b.name));
+    editingStudentId = null;
+    renderStudentList();
+    toast('Student updated!');
+  } catch(e) {
+    toast('Failed to update student', 'err');
+  }
+}
+
+async function deleteStudent(id, name) {
+  if (!confirm(`Delete ${name} from the roster?`)) return;
+  try {
+    const { error } = await sb.from('students').delete().eq('id', id);
+    if (error) throw error;
+    students = students.filter(s => s.id !== id);
+    renderStudentList();
+    toast('Student removed');
+  } catch(e) {
+    toast('Failed to delete student', 'err');
+  }
+}
+
 // ── Results tab ───────────────────────────────────────────
 let lastResults = [];
 
+let overrideResult = null; // the result object currently being overridden
+
 function showResultDetail(r, blockId) {
+  overrideResult = { ...r, blockId, answers: r.answers ? r.answers.map(a => ({...a})) : [] };
   const b = block(blockId);
   const wordMap = {};
   (b.words||[]).forEach(w => wordMap[w.id] = w);
-  const pct = Math.round(r.score / r.total * 100);
-  document.getElementById('rdTitle').textContent = `${r.student_name || 'Anonymous'} — ${r.score}/${r.total} (${pct}%)`;
-  const answers = Array.isArray(r.answers) ? r.answers : [];
-  document.getElementById('rdBody').innerHTML = answers.length ? `
+
+  // Recompute score based on current answers
+  const score = overrideResult.answers.filter(a => a.correct).length;
+  const total = overrideResult.total;
+  const pct = total ? Math.round(score / total * 100) : 0;
+
+  document.getElementById('rdTitle').textContent = `${r.student_name || 'Anonymous'} — Override Grades`;
+
+  const finalized = r.finalized;
+
+  document.getElementById('rdBody').innerHTML = `
+    <div style="background:#eff6ff;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em">Current Score</div>
+        <div style="font-size:24px;font-weight:800" id="overrideScoreDisplay">${score}/${total} (${pct}%)</div>
+      </div>
+      ${finalized
+        ? `<span style="margin-left:auto;background:#dcfce7;color:#15803d;font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px">✓ Finalized</span>`
+        : `<span style="margin-left:auto;background:#fef9c3;color:#a16207;font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px">Pending review</span>`}
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Click ✅/❌ on any row to toggle the grade. Then click Finalize.</p>
+    ${overrideResult.answers.length ? `
     <table class="word-table">
-      <thead><tr><th>Hebrew</th><th>Correct Answer</th><th>Student wrote</th><th style="width:36px"></th></tr></thead>
-      <tbody>${answers.map(a => {
-        const w = wordMap[a.word_id] || {};
-        const ok = a.correct;
-        return `<tr style="background:${ok?'#f0fdf4':'#fef2f2'}">
-          <td style="font-family:var(--font-he);font-size:18px;direction:rtl">${esc(w.hebrew||'')}</td>
-          <td>${esc(w.english||'')}</td>
-          <td style="color:${ok?'var(--green)':'var(--red)'}">${esc(a.given||'(no answer)')}</td>
-          <td>${ok?'✅':'❌'}</td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>` : '<p style="color:var(--muted);padding:16px 0">No answer data available.</p>';
+      <thead><tr><th>Word shown</th><th>Correct Answer</th><th>Student wrote</th><th style="width:44px;text-align:center">Grade</th></tr></thead>
+      <tbody id="overrideTbody">
+        ${overrideResult.answers.map((a, i) => {
+          const w = wordMap[a.word_id] || {};
+          const shownHe = a.dir === 'he_to_en' || !a.dir;
+          return `<tr id="ovrow-${i}" style="background:${a.correct?'#f0fdf4':'#fef2f2'}">
+            <td style="font-family:${shownHe?'var(--font-he)':'var(--font-ui)'};font-size:${shownHe?'18':'14'}px;direction:${shownHe?'rtl':'ltr'}">${esc(shownHe ? (w.hebrew||'') : (w.english||''))}</td>
+            <td>${esc(shownHe ? (w.english||'') : (w.hebrew||''))}</td>
+            <td style="color:${a.correct?'var(--green)':'var(--red)'}">${esc(a.given||'(no answer)')}</td>
+            <td style="text-align:center">
+              <button onclick="toggleOverride(${i})" style="font-size:20px;background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:6px" title="Toggle grade">${a.correct?'✅':'❌'}</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>` : '<p style="color:var(--muted);padding:16px 0">No answer data available.</p>'}`;
+
+  document.getElementById('rdFooter').innerHTML = `
+    <button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">Close</button>
+    <button class="btn btn-primary" onclick="finalizeResult('${r.id}','${blockId}')">✓ Finalize Score</button>
+    <button class="btn btn-green" onclick="printScoreCards('${blockId}')" style="margin-left:auto">🖨 Print Score Cards</button>`;
+
   document.getElementById('resultDetailModal').style.display = 'flex';
+}
+
+function toggleOverride(idx) {
+  if (!overrideResult) return;
+  overrideResult.answers[idx].correct = !overrideResult.answers[idx].correct;
+  // Update row color and button
+  const row = document.getElementById(`ovrow-${idx}`);
+  const ok = overrideResult.answers[idx].correct;
+  if (row) {
+    row.style.background = ok ? '#f0fdf4' : '#fef2f2';
+    const btn = row.querySelector('button');
+    if (btn) btn.textContent = ok ? '✅' : '❌';
+    const scoreCell = row.cells[2];
+    if (scoreCell) scoreCell.style.color = ok ? 'var(--green)' : 'var(--red)';
+  }
+  // Update score display
+  const score = overrideResult.answers.filter(a => a.correct).length;
+  const total = overrideResult.total;
+  const pct = total ? Math.round(score / total * 100) : 0;
+  const sd = document.getElementById('overrideScoreDisplay');
+  if (sd) sd.textContent = `${score}/${total} (${pct}%)`;
+}
+
+async function finalizeResult(resultId, blockId) {
+  if (!overrideResult) return;
+  const score = overrideResult.answers.filter(a => a.correct).length;
+  try {
+    const { error } = await sb.from('test_results').update({
+      score,
+      answers: overrideResult.answers,
+      finalized: true
+    }).eq('id', resultId);
+    if (error) throw error;
+    // Update lastResults in memory
+    const idx = lastResults.findIndex(r => r.id === resultId);
+    if (idx >= 0) { lastResults[idx].score = score; lastResults[idx].answers = overrideResult.answers; lastResults[idx].finalized = true; }
+    toast('Score finalized ✓');
+    closeMdl('resultDetailModal');
+    loadAndRenderResults(blockId);
+  } catch(e) {
+    toast('Failed to save: ' + (e.message || ''), 'err');
+  }
+}
+
+// ── Score cards print ─────────────────────────────────────
+async function printScoreCards(blockId) {
+  const b = block(blockId);
+  if (!lastResults || !lastResults.length) { toast('No finalized results to print', 'err'); return; }
+
+  // Find score_display setting from the first test in this block
+  const testId = lastResults[0]?.test_id;
+  let scoreDisplay = 'fraction';
+  try {
+    const { data } = await sb.from('tests').select('score_display').eq('id', testId).single();
+    if (data?.score_display) scoreDisplay = data.score_display;
+  } catch(e) {}
+
+  const studentMap = {};
+  students.forEach(s => { studentMap[s.id] = s.nickname || s.name; });
+
+  // Only finalized results
+  const finalized = lastResults.filter(r => r.finalized);
+  if (!finalized.length) { toast('No finalized results yet. Finalize scores first.', 'err'); return; }
+
+  const blockLabel = b.label || 'Vocabulary Test';
+  const cards = finalized.map(r => {
+    const name = (r.student_id && studentMap[r.student_id]) ? studentMap[r.student_id] : (r.student_name || 'Student');
+    const pct = r.total ? Math.round(r.score / r.total * 100) : 0;
+    let scoreText = '';
+    if (scoreDisplay === 'fraction') scoreText = `${r.score} / ${r.total}`;
+    else if (scoreDisplay === 'percent') scoreText = `${pct}%`;
+    else scoreText = `${r.score} / ${r.total} &nbsp;·&nbsp; ${pct}%`;
+    return `<div class="score-card">
+      <div class="sc-bh">ב״ה</div>
+      <div class="sc-test">${esc(blockLabel)}</div>
+      <div class="sc-name">${esc(name)}</div>
+      <div class="sc-score">${scoreText}</div>
+    </div>`;
+  });
+
+  // Pad to multiple of 6
+  while (cards.length % 6 !== 0) cards.push(`<div class="score-card sc-blank"></div>`);
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Score Cards — ${esc(blockLabel)}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Rubik', sans-serif; background: #fff; }
+  @page { size: letter; margin: 0.4in; }
+  .page { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.25in; page-break-after: always; height: calc(11in - 0.8in); }
+  .page:last-child { page-break-after: auto; }
+  .score-card { border: 2px solid #1e293b; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; }
+  .sc-blank { border: 2px dashed #e2e8f0; }
+  .sc-bh { font-size: 14px; color: #64748b; align-self: flex-end; font-weight: 600; }
+  .sc-test { font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+  .sc-name { font-size: 26px; font-weight: 800; color: #1e293b; margin: 4px 0; }
+  .sc-score { font-size: 36px; font-weight: 800; color: #8b5cf6; }
+</style>
+</head>
+<body>
+${chunk(cards, 6).map(group => `<div class="page">${group.join('')}</div>`).join('')}
+<script>
+function chunk(arr, n) { const r = []; for(let i=0;i<arr.length;i+=n) r.push(arr.slice(i,i+n)); return r; }
+window.onload = () => window.print();
+<\/script>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+}
+
+function chunk(arr, n) {
+  const r = [];
+  for (let i = 0; i < arr.length; i += n) r.push(arr.slice(i, i + n));
+  return r;
 }
 
 async function loadAndRenderResults(blockId) {
@@ -974,6 +1296,10 @@ async function loadAndRenderResults(blockId) {
     const avg = Math.round(data.reduce((s, r) => s + (r.score / r.total * 100), 0) / data.length);
     lastResults = data;
 
+    // Build a map from student id → display name
+    const studentMap = {};
+    students.forEach(s => { studentMap[s.id] = s.nickname || s.name; });
+
     tc.innerHTML = `
       <div class="results-avg">
         <span style="font-size:28px">📊</span>
@@ -988,6 +1314,7 @@ async function loadAndRenderResults(blockId) {
           <th>Student</th>
           <th style="width:90px">Score</th>
           <th style="width:70px">%</th>
+          <th style="width:80px">Status</th>
           <th style="width:110px">Date</th>
           <th style="width:40px"></th>
         </tr></thead>
@@ -995,10 +1322,15 @@ async function loadAndRenderResults(blockId) {
           ${data.map((r, i) => {
             const pct = Math.round(r.score / r.total * 100);
             const color = pct >= 90 ? '#16a34a' : pct >= 70 ? '#2563eb' : pct >= 50 ? '#a16207' : '#dc2626';
+            const displayName = (r.student_id && studentMap[r.student_id]) ? studentMap[r.student_id] : esc(r.student_name || 'Anonymous');
+            const statusBadge = r.finalized
+              ? `<span style="font-size:11px;font-weight:700;background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:999px">✓ Done</span>`
+              : `<span style="font-size:11px;font-weight:700;background:#fef9c3;color:#a16207;padding:2px 8px;border-radius:999px">Pending</span>`;
             return `<tr style="cursor:pointer" onclick="showResultDetail(lastResults[${i}], '${blockId}')">
-              <td style="font-weight:600">${esc(r.student_name || 'Anonymous')}</td>
+              <td style="font-weight:600">${displayName}</td>
               <td>${r.score}/${r.total}</td>
               <td><span style="font-weight:700;color:${color}">${pct}%</span></td>
+              <td>${statusBadge}</td>
               <td style="font-size:12px;color:var(--muted)">${fmtDate((r.completed_at||'').slice(0,10))}</td>
               <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="event.stopPropagation();deleteResult('${r.id}','${blockId}')">✕</button></td>
             </tr>`;

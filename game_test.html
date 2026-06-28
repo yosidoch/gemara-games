@@ -95,15 +95,11 @@
     /* ── Results ── */
     .results-card {
       background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
-      padding: 48px 40px; text-align: center; max-width: 500px; width: 100%;
+      padding: 40px 40px; text-align: center; max-width: 500px; width: 100%;
     }
-    .results-card .score-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; margin: 0 auto 24px; font-size: 36px; font-weight: 800; }
-    .score-a { background: #dcfce7; color: #15803d; }
-    .score-b { background: #dbeafe; color: #1e40af; }
-    .score-c { background: #fef9c3; color: #a16207; }
-    .score-d { background: #fee2e2; color: #dc2626; }
-    .results-card h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
-    .results-card .sub { font-size: 15px; color: var(--muted); margin-bottom: 28px; }
+    .results-student-name { font-size: 22px; font-weight: 800; margin-bottom: 4px; color: var(--purple); }
+    .results-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+    .results-card .sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
 
     .result-rows { text-align: left; margin-bottom: 28px; }
     .result-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
@@ -131,6 +127,26 @@
     .no-test-card .ei { font-size: 48px; margin-bottom: 16px; }
     .no-test-card p { font-size: 15px; color: var(--muted); line-height: 1.6; }
     .no-test-card a { display: inline-block; margin-top: 20px; padding: 11px 24px; background: var(--purple); color: #fff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; }
+
+    /* ── Student picker grid ── */
+    .picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 20px 0 24px; max-height: 320px; overflow-y: auto; }
+    .picker-btn { padding: 12px 8px; border: 2px solid var(--border); border-radius: 10px; background: #fff; font-family: var(--font-ui); font-size: 14px; font-weight: 600; color: var(--text); cursor: pointer; transition: all .15s; text-align: center; }
+    .picker-btn:hover { border-color: var(--purple); background: #f5f3ff; }
+    .picker-btn.selected { border-color: var(--purple); background: var(--purple); color: #fff; }
+    .picker-fallback { margin-top: 8px; font-size: 13px; color: var(--muted); }
+
+    /* ── Hebrew virtual keyboard ── */
+    .heb-kb-wrap { margin-top: 8px; }
+    .heb-kb-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 5px 12px; font-size: 13px; color: var(--muted); cursor: pointer; font-family: var(--font-ui); margin-bottom: 6px; }
+    .heb-kb-toggle:hover { background: #f1f5f9; color: var(--text); }
+    .heb-kb { display: none; background: #f8faff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 8px; }
+    .heb-kb.open { display: block; }
+    .heb-kb-row { display: flex; justify-content: center; gap: 5px; margin-bottom: 5px; flex-wrap: wrap; }
+    .heb-key { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 6px; background: #fff; font-family: var(--font-he); font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .1s; color: var(--text); padding: 0; }
+    .heb-key:hover { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .heb-key:active { transform: scale(.92); }
+    .heb-key.wide { width: 52px; font-size: 12px; font-family: var(--font-ui); color: var(--muted); }
+    .heb-key.wide:hover { color: #fff; }
   </style>
 </head>
 <body>
@@ -147,14 +163,25 @@
   </div>
 </div>
 
-<!-- Screen: name entry -->
+<!-- Screen: student picker / name entry -->
 <div class="screen" id="screenName">
   <div class="splash-card">
     <div class="block-label" id="splashBlock"></div>
     <h1 id="splashTitle">Vocabulary Test</h1>
     <p class="meta" id="splashMeta"></p>
-    <input class="name-input" id="nameInput" type="text" placeholder="Enter your name…" maxlength="40" onkeydown="if(event.key==='Enter')startTest()" />
-    <button class="start-btn" id="startBtn" onclick="startTest()">Start Test →</button>
+
+    <!-- Roster picker (shown when students exist) -->
+    <div id="rosterPicker" style="display:none">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Tap your name to begin:</p>
+      <div class="picker-grid" id="pickerGrid"></div>
+    </div>
+
+    <!-- Fallback free-text (shown when roster is empty) -->
+    <div id="fallbackInput" style="display:none">
+      <input class="name-input" id="nameInput" type="text" placeholder="Enter your name…" maxlength="40" onkeydown="if(event.key==='Enter')startTest()" />
+    </div>
+
+    <button class="start-btn" id="startBtn" onclick="startTest()" disabled>Start Test →</button>
   </div>
 </div>
 
@@ -177,6 +204,24 @@
       <div class="q-prompt" id="qPrompt"></div>
       <div class="q-type-hint" id="qTypeHint"></div>
       <input class="answer-input" id="answerInput" type="text" placeholder="Type your answer…" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')submitAnswer()" />
+      <!-- Hebrew virtual keyboard — shown only when answer is in Hebrew -->
+      <div class="heb-kb-wrap" id="hebKbWrap" style="display:none">
+        <button class="heb-kb-toggle" onclick="toggleHebKb()">⌨️ אבג מקלדת עברית</button>
+        <div class="heb-kb" id="hebKb">
+          <div class="heb-kb-row">
+            <button class="heb-key" onclick="hebType('ק')">ק</button><button class="heb-key" onclick="hebType('ר')">ר</button><button class="heb-key" onclick="hebType('א')">א</button><button class="heb-key" onclick="hebType('ט')">ט</button><button class="heb-key" onclick="hebType('ו')">ו</button><button class="heb-key" onclick="hebType('ן')">ן</button><button class="heb-key" onclick="hebType('ם')">ם</button><button class="heb-key" onclick="hebType('פ')">פ</button><button class="heb-key" onclick="hebType('ף')">ף</button>
+          </div>
+          <div class="heb-kb-row">
+            <button class="heb-key" onclick="hebType('ש')">ש</button><button class="heb-key" onclick="hebType('ד')">ד</button><button class="heb-key" onclick="hebType('ג')">ג</button><button class="heb-key" onclick="hebType('כ')">כ</button><button class="heb-key" onclick="hebType('ע')">ע</button><button class="heb-key" onclick="hebType('י')">י</button><button class="heb-key" onclick="hebType('ח')">ח</button><button class="heb-key" onclick="hebType('ל')">ל</button><button class="heb-key" onclick="hebType('ך')">ך</button>
+          </div>
+          <div class="heb-kb-row">
+            <button class="heb-key" onclick="hebType('ז')">ז</button><button class="heb-key" onclick="hebType('ס')">ס</button><button class="heb-key" onclick="hebType('ב')">ב</button><button class="heb-key" onclick="hebType('ה')">ה</button><button class="heb-key" onclick="hebType('נ')">נ</button><button class="heb-key" onclick="hebType('מ')">מ</button><button class="heb-key" onclick="hebType('צ')">צ</button><button class="heb-key" onclick="hebType('ת')">ת</button><button class="heb-key" onclick="hebType('ץ')">ץ</button>
+          </div>
+          <div class="heb-kb-row">
+            <button class="heb-key" onclick="hebType('ּ')" title="דגש">ּ</button><button class="heb-key wide" onclick="hebType(' ')">רווח</button><button class="heb-key wide" onclick="hebBackspace()">⌫ מחק</button>
+          </div>
+        </div>
+      </div>
       <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">Submit →</button>
       <div class="feedback" id="feedback"></div>
       <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next →</button>
@@ -187,13 +232,12 @@
 <!-- Screen: results -->
 <div class="screen" id="screenResults">
   <div class="results-card">
-    <div class="score-circle" id="scoreCircle"></div>
-    <h2 id="resultTitle"></h2>
+    <div class="results-student-name" id="resultStudentName"></div>
+    <h2 id="resultTitle">Test Complete!</h2>
     <p class="sub" id="resultSub"></p>
     <div class="result-rows" id="resultRows"></div>
     <div class="saved-badge" id="savedBadge"></div>
     <div class="result-actions">
-      <button class="btn-retry" onclick="retryTest()">↺ Try Again</button>
       <button class="btn-home" onclick="goHome()">← Back</button>
     </div>
   </div>
@@ -213,7 +257,40 @@ let timerInterval = null;
 let timeLeft = 30;
 let answered = false;
 let studentName = '';
+let studentId = null;    // linked to students table
 let isRetry = false;
+let currentDir = 'he_to_en';  // direction of current question
+
+// ── Hebrew virtual keyboard ────────────────────────────────
+function toggleHebKb() {
+  document.getElementById('hebKb').classList.toggle('open');
+}
+
+function hebType(char) {
+  const inp = document.getElementById('answerInput');
+  if (inp.disabled) return;
+  const start = inp.selectionStart;
+  const end = inp.selectionEnd;
+  const val = inp.value;
+  inp.value = val.slice(0, start) + char + val.slice(end);
+  inp.selectionStart = inp.selectionEnd = start + char.length;
+  inp.focus();
+}
+
+function hebBackspace() {
+  const inp = document.getElementById('answerInput');
+  if (inp.disabled) return;
+  const start = inp.selectionStart;
+  const end = inp.selectionEnd;
+  if (start !== end) {
+    inp.value = inp.value.slice(0, start) + inp.value.slice(end);
+    inp.selectionStart = inp.selectionEnd = start;
+  } else if (start > 0) {
+    inp.value = inp.value.slice(0, start - 1) + inp.value.slice(start);
+    inp.selectionStart = inp.selectionEnd = start - 1;
+  }
+  inp.focus();
+}
 
 // ── Load test from Supabase by ID ─────────────────────────
 async function loadTestFromDB(testId) {
@@ -233,7 +310,7 @@ async function loadTestFromDB(testId) {
       words: wordRows || [],
       blockLabel: ''
     };
-    initTestUI();
+    await initTestUI();
   } catch(e) {
     show('screenNoTest');
   }
@@ -249,7 +326,7 @@ function loadTestFromLocal() {
 }
 
 // ── Init test UI after testData is ready ──────────────────
-function initTestUI() {
+async function initTestUI() {
   if (!testData || !testData.words || !testData.words.length) {
     show('screenNoTest');
     return;
@@ -261,7 +338,53 @@ function initTestUI() {
   const dir = testData.direction === 'he_to_en' ? 'Hebrew → English' : 'English → Hebrew';
   document.getElementById('splashMeta').textContent =
     `${words.length} words · ${testData.timerPerWord}s per word · ${dir}`;
-  document.getElementById('nameInput').focus();
+
+  // Load student roster
+  await buildStudentPicker();
+}
+
+async function buildStudentPicker() {
+  let roster = [];
+  if (sb) {
+    try {
+      const { data } = await sb.from('students').select('*').order('name');
+      roster = data || [];
+    } catch(e) {}
+  }
+
+  const pickerGrid = document.getElementById('pickerGrid');
+  const rosterPicker = document.getElementById('rosterPicker');
+  const fallbackInput = document.getElementById('fallbackInput');
+  const startBtn = document.getElementById('startBtn');
+
+  if (roster.length > 0) {
+    // Roster mode
+    rosterPicker.style.display = '';
+    fallbackInput.style.display = 'none';
+    pickerGrid.innerHTML = roster.map(s =>
+      `<button class="picker-btn" data-id="${esc(s.id)}" data-name="${esc(s.name)}" onclick="selectStudent(this)">${esc(s.nickname || s.name)}</button>`
+    ).join('');
+    startBtn.disabled = true;
+  } else {
+    // Fallback: free text
+    rosterPicker.style.display = 'none';
+    fallbackInput.style.display = '';
+    startBtn.disabled = false;
+    const ni = document.getElementById('nameInput');
+    if (ni) {
+      ni.addEventListener('input', () => { startBtn.disabled = ni.value.trim().length === 0; });
+      ni.focus();
+    }
+  }
+}
+
+function selectStudent(btn) {
+  // Deselect all
+  document.querySelectorAll('.picker-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  studentName = btn.dataset.name;
+  studentId = btn.dataset.id;
+  document.getElementById('startBtn').disabled = false;
 }
 
 // ── Init ──────────────────────────────────────────────────
@@ -275,7 +398,14 @@ if (testId) {
 }
 
 function startTest() {
-  studentName = document.getElementById('nameInput').value.trim() || 'Student';
+  // If roster picker is active, studentName/studentId are already set by selectStudent()
+  // If fallback text input is active, read from it
+  const fallbackVisible = document.getElementById('fallbackInput').style.display !== 'none';
+  if (fallbackVisible) {
+    studentName = (document.getElementById('nameInput').value.trim()) || 'Student';
+    studentId = null;
+  }
+  if (!studentName) return;
   idx = 0; results = [];
   showQuestion();
   show('screenQ');
@@ -291,7 +421,16 @@ function showQuestion() {
   document.getElementById('progressFill').style.width = pct + '%';
   document.getElementById('progressLabel').textContent = `Question ${idx + 1} of ${total}`;
 
-  const isHeEn = testData.direction === 'he_to_en';
+  // Determine direction for this question
+  let isHeEn;
+  if (testData.direction === 'mixed') {
+    isHeEn = Math.random() < 0.5;
+  } else {
+    isHeEn = testData.direction === 'he_to_en';
+  }
+  // Store direction on the question for results display
+  currentDir = isHeEn ? 'he_to_en' : 'en_to_he';
+
   document.getElementById('qDirection').textContent = isHeEn ? 'What is the English meaning?' : 'What is the Hebrew/Aramaic?';
 
   const promptEl = document.getElementById('qPrompt');
@@ -312,6 +451,12 @@ function showQuestion() {
   ansInput.style.borderColor = '';
   ansInput.style.background = '';
 
+  // Show/hide Hebrew keyboard
+  const kbWrap = document.getElementById('hebKbWrap');
+  const kb = document.getElementById('hebKb');
+  kbWrap.style.display = isHeEn ? 'none' : '';
+  kb.classList.remove('open'); // always start closed
+
   document.getElementById('feedback').style.display = 'none';
   document.getElementById('feedback').className = 'feedback';
   document.getElementById('nextBtn').style.display = 'none';
@@ -328,12 +473,12 @@ function submitAnswer() {
   answered = true;
 
   const w = words[idx];
-  const isHeEn = testData.direction === 'he_to_en';
+  const isHeEn = currentDir === 'he_to_en';
   const given = document.getElementById('answerInput').value.trim();
   const correct = isHeEn ? w.english : w.hebrew;
   const isCorrect = normalize(given) === normalize(correct);
 
-  results.push({ word: w, given, correct, isCorrect });
+  results.push({ word: w, given, correct, isCorrect, dir: currentDir });
 
   const ansInput = document.getElementById('answerInput');
   ansInput.disabled = true;
@@ -381,9 +526,9 @@ function startTimer(seconds) {
       clearTimer();
       if (!answered) {
         const w = words[idx];
-        const isHeEn = testData.direction === 'he_to_en';
+        const isHeEn = currentDir === 'he_to_en';
         const correct = isHeEn ? w.english : w.hebrew;
-        results.push({ word: w, given: '', correct, isCorrect: false });
+        results.push({ word: w, given: '', correct, isCorrect: false, dir: currentDir });
         answered = true;
 
         const ansInput = document.getElementById('answerInput');
@@ -415,32 +560,29 @@ function showResults() {
   clearTimer();
   const correct = results.filter(r => r.isCorrect).length;
   const total = results.length;
-  const pct = Math.round((correct / total) * 100);
-  const isHeEn = testData.direction === 'he_to_en';
 
-  const scoreEl = document.getElementById('scoreCircle');
-  scoreEl.innerHTML = `<span>${pct}%</span>`;
-  scoreEl.className = 'score-circle ' + (pct >= 90 ? 'score-a' : pct >= 70 ? 'score-b' : pct >= 50 ? 'score-c' : 'score-d');
+  document.getElementById('resultStudentName').textContent = studentName;
+  document.getElementById('resultTitle').textContent = 'Test Complete! 🎉';
+  document.getElementById('resultSub').textContent = `You answered ${total} question${total!==1?'s':''}. Your teacher will give you your grade.`;
 
-  document.getElementById('resultTitle').textContent = pct >= 90 ? 'Excellent!' : pct >= 70 ? 'Good job!' : pct >= 50 ? 'Keep practicing!' : 'Keep it up!';
-  document.getElementById('resultSub').textContent = `${studentName} · ${correct} of ${total} correct`;
-
-  document.getElementById('resultRows').innerHTML = results.map(r => `
+  document.getElementById('resultRows').innerHTML = results.map(r => {
+    const isHeQ = r.dir === 'en_to_he'; // question was in English, answer in Hebrew
+    return `
     <div class="result-row">
       <span class="result-icon">${r.isCorrect ? '✅' : '❌'}</span>
       <div style="flex:1;min-width:0">
-        <div class="he">${esc(r.word.hebrew)}</div>
-        <div class="en">${esc(r.word.english)}</div>
+        <div class="he" style="${!isHeQ ? '' : 'font-size:14px;color:var(--muted)'}">${esc(r.word.hebrew)}</div>
+        <div class="en" style="${isHeQ ? '' : 'font-size:13px;color:var(--muted)'}">${esc(r.word.english)}</div>
         ${!r.isCorrect && r.given ? `<div class="given">You wrote: "${esc(r.given)}"</div>` : ''}
         ${!r.isCorrect && !r.given ? `<div class="given">No answer / time expired</div>` : ''}
       </div>
-    </div>`).join('');
+    </div>`}).join('');
 
   show('screenResults');
-  saveResultToDB();
+  saveResultToDB(correct, total);
 }
 
-async function saveResultToDB() {
+async function saveResultToDB(correct, total) {
   const badge = document.getElementById('savedBadge');
   if (isRetry) { badge.textContent = '↺ Practice run — not saved'; badge.className = 'saved-badge visible'; return; }
   if (!sb || !testData || !testData.id) return;
@@ -448,18 +590,21 @@ async function saveResultToDB() {
     const answers = results.map(r => ({
       word_id: r.word.id,
       correct: r.isCorrect,
-      given: r.given
+      given: r.given,
+      dir: r.dir
     }));
     const { error } = await sb.from('test_results').insert({
       id: crypto.randomUUID(),
       test_id: testData.id,
       student_name: studentName,
-      score: results.filter(r => r.isCorrect).length,
-      total: results.length,
-      answers
+      student_id: studentId || null,
+      score: correct,
+      total: total,
+      answers,
+      submitted_at: new Date().toISOString()
     });
     if (error) throw error;
-    badge.textContent = '✓ Result saved';
+    badge.textContent = '✓ Saved';
     badge.className = 'saved-badge visible';
   } catch(e) {
     badge.textContent = '⚠ ' + (e.message || e.code || JSON.stringify(e));
@@ -471,6 +616,7 @@ function retryTest() {
   isRetry = true;
   words = shuffle([...testData.words]);
   idx = 0; results = [];
+  // Keep studentName/studentId — it's the same student retrying
   showQuestion();
   show('screenQ');
 }
@@ -487,7 +633,10 @@ function show(id) {
 
 function normalize(s) {
   return String(s||'').toLowerCase().trim()
-    .replace(/[֑-ׇ]/g, '')  // strip Hebrew nikud/cantillation
+    .replace(/[\u0591-\u05C7]/g, '')   // strip ALL Hebrew nikud + cantillation
+    .replace(/\./g, '')                 // remove dots (shoresh notation: ב.ו.א → בוא)
+    .replace(/"/g, '')                  // remove geresh/gershayim
+    .replace(/׳/g, '').replace(/״/g, '')
     .replace(/\s+/g, ' ');
 }
 
