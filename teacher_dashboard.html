@@ -1091,7 +1091,7 @@ async function deleteStudent(id, name) {
 // ── Results tab ───────────────────────────────────────────
 let lastResults = [];
 
-let overrideResult = null; // the result object currently being overridden
+
 
 function showResultDetail(r, blockId) {
   overrideResult = { ...r, blockId, answers: r.answers ? r.answers.map(a => ({...a})) : [] };
