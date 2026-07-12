@@ -6,7 +6,7 @@
   <title>Vocabulary Test — Gemara Games</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Rubik:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
     const SUPABASE_URL = 'https://itkkiuxzbtircgifaoao.supabase.co';
@@ -15,186 +15,283 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: linear-gradient(135deg, #f8faff 0%, #fff8f0 50%, #f0fff8 100%);
-      --card: #fff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
-      --radius: 16px; --shadow: 0 8px 32px rgba(0,0,0,0.1);
-      --green: #22c55e; --blue: #3b82f6; --red: #ef4444; --purple: #8b5cf6;
+      --gg-purple: #46178F;
+      --gg-purple-deep: #2E1065;
+      --gg-purple-light: #864CBF;
+      --gg-red: #E21B3C;
+      --gg-blue: #1368CE;
+      --gg-yellow: #FFA602;
+      --gg-green: #26890C;
+      --gg-green-bright: #66BF39;
+      --gg-white: #FFFFFF;
+      --gg-ink: #25076B;
+      --gg-lavender: #D8C7F0;
+      --gg-r-sm: 12px; --gg-r-md: 16px; --gg-r-lg: 24px;
+      --gg-shadow-btn: 0 6px 0 rgba(0,0,0,0.30);
+      --gg-shadow-btn-press: 0 2px 0 rgba(0,0,0,0.30);
+      --gg-shadow-card: 0 12px 32px rgba(0,0,0,0.35);
       --font-ui: 'Rubik', sans-serif; --font-he: 'Frank Ruhl Libre', serif;
     }
     html { font-size: 16px; }
-    body { font-family: var(--font-ui); background: var(--bg); background-attachment: fixed; color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
-
-    .rainbow-bar { height: 5px; background: linear-gradient(90deg,#f97316,#eab308,#22c55e,#06b6d4,#3b82f6,#8b5cf6,#ec4899); flex-shrink: 0; }
-
-    /* ── Screens ── */
-    .screen { display: none; flex: 1; align-items: center; justify-content: center; padding: 24px; }
-    .screen.active { display: flex; }
-
-    /* ── Splash / Name entry ── */
-    .splash-card {
-      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
-      padding: 48px 40px; text-align: center; max-width: 460px; width: 100%;
+    body {
+      font-family: var(--font-ui);
+      background: linear-gradient(160deg, #46178F 0%, #2E1065 100%) fixed;
+      color: var(--gg-white); min-height: 100vh; display: flex; flex-direction: column;
     }
-    .splash-card .block-label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
-    .splash-card h1 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
-    .splash-card .meta { font-size: 14px; color: var(--muted); margin-bottom: 32px; line-height: 1.6; }
-    .name-input { width: 100%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; font-family: var(--font-ui); font-size: 16px; text-align: center; outline: none; transition: border-color .15s; margin-bottom: 16px; }
-    .name-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,.1); }
-    .start-btn { width: 100%; padding: 14px; background: var(--purple); color: #fff; border: none; border-radius: 10px; font-family: var(--font-ui); font-size: 16px; font-weight: 700; cursor: pointer; transition: background .15s; }
-    .start-btn:hover { background: #7c3aed; }
-    .start-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-    /* ── Question ── */
-    .q-wrap { width: 100%; max-width: 600px; }
+    .topbar {
+      background: rgba(37,7,107,0.92); border-bottom: 2px solid rgba(255,255,255,0.12);
+      padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0;
+    }
+    .topbar .brand { font-weight: 900; font-size: 16px; letter-spacing: .02em; }
+    .topbar .brand span { color: var(--gg-yellow); }
+    .topbar .block-tag { font-size: 13px; font-weight: 700; color: var(--gg-lavender); }
 
-    .progress-bar-wrap { background: #e2e8f0; border-radius: 999px; height: 6px; margin-bottom: 10px; overflow: hidden; }
-    .progress-bar-fill { height: 100%; background: var(--purple); border-radius: 999px; transition: width .4s; }
-    .progress-label { font-size: 13px; color: var(--muted); text-align: right; margin-bottom: 24px; }
+    .screen { display: none; flex: 1; align-items: center; justify-content: center; padding: 24px 16px; }
+    .screen.active { display: flex; animation: ggScreenIn 0.45s cubic-bezier(0.34,1.56,0.64,1); }
+
+    @keyframes ggScreenIn {
+      0% { transform: scale(0.85) translateY(40px); opacity: 0; }
+      70% { transform: scale(1.03) translateY(-4px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    @keyframes ggPopIn { 0% { transform: scale(0); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+    @keyframes ggBreath { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    @keyframes ggShake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(4px); } }
+    @keyframes ggPulseUrgent { 0%,100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+    @keyframes ggXpPop {
+      0% { transform: translate(-50%,-50%) scale(0.3); opacity: 0; }
+      25% { transform: translate(-50%,-50%) scale(1.35); opacity: 1; }
+      100% { transform: translate(-50%, calc(-50% - 110px)) scale(1); opacity: 0; }
+    }
+    @keyframes ggConfettiFall { to { transform: translateY(105vh) rotate(720deg); } }
+
+    .gg-xp {
+      position: fixed; z-index: 9999; transform: translate(-50%, -50%);
+      font-family: var(--font-ui); font-weight: 900; font-size: 2.2rem;
+      color: var(--gg-yellow); text-shadow: 0 3px 0 rgba(0,0,0,0.45);
+      pointer-events: none; animation: ggXpPop 0.9s ease-out forwards;
+    }
+    .gg-xp.bad { color: var(--gg-red); }
+    .gg-confetti { position: fixed; top: -20px; width: 12px; height: 12px; z-index: 9998; pointer-events: none; animation: ggConfettiFall linear forwards; }
+    .gg-shake { animation: ggShake 0.45s; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--gg-white); border-radius: var(--gg-r-lg); box-shadow: var(--gg-shadow-card);
+      padding: 40px 32px; text-align: center; max-width: 480px; width: 100%; color: var(--gg-ink);
+    }
+
+    .card .block-label { font-size: 13px; font-weight: 800; color: var(--gg-purple-light); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
+    .card h1 { font-family: var(--font-ui); font-size: clamp(1.6rem, 5vw, 2rem); font-weight: 900; margin-bottom: 8px; }
+    .card .meta { font-size: 14px; font-weight: 600; color: #6B5CA5; margin-bottom: 26px; line-height: 1.6; }
+
+    .field { text-align: left; margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; font-weight: 800; color: var(--gg-ink); margin-bottom: 6px; }
+    .field .hint { font-size: 12px; font-weight: 600; color: #6B5CA5; margin-top: 5px; }
+    .text-input {
+      width: 100%; padding: 14px 16px; border: 3px solid #D9CCF0; border-radius: var(--gg-r-sm);
+      font-family: var(--font-ui); font-size: 17px; font-weight: 600; color: var(--gg-ink);
+      text-align: center; outline: none; transition: border-color .15s; background: #fff; min-height: 52px;
+    }
+    .text-input:focus-visible { border-color: var(--gg-blue); box-shadow: 0 0 0 4px rgba(19,104,206,.18); }
+    .text-input.err { border-color: var(--gg-red); }
+    .code-input { letter-spacing: .4em; font-weight: 900; font-size: 22px; }
+
+    .form-error { display: none; margin: 4px 0 14px; padding: 10px 14px; background: #FDE7EB; color: var(--gg-red); border-radius: var(--gg-r-sm); font-size: 14px; font-weight: 700; }
+    .form-error.visible { display: block; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border: none; border-radius: var(--gg-r-md); font-family: var(--font-ui); font-weight: 900;
+      cursor: pointer; box-shadow: var(--gg-shadow-btn);
+      transition: transform 0.08s, box-shadow 0.08s; min-height: 52px; font-size: 17px; padding: 14px 22px;
+    }
+    .btn:hover { transform: translateY(-3px); }
+    .btn:active { transform: translateY(4px); box-shadow: var(--gg-shadow-btn-press); }
+    .btn:focus-visible { outline: 4px solid var(--gg-blue); outline-offset: 3px; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+    .btn-cta { width: 100%; background: var(--gg-yellow); color: var(--gg-ink); animation: ggBreath 1.6s infinite; }
+    .btn-blue { background: var(--gg-blue); color: #fff; text-shadow: 0 2px 3px rgba(0,0,0,0.35); }
+    .btn-dark { background: var(--gg-purple); color: #fff; text-shadow: 0 2px 3px rgba(0,0,0,0.35); }
+    .btn-ghost { background: #EDE6F7; color: var(--gg-ink); box-shadow: 0 4px 0 rgba(0,0,0,0.15); }
+
+    /* ── Question screen ── */
+    .q-wrap { width: 100%; max-width: 620px; }
+
+    .progress-bar-wrap { background: rgba(255,255,255,0.2); border-radius: 999px; height: 18px; margin-bottom: 8px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--gg-green-bright); border-radius: 999px; transition: width .4s; }
+    .progress-label { font-size: 14px; font-weight: 800; color: var(--gg-lavender); text-align: right; margin-bottom: 18px; }
+
+    .timer-circle {
+      width: 96px; height: 96px; border-radius: 50%; margin: -76px auto 14px;
+      background: var(--gg-purple); border: 6px solid var(--gg-yellow);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px; font-weight: 900; color: #fff; text-shadow: 0 2px 3px rgba(0,0,0,0.4);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.28); position: relative; z-index: 2;
+    }
+    .timer-circle.urgent { border-color: var(--gg-red); background: #7A0E22; animation: ggPulseUrgent 0.5s infinite; }
 
     .q-card {
-      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
-      padding: 40px 36px; text-align: center; position: relative; overflow: hidden;
+      background: var(--gg-white); border-radius: var(--gg-r-lg); box-shadow: var(--gg-shadow-card);
+      padding: 64px 30px 30px; text-align: center; color: var(--gg-ink); margin-top: 60px;
     }
 
-    /* Timer ring */
-    .timer-ring-wrap { position: absolute; top: 16px; right: 20px; }
-    .timer-ring { display: block; }
-    .timer-bg { fill: none; stroke: #e2e8f0; stroke-width: 4; }
-    .timer-arc { fill: none; stroke: var(--purple); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset .9s linear, stroke .3s; transform: rotate(-90deg); transform-origin: center; }
-    .timer-arc.warning { stroke: var(--red); }
-    .timer-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--text); }
-
-    .q-direction { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 20px; }
-    .q-prompt { margin-bottom: 32px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
-    .q-prompt .he-text { font-family: var(--font-he); font-size: 42px; font-weight: 700; direction: rtl; line-height: 1.3; }
-    .q-prompt .en-text { font-size: 28px; font-weight: 700; line-height: 1.4; }
-    .q-type-hint { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .q-direction { font-size: 14px; font-weight: 900; color: var(--gg-purple-light); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 18px; }
+    .q-prompt { margin-bottom: 8px; min-height: 84px; display: flex; align-items: center; justify-content: center; }
+    .q-prompt .he-text { font-family: var(--font-he); font-size: clamp(34px, 8vw, 48px); font-weight: 700; direction: rtl; line-height: 1.3; }
+    .q-prompt .en-text { font-size: clamp(24px, 6vw, 32px); font-weight: 900; line-height: 1.4; }
+    .q-type-hint { font-size: 13px; font-weight: 700; color: #6B5CA5; margin-bottom: 18px; }
 
     .answer-input {
-      width: 100%; padding: 14px 18px; border: 2px solid var(--border); border-radius: 12px;
-      font-family: var(--font-ui); font-size: 18px; text-align: center; outline: none;
-      transition: border-color .15s; margin-bottom: 16px;
+      width: 100%; padding: 14px 18px; border: 3px solid #D9CCF0; border-radius: var(--gg-r-md);
+      font-family: var(--font-ui); font-size: 19px; font-weight: 600; text-align: center; outline: none;
+      transition: border-color .15s; margin-bottom: 14px; color: var(--gg-ink); min-height: 56px;
     }
-    .answer-input.he-answer { font-family: var(--font-he); font-size: 22px; direction: rtl; }
-    .answer-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,.12); }
-    .answer-input.correct { border-color: var(--green); background: #f0fdf4; }
-    .answer-input.wrong { border-color: var(--red); background: #fef2f2; }
+    .answer-input.he-answer { font-family: var(--font-he); font-size: 24px; direction: rtl; }
+    .answer-input:focus-visible { border-color: var(--gg-blue); box-shadow: 0 0 0 4px rgba(19,104,206,.18); }
+    .answer-input.correct { border-color: var(--gg-green); background: #EFFAE9; }
+    .answer-input.wrong { border-color: var(--gg-red); background: #FDE7EB; }
 
-    .submit-btn { width: 100%; padding: 14px; background: var(--purple); color: #fff; border: none; border-radius: 10px; font-family: var(--font-ui); font-size: 16px; font-weight: 700; cursor: pointer; transition: background .15s; }
-    .submit-btn:hover { background: #7c3aed; }
-    .submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .feedback { margin-top: 14px; padding: 14px 16px; border-radius: var(--gg-r-md); font-size: 16px; font-weight: 800; text-align: center; display: none; }
+    .feedback.correct { background: var(--gg-green); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); display: block; animation: ggPopIn 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+    .feedback.wrong { background: var(--gg-red); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); display: block; }
+    .feedback .correct-answer { font-family: var(--font-he); font-size: 20px; direction: rtl; display: block; margin-top: 6px; }
+    .feedback .correct-answer.ltr { font-family: var(--font-ui); direction: ltr; }
 
-    .feedback { margin-top: 14px; padding: 12px 16px; border-radius: 10px; font-size: 15px; font-weight: 600; text-align: center; display: none; }
-    .feedback.correct { background: #dcfce7; color: #15803d; display: block; }
-    .feedback.wrong { background: #fee2e2; color: #dc2626; display: block; }
-    .feedback .correct-answer { font-family: var(--font-he); font-size: 18px; direction: rtl; display: block; margin-top: 4px; }
-
-    .next-btn { width: 100%; margin-top: 12px; padding: 12px; background: #1e293b; color: #fff; border: none; border-radius: 10px; font-family: var(--font-ui); font-size: 15px; font-weight: 700; cursor: pointer; transition: background .15s; display: none; }
-    .next-btn:hover { background: #334155; }
+    .next-btn { width: 100%; margin-top: 12px; display: none; }
 
     /* ── Results ── */
-    .results-card {
-      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
-      padding: 48px 40px; text-align: center; max-width: 500px; width: 100%;
+    .results-card { max-width: 520px; }
+    .score-circle {
+      width: 128px; height: 128px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; font-size: 38px; font-weight: 900; border: 6px solid;
+      animation: ggPopIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
     }
-    .results-card .score-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; margin: 0 auto 24px; font-size: 36px; font-weight: 800; }
-    .score-a { background: #dcfce7; color: #15803d; }
-    .score-b { background: #dbeafe; color: #1e40af; }
-    .score-c { background: #fef9c3; color: #a16207; }
-    .score-d { background: #fee2e2; color: #dc2626; }
-    .results-card h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
-    .results-card .sub { font-size: 15px; color: var(--muted); margin-bottom: 28px; }
+    .score-a { background: #EFFAE9; color: var(--gg-green); border-color: var(--gg-green); }
+    .score-b { background: #E8F0FB; color: var(--gg-blue); border-color: var(--gg-blue); }
+    .score-c { background: #FFF4DE; color: #E08A00; border-color: var(--gg-yellow); }
+    .score-d { background: #FDE7EB; color: var(--gg-red); border-color: var(--gg-red); }
+    .results-card h2 { font-size: 26px; font-weight: 900; margin-bottom: 6px; }
+    .results-card .sub { font-size: 15px; font-weight: 600; color: #6B5CA5; margin-bottom: 24px; }
 
-    .result-rows { text-align: left; margin-bottom: 28px; }
-    .result-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .result-rows { text-align: left; margin-bottom: 24px; max-height: 300px; overflow-y: auto; border: 2px solid #EDE6F7; border-radius: var(--gg-r-md); padding: 4px 14px; }
+    .result-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 2px solid #F4EEFB; }
     .result-row:last-child { border-bottom: none; }
     .result-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
-    .result-row .he { font-family: var(--font-he); font-size: 18px; direction: rtl; }
-    .result-row .en { font-size: 13px; color: var(--muted); }
-    .result-row .given { font-size: 13px; color: var(--red); }
+    .result-row .he { font-family: var(--font-he); font-size: 19px; direction: rtl; text-align: right; }
+    .result-row .rr-body { flex: 1; min-width: 0; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .result-row .en { font-size: 13px; font-weight: 600; color: #6B5CA5; }
+    .result-row .given { font-size: 13px; font-weight: 700; color: var(--gg-red); }
 
-    .result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-    .result-actions button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-family: var(--font-ui); font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s; }
-    .btn-retry { background: var(--purple); color: #fff; } .btn-retry:hover { background: #7c3aed; }
-    .btn-home { background: #f1f5f9; color: var(--text); } .btn-home:hover { background: #e2e8f0; }
+    .result-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .result-actions .btn { flex: 1; }
 
-    /* ── Saved badge ── */
-    .saved-badge { display: none; align-items: center; gap: 6px; margin-top: 14px; padding: 8px 16px; background: #dcfce7; color: #15803d; border-radius: 8px; font-size: 13px; font-weight: 700; justify-content: center; }
+    .saved-badge { display: none; align-items: center; gap: 6px; margin-bottom: 18px; padding: 10px 16px; background: #EFFAE9; color: var(--gg-green); border-radius: var(--gg-r-sm); font-size: 14px; font-weight: 800; justify-content: center; }
     .saved-badge.visible { display: flex; }
-    .saved-badge.error { background: #fee2e2; color: #dc2626; }
+    .saved-badge.error { background: #FDE7EB; color: var(--gg-red); }
 
-    /* ── No test ── */
-    .no-test-card {
-      background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
-      padding: 48px 40px; text-align: center; max-width: 440px; width: 100%;
+    .info-card .ei { font-size: 52px; margin-bottom: 14px; animation: ggPopIn 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+    .info-card p { font-size: 15px; font-weight: 600; color: #6B5CA5; line-height: 1.6; }
+    .info-card .btn { margin-top: 22px; }
+
+    .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     }
-    .no-test-card .ei { font-size: 48px; margin-bottom: 16px; }
-    .no-test-card p { font-size: 15px; color: var(--muted); line-height: 1.6; }
-    .no-test-card a { display: inline-block; margin-top: 20px; padding: 11px 24px; background: var(--purple); color: #fff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; }
+    @media (max-width: 480px) {
+      .card, .q-card { padding-left: 20px; padding-right: 20px; }
+      .timer-circle { width: 78px; height: 78px; font-size: 28px; margin-top: -66px; }
+    }
   </style>
 </head>
 <body>
 
-<div class="rainbow-bar"></div>
+<div class="topbar">
+  <div class="brand">Gemara <span>Games</span></div>
+  <div class="block-tag" id="topBlockTag"></div>
+</div>
 
-<!-- Screen: no test configured -->
+<!-- Screen: no test -->
 <div class="screen active" id="screenNoTest">
-  <div class="no-test-card">
+  <div class="card info-card">
     <div class="ei">📋</div>
-    <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">No Active Test</h2>
-    <p>A teacher needs to start a test from the Teacher Dashboard first.</p>
-    <a href="teacher_dashboard.html">← Teacher Dashboard</a>
+    <h1 style="font-size:22px">No Active Test</h1>
+    <p>A teacher needs to start a test and share the link with you first.</p>
+    <a class="btn btn-dark" href="index.html">← Back to Games</a>
   </div>
 </div>
 
-<!-- Screen: name entry -->
+<!-- Screen: test closed -->
+<div class="screen" id="screenClosed">
+  <div class="card info-card">
+    <div class="ei">🔒</div>
+    <h1 style="font-size:22px" id="closedTitle">This Test Is Closed</h1>
+    <p id="closedMsg">Your teacher has closed this test. You can't submit answers anymore.</p>
+    <a class="btn btn-dark" href="index.html">← Back to Games</a>
+  </div>
+</div>
+
+<!-- Screen: name + access code -->
 <div class="screen" id="screenName">
-  <div class="splash-card">
+  <div class="card">
     <div class="block-label" id="splashBlock"></div>
     <h1 id="splashTitle">Vocabulary Test</h1>
     <p class="meta" id="splashMeta"></p>
-    <input class="name-input" id="nameInput" type="text" placeholder="Enter your name…" maxlength="40" onkeydown="if(event.key==='Enter')startTest()" />
-    <button class="start-btn" id="startBtn" onclick="startTest()">Start Test →</button>
+
+    <div class="field">
+      <label for="nameInput">Your name <span aria-hidden="true" style="color:var(--gg-red)">*</span></label>
+      <input class="text-input" id="nameInput" type="text" placeholder="Type your name…" maxlength="40"
+             autocomplete="off" required aria-required="true" />
+    </div>
+
+    <div class="field" id="codeField" style="display:none">
+      <label for="codeInput">Access code <span aria-hidden="true" style="color:var(--gg-red)">*</span></label>
+      <input class="text-input code-input" id="codeInput" type="text" inputmode="numeric" pattern="[0-9]*"
+             placeholder="• • • •" maxlength="4" autocomplete="off" aria-describedby="codeHint" />
+      <p class="hint" id="codeHint">Ask your teacher for the 4-digit code.</p>
+    </div>
+
+    <div class="form-error" id="formError" role="alert"></div>
+
+    <button class="btn btn-cta" id="startBtn" onclick="startTest()">Start Test →</button>
   </div>
 </div>
 
 <!-- Screen: question -->
 <div class="screen" id="screenQ">
   <div class="q-wrap">
-    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="progress-bar-wrap" role="progressbar" id="progressBar" aria-label="Test progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
     <div class="progress-label" id="progressLabel"></div>
-    <div class="q-card">
-      <!-- Timer -->
-      <div class="timer-ring-wrap">
-        <svg class="timer-ring" width="52" height="52" viewBox="0 0 52 52">
-          <circle class="timer-bg" cx="26" cy="26" r="22" />
-          <circle class="timer-arc" id="timerArc" cx="26" cy="26" r="22" />
-        </svg>
-        <div class="timer-num" id="timerNum">30</div>
-      </div>
 
+    <div class="q-card">
+      <div class="timer-circle" id="timerCircle" role="timer" aria-label="Time left"><span id="timerNum">30</span></div>
       <div class="q-direction" id="qDirection"></div>
       <div class="q-prompt" id="qPrompt"></div>
       <div class="q-type-hint" id="qTypeHint"></div>
-      <input class="answer-input" id="answerInput" type="text" placeholder="Type your answer…" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')submitAnswer()" />
-      <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">Submit →</button>
-      <div class="feedback" id="feedback"></div>
-      <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next →</button>
+      <label class="visually-hidden" for="answerInput">Your answer</label>
+      <input class="answer-input" id="answerInput" type="text" placeholder="Type your answer…" autocomplete="off" autocorrect="off" spellcheck="false" />
+      <button class="btn btn-blue" id="submitBtn" style="width:100%" onclick="submitAnswer()">Submit →</button>
+      <div class="feedback" id="feedback" aria-live="assertive"></div>
+      <button class="btn btn-dark next-btn" id="nextBtn" onclick="nextQuestion()">Next →</button>
     </div>
   </div>
 </div>
 
 <!-- Screen: results -->
 <div class="screen" id="screenResults">
-  <div class="results-card">
+  <div class="card results-card">
     <div class="score-circle" id="scoreCircle"></div>
     <h2 id="resultTitle"></h2>
     <p class="sub" id="resultSub"></p>
-    <div class="result-rows" id="resultRows"></div>
-    <div class="saved-badge" id="savedBadge"></div>
+    <div class="result-rows" id="resultRows" tabindex="0" aria-label="Your answers"></div>
+    <div class="saved-badge" id="savedBadge" role="status"></div>
     <div class="result-actions">
-      <button class="btn-retry" onclick="retryTest()">↺ Try Again</button>
-      <button class="btn-home" onclick="goHome()">← Back</button>
+      <button class="btn btn-cta" style="animation:none" onclick="retryTest()">↺ Try Again</button>
+      <button class="btn btn-ghost" onclick="goHome()">← Back</button>
     </div>
   </div>
 </div>
@@ -208,18 +305,70 @@ try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
 let testData = null;
 let words = [];
 let idx = 0;
-let results = [];     // {word, given, correct}
+let results = [];     // {word, given, correct, isCorrect}
 let timerInterval = null;
 let timeLeft = 30;
 let answered = false;
 let studentName = '';
 let isRetry = false;
+let requireCode = false;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Access code: derived deterministically from the test UUID (same formula as the dashboard)
+function accessCode(id) {
+  const hex = String(id || '').replace(/-/g, '').slice(0, 8);
+  const n = parseInt(hex, 16);
+  if (isNaN(n)) return '';
+  return String(n % 10000).padStart(4, '0');
+}
+
+// ── GG helpers ────────────────────────────────────────────
+function ggXpPop(text, x, y, bad) {
+  const el = document.createElement('div');
+  el.className = 'gg-xp' + (bad ? ' bad' : '');
+  el.textContent = text;
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  el.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+
+function ggConfetti(n) {
+  if (reducedMotion) return;
+  n = n || 120;
+  const colors = ['#E21B3C','#1368CE','#FFA602','#26890C','#FFFFFF','#864CBF'];
+  for (let i = 0; i < n; i++) setTimeout(() => {
+    const c = document.createElement('div');
+    c.className = 'gg-confetti';
+    c.style.left = Math.random()*100 + 'vw';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    c.style.animationDuration = (2 + Math.random()*2) + 's';
+    c.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 4200);
+  }, i * 15);
+}
+
+function shakeEl(el) {
+  if (!el || reducedMotion) return;
+  el.classList.remove('gg-shake'); void el.offsetWidth; el.classList.add('gg-shake');
+}
 
 // ── Load test from Supabase by ID ─────────────────────────
 async function loadTestFromDB(testId) {
   try {
     const { data: test, error: testErr } = await sb.from('tests').select('*').eq('id', testId).single();
     if (testErr || !test) throw testErr || new Error('Test not found');
+
+    if (test.status === 'closed') { show('screenClosed'); return; }
+    if (test.status === 'draft') {
+      document.getElementById('closedTitle').textContent = 'Test Not Started Yet';
+      document.getElementById('closedMsg').textContent = 'Your teacher hasn’t started this test yet. Please wait and refresh the page.';
+      show('screenClosed');
+      return;
+    }
+
     const wordIds = Array.isArray(test.word_ids) ? test.word_ids : [];
     const { data: wordRows, error: wordErr } = await sb.from('words').select('*').in('id', wordIds);
     if (wordErr) throw wordErr;
@@ -233,18 +382,20 @@ async function loadTestFromDB(testId) {
       words: wordRows || [],
       blockLabel: ''
     };
+    requireCode = true;
     initTestUI();
   } catch(e) {
     show('screenNoTest');
   }
 }
 
-// ── Load test from localStorage ───────────────────────────
+// ── Load test from localStorage (teacher preview fallback) ─
 function loadTestFromLocal() {
   try {
     const raw = localStorage.getItem('gm_active_test');
     if (raw) testData = JSON.parse(raw);
   } catch(e) {}
+  requireCode = false;
   initTestUI();
 }
 
@@ -256,29 +407,81 @@ function initTestUI() {
   }
   words = shuffle([...testData.words]);
   show('screenName');
-  document.getElementById('splashBlock').textContent = testData.blockLabel ? 'Block · ' + testData.blockLabel : 'Vocabulary Test';
-  document.getElementById('splashTitle').textContent = 'Vocabulary Test';
+  const blockTag = testData.blockLabel ? 'Block · ' + testData.blockLabel : 'Vocabulary Test';
+  document.getElementById('splashBlock').textContent = blockTag;
+  document.getElementById('topBlockTag').textContent = testData.blockLabel || '';
   const dir = testData.direction === 'he_to_en' ? 'Hebrew → English' : 'English → Hebrew';
   document.getElementById('splashMeta').textContent =
     `${words.length} words · ${testData.timerPerWord}s per word · ${dir}`;
+  document.getElementById('codeField').style.display = requireCode ? '' : 'none';
   document.getElementById('nameInput').focus();
 }
 
 // ── Init ──────────────────────────────────────────────────
 const testId = new URLSearchParams(location.search).get('test');
 if (testId) {
-  // fetch from Supabase via URL param
   loadTestFromDB(testId);
 } else {
-  // localStorage fallback (existing behavior)
   loadTestFromLocal();
 }
 
+function showFormError(msg, inputEl) {
+  const err = document.getElementById('formError');
+  err.textContent = msg;
+  err.classList.add('visible');
+  if (inputEl) {
+    inputEl.classList.add('err');
+    shakeEl(inputEl.closest('.card'));
+    inputEl.focus();
+  }
+}
+
+function clearFormError() {
+  document.getElementById('formError').classList.remove('visible');
+  document.getElementById('nameInput').classList.remove('err');
+  document.getElementById('codeInput').classList.remove('err');
+}
+
 function startTest() {
-  studentName = document.getElementById('nameInput').value.trim() || 'Student';
+  clearFormError();
+  const nameEl = document.getElementById('nameInput');
+  const name = nameEl.value.trim();
+  if (!name) { showFormError('Please type your name first.', nameEl); return; }
+
+  if (requireCode) {
+    const codeEl = document.getElementById('codeInput');
+    const given = codeEl.value.trim();
+    if (!given) { showFormError('Please type the access code your teacher gave you.', codeEl); return; }
+    if (given !== accessCode(testData.id)) { showFormError('Wrong code. Ask your teacher and try again.', codeEl); return; }
+  }
+
+  studentName = name;
   idx = 0; results = [];
   showQuestion();
   show('screenQ');
+}
+
+// ── Flexible answer checking ──────────────────────────────
+// Accepts any one of the meanings when the answer has alternatives,
+// e.g. "Say" or "Speak" are both correct for "Say, Speak".
+// Ignores case, nikud, punctuation, extra spaces, and a leading "to ".
+function normalize(s) {
+  return String(s||'').toLowerCase().trim()
+    .replace(/[֑-ׇ]/g, '')          // strip Hebrew nikud/cantillation
+    .replace(/[.,;:!?'"()׳״\-]/g, ' ') // strip punctuation
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function stripTo(s) { return s.replace(/^to /, ''); }
+
+function isAnswerCorrect(given, correct) {
+  const g = normalize(given);
+  if (!g) return false;
+  const full = normalize(correct);
+  if (g === full || stripTo(g) === stripTo(full)) return true;
+  const alts = String(correct||'').split(/[,;\/]|\bor\b/i).map(a => normalize(a)).filter(Boolean);
+  return alts.some(a => a === g || stripTo(a) === stripTo(g));
 }
 
 // ── Question flow ─────────────────────────────────────────
@@ -286,9 +489,10 @@ function showQuestion() {
   answered = false;
   const w = words[idx];
   const total = words.length;
-  const pct = (idx / total) * 100;
+  const pct = Math.round((idx / total) * 100);
 
   document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressBar').setAttribute('aria-valuenow', pct);
   document.getElementById('progressLabel').textContent = `Question ${idx + 1} of ${total}`;
 
   const isHeEn = testData.direction === 'he_to_en';
@@ -296,24 +500,24 @@ function showQuestion() {
 
   const promptEl = document.getElementById('qPrompt');
   if (isHeEn) {
-    promptEl.innerHTML = `<span class="he-text">${esc(w.hebrew)}</span>`;
+    promptEl.innerHTML = `<span class="he-text" lang="he">${esc(w.hebrew)}</span>`;
   } else {
     promptEl.innerHTML = `<span class="en-text">${esc(w.english)}</span>`;
   }
 
-  const typeHintEl = document.getElementById('qTypeHint');
-  typeHintEl.textContent = w.type === 'shoresh' ? 'שורש — root' : 'מילה — word';
+  document.getElementById('qTypeHint').textContent = w.type === 'shoresh' ? 'שורש — root' : 'מילה — word';
 
   const ansInput = document.getElementById('answerInput');
   ansInput.value = '';
   ansInput.className = 'answer-input' + (!isHeEn ? ' he-answer' : '');
-  ansInput.placeholder = isHeEn ? 'Type English meaning…' : 'הקלד/י בעברית…';
+  ansInput.placeholder = isHeEn ? 'Type the English meaning…' : 'Type in Hebrew…';
+  ansInput.setAttribute('lang', isHeEn ? 'en' : 'he');
   ansInput.disabled = false;
-  ansInput.style.borderColor = '';
-  ansInput.style.background = '';
 
-  document.getElementById('feedback').style.display = 'none';
-  document.getElementById('feedback').className = 'feedback';
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'none';
+  fb.className = 'feedback';
+  fb.innerHTML = '';
   document.getElementById('nextBtn').style.display = 'none';
   document.getElementById('submitBtn').style.display = '';
   document.getElementById('submitBtn').disabled = false;
@@ -322,16 +526,12 @@ function showQuestion() {
   setTimeout(() => ansInput.focus(), 50);
 }
 
-function submitAnswer() {
-  if (answered) return;
+function finishQuestion(given, isCorrect, timedOut) {
   clearTimer();
   answered = true;
-
   const w = words[idx];
   const isHeEn = testData.direction === 'he_to_en';
-  const given = document.getElementById('answerInput').value.trim();
   const correct = isHeEn ? w.english : w.hebrew;
-  const isCorrect = normalize(given) === normalize(correct);
 
   results.push({ word: w, given, correct, isCorrect });
 
@@ -343,14 +543,29 @@ function submitAnswer() {
   fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
   if (isCorrect) {
     fb.textContent = '✓ Correct!';
+    const r = ansInput.getBoundingClientRect();
+    ggXpPop('+100', r.left + r.width / 2, r.top);
   } else {
-    fb.innerHTML = `✗ Not quite. The answer is: <span class="correct-answer">${esc(correct)}</span>`;
+    const ansCls = isHeEn ? 'correct-answer ltr' : 'correct-answer';
+    fb.innerHTML = (timedOut ? '⏱ Time’s up! The answer was:' : '✗ Not quite. The answer is:') +
+      ` <span class="${ansCls}" ${isHeEn ? '' : 'lang="he"'}>${esc(correct)}</span>`;
+    shakeEl(document.querySelector('.q-card'));
   }
 
   document.getElementById('submitBtn').style.display = 'none';
-  document.getElementById('nextBtn').style.display = 'block';
-  document.getElementById('nextBtn').textContent = idx < words.length - 1 ? 'Next →' : 'See Results →';
-  document.getElementById('nextBtn').focus();
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.style.display = 'inline-flex';
+  nextBtn.textContent = idx < words.length - 1 ? 'Next →' : 'See Results →';
+  nextBtn.focus();
+}
+
+function submitAnswer() {
+  if (answered) return;
+  const w = words[idx];
+  const isHeEn = testData.direction === 'he_to_en';
+  const given = document.getElementById('answerInput').value.trim();
+  const correct = isHeEn ? w.english : w.hebrew;
+  finishQuestion(given, isAnswerCorrect(given, correct), false);
 }
 
 function nextQuestion() {
@@ -366,38 +581,15 @@ function nextQuestion() {
 function startTimer(seconds) {
   clearTimer();
   timeLeft = seconds;
-  const arc = document.getElementById('timerArc');
+  const circle = document.getElementById('timerCircle');
   const num = document.getElementById('timerNum');
-  const r = 22;
-  const circ = 2 * Math.PI * r;
-  arc.style.strokeDasharray = circ;
 
   function tick() {
-    const frac = timeLeft / seconds;
-    arc.style.strokeDashoffset = circ * (1 - frac);
     num.textContent = timeLeft;
-    arc.classList.toggle('warning', timeLeft <= Math.ceil(seconds * 0.25));
+    circle.classList.toggle('urgent', timeLeft <= Math.min(3, Math.ceil(seconds * 0.25)));
     if (timeLeft <= 0) {
       clearTimer();
-      if (!answered) {
-        const w = words[idx];
-        const isHeEn = testData.direction === 'he_to_en';
-        const correct = isHeEn ? w.english : w.hebrew;
-        results.push({ word: w, given: '', correct, isCorrect: false });
-        answered = true;
-
-        const ansInput = document.getElementById('answerInput');
-        ansInput.disabled = true;
-        ansInput.classList.add('wrong');
-
-        const fb = document.getElementById('feedback');
-        fb.className = 'feedback wrong';
-        fb.innerHTML = `⏱ Time's up! The answer was: <span class="correct-answer">${esc(correct)}</span>`;
-
-        document.getElementById('submitBtn').style.display = 'none';
-        document.getElementById('nextBtn').style.display = 'block';
-        document.getElementById('nextBtn').textContent = idx < words.length - 1 ? 'Next →' : 'See Results →';
-      }
+      if (!answered) finishQuestion('', false, true);
     }
   }
 
@@ -416,7 +608,6 @@ function showResults() {
   const correct = results.filter(r => r.isCorrect).length;
   const total = results.length;
   const pct = Math.round((correct / total) * 100);
-  const isHeEn = testData.direction === 'he_to_en';
 
   const scoreEl = document.getElementById('scoreCircle');
   scoreEl.innerHTML = `<span>${pct}%</span>`;
@@ -427,16 +618,21 @@ function showResults() {
 
   document.getElementById('resultRows').innerHTML = results.map(r => `
     <div class="result-row">
-      <span class="result-icon">${r.isCorrect ? '✅' : '❌'}</span>
-      <div style="flex:1;min-width:0">
-        <div class="he">${esc(r.word.hebrew)}</div>
+      <span class="result-icon" aria-hidden="true">${r.isCorrect ? '✅' : '❌'}</span>
+      <span class="visually-hidden">${r.isCorrect ? 'Correct:' : 'Wrong:'}</span>
+      <div class="rr-body">
+        <div>
+          <div class="he" lang="he">${esc(r.word.hebrew)}</div>
+          ${!r.isCorrect && r.given ? `<div class="given">You wrote: "${esc(r.given)}"</div>` : ''}
+          ${!r.isCorrect && !r.given ? `<div class="given">No answer / time expired</div>` : ''}
+        </div>
         <div class="en">${esc(r.word.english)}</div>
-        ${!r.isCorrect && r.given ? `<div class="given">You wrote: "${esc(r.given)}"</div>` : ''}
-        ${!r.isCorrect && !r.given ? `<div class="given">No answer / time expired</div>` : ''}
       </div>
     </div>`).join('');
 
   show('screenResults');
+  if (pct >= 90) ggConfetti(160);
+  else if (pct >= 70) ggConfetti(90);
   saveResultToDB();
 }
 
@@ -479,16 +675,15 @@ function goHome() {
   window.location.href = 'index.html';
 }
 
+// ── Keyboard shortcuts ────────────────────────────────────
+document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') { requireCode ? document.getElementById('codeInput').focus() : startTest(); } });
+document.getElementById('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') startTest(); });
+document.getElementById('answerInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitAnswer(); });
+
 // ── Utilities ─────────────────────────────────────────────
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-}
-
-function normalize(s) {
-  return String(s||'').toLowerCase().trim()
-    .replace(/[֑-ׇ]/g, '')  // strip Hebrew nikud/cantillation
-    .replace(/\s+/g, ' ');
 }
 
 function esc(s) {

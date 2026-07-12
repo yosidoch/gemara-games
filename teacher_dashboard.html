@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Teacher Dashboard — Gemara Games</title>
+  <title>לוח המורה — Gemara Games</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
     const SUPABASE_URL = 'https://itkkiuxzbtircgifaoao.supabase.co';
@@ -15,145 +15,180 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: linear-gradient(135deg, #f8faff 0%, #fff8f0 50%, #f0fff8 100%);
-      --card: #fff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
-      --radius: 14px; --shadow: 0 4px 24px rgba(0,0,0,0.08);
-      --green: #22c55e; --blue: #3b82f6; --amber: #f59e0b;
-      --red: #ef4444; --purple: #8b5cf6;
+      --bg: #F6F7FB;
+      --card: #fff; --text: #182033; --muted: #5B6474; --border: #E4E7EF;
+      --radius: 16px; --shadow: 0 1px 2px rgba(16,24,40,.05), 0 8px 24px rgba(16,24,40,.06);
+      --accent: #4F46E5; --accent-dark: #4338CA; --accent-soft: #EEF0FE;
+      --green: #16A34A; --green-soft: #E7F6EC;
+      --blue: #2563EB; --amber: #B45309; --amber-soft: #FEF3C7;
+      --red: #DC2626; --red-soft: #FDE8E8;
+      --purple: #7C3AED; --purple-soft: #F1EAFE;
       --font-ui: 'Rubik', sans-serif; --font-he: 'Frank Ruhl Libre', serif;
     }
-    html { font-size: 16px; }
-    body { font-family: var(--font-ui); background: var(--bg); background-attachment: fixed; color: var(--text); min-height: 100vh; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { font-family: var(--font-ui); background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    .rainbow-bar { height: 5px; background: linear-gradient(90deg,#f97316,#eab308,#22c55e,#06b6d4,#3b82f6,#8b5cf6,#ec4899); }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 
-    .site-header { max-width: 1300px; margin: 0 auto; padding: 28px 24px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    .header-left { display: flex; align-items: center; gap: 16px; }
-    .back-link { text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; transition: all .2s; }
-    .back-link:hover { background: #f1f5f9; color: var(--text); }
-    .site-title h1 { font-size: 22px; font-weight: 700; }
+    .accent-bar { height: 4px; background: linear-gradient(90deg, #4F46E5, #7C3AED, #2563EB); }
+
+    .site-header { max-width: 1300px; margin: 0 auto; padding: 26px 24px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .header-right { display: flex; align-items: center; gap: 14px; }
+    .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .back-link { text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: #fff; transition: all .2s; min-height: 42px; }
+    .back-link:hover { background: var(--accent-soft); color: var(--accent-dark); border-color: #C9CDF7; }
+    .site-title h1 { font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
     .site-title p { font-size: 13px; color: var(--muted); margin-top: 2px; }
-    .db-badge { font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 999px; display: flex; align-items: center; gap: 6px; }
+    .db-badge { font-size: 12.5px; font-weight: 600; padding: 7px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 7px; min-height: 32px; }
     .db-badge::before { content: '●'; font-size: 8px; }
-    .db-badge.connected { background: #dcfce7; color: #16a34a; }
-    .db-badge.local { background: #fef9c3; color: #a16207; }
-    .db-badge.loading { background: #e0e7ff; color: #4338ca; }
+    .db-badge.connected { background: var(--green-soft); color: #15803D; }
+    .db-badge.local { background: var(--amber-soft); color: var(--amber); }
+    .db-badge.loading { background: var(--accent-soft); color: var(--accent-dark); }
 
-    .main-layout { max-width: 1300px; margin: 0 auto; padding: 0 24px 60px; display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
+    .main-layout { max-width: 1300px; margin: 0 auto; padding: 0 24px 60px; display: grid; grid-template-columns: 310px 1fr; gap: 24px; align-items: start; }
+    .main-layout > * { min-width: 0; }
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-    .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .card-header h2 { font-size: 15px; font-weight: 700; }
     .card-body { padding: 20px; }
 
-    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-family: var(--font-ui); font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; white-space: nowrap; }
-    .btn-primary { background: var(--blue); color: #fff; } .btn-primary:hover { background: #2563eb; }
-    .btn-green { background: var(--green); color: #fff; } .btn-green:hover { background: #16a34a; }
-    .btn-red { background: var(--red); color: #fff; } .btn-red:hover { background: #dc2626; }
-    .btn-purple { background: var(--purple); color: #fff; } .btn-purple:hover { background: #7c3aed; }
-    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-    .btn-ghost:hover { background: #f1f5f9; color: var(--text); }
-    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; border-radius: 10px; font-family: var(--font-ui); font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: background .15s, color .15s, box-shadow .15s; white-space: nowrap; min-height: 42px; }
+    .btn-primary { background: var(--accent); color: #fff; } .btn-primary:hover { background: var(--accent-dark); }
+    .btn-green { background: var(--green); color: #fff; } .btn-green:hover { background: #15803D; }
+    .btn-red { background: var(--red); color: #fff; } .btn-red:hover { background: #B91C1C; }
+    .btn-purple { background: var(--purple); color: #fff; } .btn-purple:hover { background: #6D28D9; }
+    .btn-ghost { background: #fff; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--accent-soft); color: var(--accent-dark); border-color: #C9CDF7; }
+    .btn-sm { padding: 8px 12px; font-size: 13px; min-height: 38px; min-width: 38px; }
     .btn:disabled { opacity: .5; cursor: not-allowed; }
 
     .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
-    input[type=text], input[type=number], input[type=date], select, textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font-ui); font-size: 14px; color: var(--text); background: #fff; outline: none; transition: border-color .15s; }
-    input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+    input[type=text], input[type=number], input[type=date], select, textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-family: var(--font-ui); font-size: 14px; color: var(--text); background: #fff; outline: none; transition: border-color .15s; min-height: 42px; }
+    input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.12); outline: none; }
     .he-input { font-family: var(--font-he); font-size: 16px; direction: rtl; }
+    .en-cell { direction: ltr; text-align: left; }
+
+    .hint-en { direction: ltr; text-align: left; font-size: 13px; color: var(--muted); line-height: 1.55; }
+    code.fmt { background: #EEF1F6; padding: 2px 7px; border-radius: 6px; font-size: 12px; direction: ltr; display: inline-block; }
 
     .block-list { display: flex; flex-direction: column; }
-    .block-item { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .block-item { width: 100%; text-align: right; background: none; border: none; border-bottom: 1px solid var(--border); font-family: var(--font-ui); padding: 13px 16px; cursor: pointer; transition: background .15s; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--text); }
     .block-item:last-child { border-bottom: none; }
-    .block-item:hover { background: #f8faff; }
-    .block-item.active { background: #eff6ff; border-right: 3px solid var(--blue); }
+    .block-item:hover { background: #FAFBFF; }
+    .block-item.active { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
     .block-item-left { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-    .block-item-num { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    .block-item-num { font-size: 11px; font-weight: 700; color: var(--muted); }
     .block-item-label { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .block-item-meta { font-size: 11px; color: var(--muted); }
+    .block-item-meta { font-size: 11.5px; color: var(--muted); }
     .block-item-badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex-shrink: 0; }
-    .badge { background: #f1f5f9; color: var(--muted); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
-    .badge-purple { background: #ede9fe; color: #6d28d9; }
+    .badge { background: #EEF1F6; color: var(--muted); font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+    .badge-purple { background: var(--purple-soft); color: #6D28D9; }
 
-    .add-block-form { padding: 16px; border-top: 1px solid var(--border); background: #f8faff; display: none; }
+    .add-block-form { padding: 16px; border-top: 1px solid var(--border); background: #FAFBFF; display: none; }
     .add-block-form.open { display: block; }
 
-    .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; gap: 0; overflow-x: auto; }
-    .tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; margin-bottom: -1px; white-space: nowrap; }
-    .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
-    .tab:hover:not(.active) { color: var(--text); }
+    .tabs { display: flex; border-bottom: 1.5px solid var(--border); margin-bottom: 20px; gap: 0; overflow-x: auto; }
+    .tab { background: none; border: none; font-family: var(--font-ui); padding: 11px 16px; font-size: 13.5px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2.5px solid transparent; transition: all .15s; margin-bottom: -1.5px; white-space: nowrap; min-height: 44px; }
+    .tab[aria-selected="true"] { color: var(--accent-dark); border-bottom-color: var(--accent); }
+    .tab:hover:not([aria-selected="true"]) { color: var(--text); }
 
     .word-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    .word-table th { text-align: left; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding: 10px 12px; background: #f8faff; border-bottom: 1px solid var(--border); }
-    .word-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .word-table th { text-align: right; font-size: 11.5px; font-weight: 700; color: var(--muted); padding: 10px 12px; background: #FAFBFF; border-bottom: 1px solid var(--border); }
+    .word-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
     .word-table tr:last-child td { border-bottom: none; }
-    .word-table tbody tr:hover td { background: #f8faff; }
+    .word-table tbody tr:hover td { background: #FAFBFF; }
     .word-he { font-family: var(--font-he); font-size: 18px; direction: rtl; }
-    .type-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-    .type-shoresh { background: #fef3c7; color: #92400e; }
-    .type-milah { background: #dbeafe; color: #1e40af; }
-    .edit-row td { background: #f0f9ff !important; padding: 6px 8px !important; }
-    .edit-row input, .edit-row select { padding: 5px 8px; font-size: 13px; }
+    .type-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+    .type-shoresh { background: var(--amber-soft); color: #92400E; }
+    .type-milah { background: #DBEAFE; color: #1E40AF; }
+    .edit-row td { background: var(--accent-soft) !important; padding: 6px 8px !important; }
+    .edit-row input, .edit-row select { padding: 6px 8px; font-size: 13px; min-height: 38px; }
 
-    .bulk-textarea { font-family: var(--font-he); font-size: 15px; min-height: 160px; resize: vertical; direction: ltr; }
+    .bulk-textarea { font-family: var(--font-he); font-size: 15px; min-height: 160px; resize: vertical; direction: ltr; text-align: left; }
 
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
-    .modal { background: #fff; border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0,0,0,.2); max-height: 90vh; overflow-y: auto; width: 100%; max-width: 760px; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.55); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .modal { background: #fff; border-radius: var(--radius); box-shadow: 0 24px 64px rgba(15,23,42,.28); max-height: 90vh; overflow-y: auto; width: 100%; max-width: 760px; }
     .modal-lg { max-width: 960px; }
-    .modal-sm { max-width: 440px; }
+    .modal-sm { max-width: 460px; }
     .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 1; }
     .modal-header h2 { font-size: 18px; font-weight: 700; }
-    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted); line-height: 1; padding: 2px 6px; }
-    .modal-close:hover { color: var(--text); }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted); line-height: 1; padding: 6px 10px; border-radius: 8px; min-width: 42px; min-height: 42px; }
+    .modal-close:hover { color: var(--text); background: #EEF1F6; }
     .modal-body { padding: 24px; }
     .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; background: #fff; }
 
     .preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .preview-table th { text-align: left; padding: 8px 10px; background: #f8faff; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    .preview-table th { text-align: right; padding: 8px 10px; background: #FAFBFF; border-bottom: 1px solid var(--border); font-size: 11.5px; font-weight: 700; color: var(--muted); }
     .preview-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
     .preview-table tr:last-child td { border-bottom: none; }
-    .preview-table input, .preview-table select { padding: 4px 8px; font-size: 13px; }
+    .preview-table input, .preview-table select { padding: 6px 8px; font-size: 13px; min-height: 38px; }
 
-    .word-selection { display: flex; flex-direction: column; max-height: 280px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
-    .wsr { display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
+    .word-selection { display: flex; flex-direction: column; max-height: 280px; overflow-y: auto; border: 1.5px solid var(--border); border-radius: 10px; }
+    .wsr { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; min-height: 46px; }
     .wsr:last-child { border-bottom: none; }
-    .wsr:hover { background: #f8faff; }
-    .wsr.off { opacity: .4; text-decoration: line-through; }
-    .wsr input[type=checkbox] { width: auto; margin: 0; cursor: pointer; flex-shrink: 0; }
+    .wsr:hover { background: #FAFBFF; }
+    .wsr.off { opacity: .45; text-decoration: line-through; }
+    .wsr input[type=checkbox] { width: 20px; height: 20px; margin: 0; cursor: pointer; flex-shrink: 0; accent-color: var(--accent); }
 
     .dir-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .dir-card { border: 2px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: all .15s; text-align: center; }
-    .dir-card:hover { border-color: var(--blue); }
-    .dir-card.on { border-color: var(--blue); background: #eff6ff; }
+    .dir-card { border: 2px solid var(--border); background: #fff; border-radius: 12px; padding: 16px 14px; cursor: pointer; transition: all .15s; text-align: center; font-family: var(--font-ui); color: var(--text); }
+    .dir-card:hover { border-color: var(--accent); }
+    .dir-card[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); }
     .dir-card .icon { font-size: 24px; margin-bottom: 6px; }
-    .dir-card .lbl { font-size: 13px; font-weight: 700; }
-    .dir-card .desc { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .dir-card .lbl { font-size: 14px; font-weight: 700; }
+    .dir-card .desc { font-size: 12px; color: var(--muted); margin-top: 5px; direction: ltr; }
 
     .empty-state { text-align: center; padding: 40px 24px; color: var(--muted); }
     .empty-state .ei { font-size: 36px; margin-bottom: 10px; }
-    .empty-state p { font-size: 14px; line-height: 1.6; }
+    .empty-state p { font-size: 14px; line-height: 1.7; }
 
-    .section-lbl { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
+    .section-lbl { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
 
-    .test-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .test-card-info .title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
-    .test-card-info .meta { font-size: 12px; color: var(--muted); }
-    .test-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
-    .test-status.draft { background: #f1f5f9; color: var(--muted); }
-    .test-status.active { background: #dcfce7; color: #16a34a; }
+    .test-card { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .test-card-info .title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .test-card-info .meta { font-size: 12.5px; color: var(--muted); }
+    .test-status { font-size: 11.5px; font-weight: 700; padding: 4px 11px; border-radius: 999px; }
+    .test-status.draft { background: #EEF1F6; color: var(--muted); }
+    .test-status.active { background: var(--green-soft); color: #15803D; }
+    .test-status.closed { background: var(--red-soft); color: var(--red); }
+    .test-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-    .results-avg { background: #eff6ff; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+    .access-code { display: inline-flex; align-items: center; gap: 7px; background: var(--purple-soft); color: #5B21B6; border-radius: 8px; padding: 5px 11px; font-weight: 800; font-size: 14px; letter-spacing: .12em; direction: ltr; }
+    .access-code small { font-size: 10.5px; font-weight: 700; letter-spacing: 0; }
+
+    .results-avg { background: var(--accent-soft); border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
 
     hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
-    .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; z-index: 200; transform: translateY(80px); opacity: 0; transition: all .3s; pointer-events: none; }
+    .toast { position: fixed; bottom: 24px; inset-inline-start: 24px; padding: 13px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 300; transform: translateY(80px); opacity: 0; transition: all .3s; pointer-events: none; max-width: min(420px, 90vw); }
     .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.ok { background: #1e293b; color: #fff; }
-    .toast.err { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+    .toast.ok { background: #182033; color: #fff; }
+    .toast.err { background: var(--red-soft); color: var(--red); border: 1px solid #FBD0D0; }
 
-    .gen-btn { width: 100%; padding: 14px; font-size: 15px; border-radius: 10px; margin-top: 20px; justify-content: center; }
+    .gen-btn { width: 100%; padding: 14px; font-size: 15px; border-radius: 12px; margin-top: 20px; white-space: normal; }
 
-    @media (max-width: 768px) {
+    .danger-note { background: var(--red-soft); border: 1px solid #FBD0D0; color: #991B1B; border-radius: 10px; padding: 12px 14px; font-size: 13.5px; line-height: 1.6; margin: 12px 0; }
+    .confirm-check { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 14px; }
+    .confirm-check input { width: 20px; height: 20px; accent-color: var(--red); flex-shrink: 0; }
+
+    /* Help modal */
+    .help-body { direction: ltr; text-align: left; font-size: 14.5px; line-height: 1.7; color: var(--text); }
+    .help-body h3 { font-size: 15px; font-weight: 800; margin: 20px 0 6px; color: var(--accent-dark); }
+    .help-body h3:first-child { margin-top: 0; }
+    .help-body p { margin-bottom: 8px; }
+    .help-body ul { margin: 0 0 8px 20px; }
+    .help-body li { margin-bottom: 4px; }
+    .help-body .kbd { background: #EEF1F6; border-radius: 6px; padding: 1px 7px; font-size: 13px; font-weight: 700; }
+
+    .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+      html { scroll-behavior: auto; }
+    }
+    @media (max-width: 820px) {
       .main-layout { grid-template-columns: 1fr; }
       .dir-options { grid-template-columns: 1fr; }
     }
@@ -161,155 +196,215 @@
 </head>
 <body>
 
-<div class="rainbow-bar"></div>
+<div class="accent-bar" aria-hidden="true"></div>
 
 <header class="site-header">
-  <div class="header-left">
-    <a class="back-link" href="index.html">← Back to Games</a>
+  <div class="header-right">
+    <a class="back-link" href="index.html">→ חזרה למשחקים</a>
     <div class="site-title">
-      <h1>📋 Teacher Dashboard</h1>
-      <p>Manage vocabulary blocks, words, and tests</p>
+      <h1>📋 לוח המורה</h1>
+      <p>ניהול בלוקים של אוצר מילים, מבחנים ותוצאות</p>
     </div>
   </div>
-  <div id="dbBadge" class="db-badge loading">Connecting…</div>
-  <button class="btn btn-ghost btn-sm" id="classViewBtn" onclick="openClassView()" style="display:none">📊 Class View</button>
+  <div class="header-actions">
+    <div id="dbBadge" class="db-badge loading" role="status">מתחבר…</div>
+    <button class="btn btn-ghost btn-sm" id="classViewBtn" onclick="openClassView()" style="display:none">📊 תצוגת כיתה</button>
+    <button class="btn btn-ghost btn-sm" onclick="openMdl('helpModal')" aria-haspopup="dialog">❓ מדריך למורה</button>
+  </div>
 </header>
 
 <div class="main-layout">
-  <div>
+  <aside aria-label="רשימת בלוקים">
     <div class="card">
       <div class="card-header">
-        <h2>Vocabulary Blocks</h2>
-        <button class="btn btn-primary btn-sm" onclick="toggleAddBlockForm()">+ Add Block</button>
+        <h2>בלוקים של אוצר מילים</h2>
+        <button class="btn btn-primary btn-sm" onclick="toggleAddBlockForm()" aria-expanded="false" id="addBlockToggle">+ בלוק חדש</button>
       </div>
       <div class="add-block-form" id="addBlockForm">
-        <div class="form-group"><label>Block #</label><input type="number" id="nbNum" min="1" /></div>
-        <div class="form-group"><label>Label / Title</label><input type="text" id="nbLabel" placeholder="e.g. Tied Doves & Vessel" /></div>
-        <div class="form-group"><label>Week Start</label><input type="date" id="nbWeekStart" /></div>
-        <div class="form-group"><label>Week End</label><input type="date" id="nbWeekEnd" /></div>
+        <div class="form-group"><label for="nbNum">מספר בלוק</label><input type="number" id="nbNum" min="1" /></div>
+        <div class="form-group"><label for="nbLabel">כותרת</label><input type="text" id="nbLabel" placeholder="לדוגמה: יונים קשורות וכלי" /></div>
+        <div class="form-group"><label for="nbWeekStart">תחילת שבוע</label><input type="date" id="nbWeekStart" /></div>
+        <div class="form-group"><label for="nbWeekEnd">סוף שבוע</label><input type="date" id="nbWeekEnd" /></div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-ghost btn-sm" onclick="toggleAddBlockForm()">Cancel</button>
-          <button class="btn btn-primary btn-sm" id="addBlockBtn" onclick="addBlock()">Save Block</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddBlockForm()">ביטול</button>
+          <button class="btn btn-primary btn-sm" id="addBlockBtn" onclick="addBlock()">שמירת בלוק</button>
         </div>
       </div>
-      <div class="block-list" id="blockList"></div>
+      <div class="block-list" id="blockList" role="list"></div>
     </div>
-  </div>
+  </aside>
 
-  <div id="detailPanel">
+  <main id="detailPanel" aria-live="polite">
     <div class="card">
       <div class="card-body empty-state">
-        <div class="ei">📚</div>
-        <p>Select a block on the left<br>to manage its words and tests.</p>
+        <div class="ei" aria-hidden="true">📚</div>
+        <p>בחרו בלוק מהרשימה כדי לנהל<br>את המילים והמבחנים שלו.</p>
       </div>
     </div>
-  </div>
+  </main>
 </div>
 
 <!-- MODAL: edit block -->
 <div class="modal-backdrop" id="editBlockModal" style="display:none" onclick="closeMdl('editBlockModal',event)">
-  <div class="modal modal-sm">
-    <div class="modal-header"><h2>Edit Block</h2><button class="modal-close" onclick="closeMdl('editBlockModal')">×</button></div>
+  <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="editBlockTitle">
+    <div class="modal-header"><h2 id="editBlockTitle">עריכת בלוק</h2><button class="modal-close" onclick="closeMdl('editBlockModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Block #</label><input type="number" id="ebNum" min="1" /></div>
-      <div class="form-group"><label>Label</label><input type="text" id="ebLabel" /></div>
-      <div class="form-group"><label>Week Start</label><input type="date" id="ebWeekStart" /></div>
-      <div class="form-group"><label>Week End</label><input type="date" id="ebWeekEnd" /></div>
+      <div class="form-group"><label for="ebNum">מספר בלוק</label><input type="number" id="ebNum" min="1" /></div>
+      <div class="form-group"><label for="ebLabel">כותרת</label><input type="text" id="ebLabel" /></div>
+      <div class="form-group"><label for="ebWeekStart">תחילת שבוע</label><input type="date" id="ebWeekStart" /></div>
+      <div class="form-group"><label for="ebWeekEnd">סוף שבוע</label><input type="date" id="ebWeekEnd" /></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeMdl('editBlockModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveEditBlock()">Save Changes</button>
+      <button class="btn btn-ghost" onclick="closeMdl('editBlockModal')">ביטול</button>
+      <button class="btn btn-primary" onclick="saveEditBlock()">שמירת שינויים</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: delete block -->
+<div class="modal-backdrop" id="delBlockModal" style="display:none" onclick="closeMdl('delBlockModal',event)">
+  <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="delBlockTitle">
+    <div class="modal-header"><h2 id="delBlockTitle">מחיקת בלוק</h2><button class="modal-close" onclick="closeMdl('delBlockModal')" aria-label="סגירה">×</button></div>
+    <div class="modal-body">
+      <p style="font-size:15px">האם למחוק את הבלוק "<strong id="delBlockLabel"></strong>"?</p>
+      <div class="danger-note" id="delBlockDetails"></div>
+      <label class="confirm-check">
+        <input type="checkbox" id="delBlockConfirmChk" onchange="document.getElementById('delBlockBtn').disabled = !this.checked" />
+        אני מבין/ה שהמחיקה סופית ולא ניתנת לשחזור
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMdl('delBlockModal')">ביטול</button>
+      <button class="btn btn-red" id="delBlockBtn" onclick="confirmDelBlock()" disabled>מחיקה סופית</button>
     </div>
   </div>
 </div>
 
 <!-- MODAL: bulk preview -->
 <div class="modal-backdrop" id="bulkModal" style="display:none" onclick="closeMdl('bulkModal',event)">
-  <div class="modal modal-lg">
-    <div class="modal-header"><h2>Preview Bulk Upload</h2><button class="modal-close" onclick="closeMdl('bulkModal')">×</button></div>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="bulkTitle">
+    <div class="modal-header"><h2 id="bulkTitle">בדיקה לפני הוספה</h2><button class="modal-close" onclick="closeMdl('bulkModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Edit any row before confirming. Click ✕ to remove a row.</p>
+      <p class="hint-en" style="margin-bottom:16px">Check the words below. You can edit any row before confirming, or click ✕ to remove a row.</p>
       <div style="overflow-x:auto">
         <table class="preview-table">
-          <thead><tr><th style="width:32px">#</th><th>Hebrew / Aramaic</th><th style="width:100px">Type</th><th>English</th><th style="width:36px"></th></tr></thead>
+          <thead><tr><th style="width:32px">#</th><th>עברית / ארמית</th><th style="width:110px">סוג</th><th>אנגלית</th><th style="width:44px"><span class="visually-hidden">הסרה</span></th></tr></thead>
           <tbody id="previewTbody"></tbody>
         </table>
       </div>
     </div>
     <div class="modal-footer">
-      <span id="previewCount" style="font-size:13px;color:var(--muted);margin-right:auto"></span>
-      <button class="btn btn-ghost" onclick="closeMdl('bulkModal')">Cancel</button>
-      <button class="btn btn-green" id="confirmBulkBtn" onclick="confirmBulk()">✓ Insert All Words</button>
+      <span id="previewCount" style="font-size:13px;color:var(--muted);margin-inline-end:auto"></span>
+      <button class="btn btn-ghost" onclick="closeMdl('bulkModal')">ביטול</button>
+      <button class="btn btn-green" id="confirmBulkBtn" onclick="confirmBulk()">✓ הוספת כל המילים</button>
     </div>
   </div>
 </div>
 
 <!-- MODAL: generate test -->
 <div class="modal-backdrop" id="testModal" style="display:none" onclick="closeMdl('testModal',event)">
-  <div class="modal modal-lg">
-    <div class="modal-header"><h2>Generate Test</h2><button class="modal-close" onclick="closeMdl('testModal')">×</button></div>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="testModalTitle">
+    <div class="modal-header"><h2 id="testModalTitle">יצירת מבחן</h2><button class="modal-close" onclick="closeMdl('testModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body">
-      <div class="section-lbl">1. Select words to include</div>
+      <div class="section-lbl">1. אילו מילים ייכללו במבחן?</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <button class="btn btn-ghost btn-sm" onclick="selAllWords(true)">Select all</button>
-        <button class="btn btn-ghost btn-sm" onclick="selAllWords(false)">Deselect all</button>
-        <span id="wordSelCount" style="font-size:13px;color:var(--muted);margin-left:auto"></span>
+        <button class="btn btn-ghost btn-sm" onclick="selAllWords(true)">בחירת הכל</button>
+        <button class="btn btn-ghost btn-sm" onclick="selAllWords(false)">ניקוי הכל</button>
+        <span id="wordSelCount" style="font-size:13px;color:var(--muted);margin-inline-start:auto" aria-live="polite"></span>
       </div>
-      <div class="word-selection" id="testWordList"></div>
+      <div class="word-selection" id="testWordList" role="group" aria-label="בחירת מילים למבחן"></div>
       <hr />
-      <div class="section-lbl">2. Timer per word</div>
+      <div class="section-lbl"><label for="testTimer" style="font-size:13px;font-weight:700;color:var(--text)">2. זמן לכל מילה</label></div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
         <input type="number" id="testTimer" value="30" min="5" max="120" style="width:90px" />
-        <span style="font-size:14px;color:var(--muted)">seconds per word</span>
+        <span style="font-size:14px;color:var(--muted)">שניות לכל מילה</span>
       </div>
       <hr />
-      <div class="section-lbl">3. Test direction</div>
-      <div class="dir-options">
-        <div class="dir-card on" id="dirHE" onclick="setDir('he_to_en')">
-          <div class="icon">🔤</div>
-          <div class="lbl">Hebrew → English</div>
-          <div class="desc">Student sees Hebrew/Aramaic, types the English meaning</div>
-        </div>
-        <div class="dir-card" id="dirEN" onclick="setDir('en_to_he')">
-          <div class="icon">⌨️</div>
-          <div class="lbl">English → Hebrew</div>
-          <div class="desc">Student sees English, types Hebrew (requires Hebrew keyboard)</div>
-        </div>
+      <div class="section-lbl" id="dirGroupLbl">3. כיוון המבחן</div>
+      <div class="dir-options" role="radiogroup" aria-labelledby="dirGroupLbl">
+        <button type="button" class="dir-card" role="radio" aria-checked="true" id="dirHE" onclick="setDir('he_to_en')">
+          <div class="icon" aria-hidden="true">🔤</div>
+          <div class="lbl">עברית → אנגלית</div>
+          <div class="desc">Student sees the Hebrew/Aramaic word and types the English meaning</div>
+        </button>
+        <button type="button" class="dir-card" role="radio" aria-checked="false" id="dirEN" onclick="setDir('en_to_he')">
+          <div class="icon" aria-hidden="true">⌨️</div>
+          <div class="lbl">אנגלית → עברית</div>
+          <div class="desc">Student sees the English meaning and types the Hebrew (needs a Hebrew keyboard)</div>
+        </button>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeMdl('testModal')">Cancel</button>
-      <button class="btn btn-ghost" onclick="saveTestDraft()">💾 Save as Draft</button>
-      <button class="btn btn-purple" onclick="startTestNow()">▶ Start Test Now</button>
+      <button class="btn btn-ghost" onclick="closeMdl('testModal')">ביטול</button>
+      <button class="btn btn-ghost" onclick="saveTestDraft()">💾 שמירה כטיוטה</button>
+      <button class="btn btn-purple" onclick="startTestNow()">▶ הפעלת המבחן עכשיו</button>
     </div>
   </div>
 </div>
 
 <!-- MODAL: delete word -->
 <div class="modal-backdrop" id="delModal" style="display:none" onclick="closeMdl('delModal',event)">
-  <div class="modal modal-sm">
-    <div class="modal-header"><h2>Delete Word</h2><button class="modal-close" onclick="closeMdl('delModal')">×</button></div>
+  <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="delWordTitle">
+    <div class="modal-header"><h2 id="delWordTitle">מחיקת מילה</h2><button class="modal-close" onclick="closeMdl('delModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body">
-      <p style="font-size:15px">Delete "<strong id="delWordLabel"></strong>"?</p>
-      <p style="font-size:13px;color:var(--muted);margin-top:8px">This cannot be undone.</p>
+      <p style="font-size:15px">למחוק את "<strong id="delWordLabel"></strong>"?</p>
+      <p style="font-size:13px;color:var(--muted);margin-top:8px">לא ניתן לבטל את הפעולה.</p>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeMdl('delModal')">Cancel</button>
-      <button class="btn btn-red" onclick="confirmDelWord()">Delete</button>
+      <button class="btn btn-ghost" onclick="closeMdl('delModal')">ביטול</button>
+      <button class="btn btn-red" onclick="confirmDelWord()">מחיקה</button>
     </div>
   </div>
 </div>
 
 <!-- MODAL: result detail -->
 <div class="modal-backdrop" id="resultDetailModal" style="display:none" onclick="closeMdl('resultDetailModal',event)">
-  <div class="modal modal-lg">
-    <div class="modal-header"><h2 id="rdTitle">Student Result</h2><button class="modal-close" onclick="closeMdl('resultDetailModal')">×</button></div>
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="rdTitle">
+    <div class="modal-header"><h2 id="rdTitle">תוצאת תלמיד/ה</h2><button class="modal-close" onclick="closeMdl('resultDetailModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body" id="rdBody"></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">Close</button></div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">סגירה</button></div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- MODAL: teacher guide (English, per request) -->
+<div class="modal-backdrop" id="helpModal" style="display:none" onclick="closeMdl('helpModal',event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-header"><h2 id="helpTitle">❓ Teacher Guide</h2><button class="modal-close" onclick="closeMdl('helpModal')" aria-label="Close">×</button></div>
+    <div class="modal-body help-body">
+      <h3>What is this app?</h3>
+      <p>A weekly vocabulary system for Gemara class: you create <strong>blocks</strong> of words, generate timed <strong>tests</strong>, and students take them on their Chromebooks through a shared link with an <strong>access code</strong>.</p>
+
+      <h3>1 · Blocks</h3>
+      <p>Each block is one week of vocabulary. Click <span class="kbd">+ בלוק חדש</span>, give it a number, a title and the week dates. Select a block to manage its words and tests.</p>
+
+      <h3>2 · Words</h3>
+      <ul>
+        <li><strong>Add one word:</strong> use the <span class="kbd">+ הוספת מילה</span> tab.</li>
+        <li><strong>Bulk upload:</strong> paste many words at once, one per line, in this format:<br><code class="fmt">Hebrew | shoresh/milah | English</code></li>
+        <li>You can edit ✏️ or delete 🗑 any word later from the words table.</li>
+      </ul>
+
+      <h3>3 · Tests</h3>
+      <ul>
+        <li>Click <span class="kbd">✨ יצירת מבחן</span>, pick the words, the timer per word, and the direction.</li>
+        <li><strong>Save as draft</strong> — students cannot open it yet. <strong>Start now</strong> — the test goes live immediately.</li>
+        <li>Every test has a <strong>4-digit access code</strong> shown on its card. Write it on the board — students must type it before starting. This stops anyone without the code from taking the test.</li>
+        <li>Click 📋 to copy the student link and share it (email, Google Classroom, etc.).</li>
+        <li>When the lesson is over, click <span class="kbd">⏹ סיום</span> to close the test — students can no longer submit. You can reopen it later.</li>
+      </ul>
+
+      <h3>4 · Results</h3>
+      <ul>
+        <li>The <span class="kbd">📊 תוצאות</span> tab shows every submission with the class average. Click a row to see exactly what the student answered.</li>
+        <li><span class="kbd">📊 תצוגת כיתה</span> (top of the page, when a test is live) opens a live board that refreshes every 10 seconds — great for projecting during the test. It also shows the access code.</li>
+        <li>Students who click "Try Again" after finishing do a practice run — it is <em>not</em> saved twice.</li>
+      </ul>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="closeMdl('helpModal')">Got it</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 // ── Supabase ──────────────────────────────────────────────
@@ -321,26 +416,36 @@ let activeId = null;
 let editingWordId = null;
 let editingBlockId = null;
 let pendingDelWordId = null;
+let pendingDelBlockId = null;
 let bulkRows = [];
 let bulkBlockId = null;
 let testBlockId = null;
 let testDir = 'he_to_en';
 let testWordSel = {};
 let activeTab = 'words';
+let lastFocusEl = null;
+
+// Access code: derived deterministically from the test UUID (same formula in game_test.html)
+function accessCode(id) {
+  const hex = String(id || '').replace(/-/g, '').slice(0, 8);
+  const n = parseInt(hex, 16);
+  if (isNaN(n)) return '';
+  return String(n % 10000).padStart(4, '0');
+}
 
 // ── Init ──────────────────────────────────────────────────
 async function init() {
   try {
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     await loadFromDB();
-    document.getElementById('dbBadge').textContent = 'Connected to Supabase';
+    document.getElementById('dbBadge').textContent = 'מחובר למסד הנתונים';
     document.getElementById('dbBadge').className = 'db-badge connected';
   } catch(e) {
     console.error('Supabase init failed:', e);
     loadLocal();
-    document.getElementById('dbBadge').textContent = 'Offline (cached)';
+    document.getElementById('dbBadge').textContent = 'לא מקוון (עותק מקומי)';
     document.getElementById('dbBadge').className = 'db-badge local';
-    toast('Offline: ' + (e.message || e.code || String(e)), 'err');
+    toast('אין חיבור: ' + (e.message || e.code || String(e)), 'err');
   }
   renderBlockList();
   if (blocks.length) selectBlock(blocks[0].id);
@@ -386,11 +491,17 @@ function saveLocal() {
 
 function block(id) { return blocks.find(b => b.id === id); }
 
+// ── Hebrew plural helpers ─────────────────────────────────
+function wordsCount(n) { return n === 1 ? 'מילה אחת' : `${n} מילים`; }
+function testsCount(n) { return n === 1 ? 'מבחן אחד' : `${n} מבחנים`; }
+
 // ── Block CRUD ────────────────────────────────────────────
 function toggleAddBlockForm() {
   const f = document.getElementById('addBlockForm');
   f.classList.toggle('open');
-  if (f.classList.contains('open')) {
+  const open = f.classList.contains('open');
+  document.getElementById('addBlockToggle').setAttribute('aria-expanded', open);
+  if (open) {
     const next = blocks.length ? Math.max(...blocks.map(b => b.block_number)) + 1 : 1;
     document.getElementById('nbNum').value = next;
     document.getElementById('nbLabel').focus();
@@ -402,11 +513,11 @@ async function addBlock() {
   const label = document.getElementById('nbLabel').value.trim();
   const ws = document.getElementById('nbWeekStart').value;
   const we = document.getElementById('nbWeekEnd').value;
-  if (!label) return toast('Enter a block label', 'err');
-  if (!num || num < 1) return toast('Enter a valid block number', 'err');
+  if (!label) return toast('נא להזין כותרת לבלוק', 'err');
+  if (!num || num < 1) return toast('נא להזין מספר בלוק תקין', 'err');
 
   const btn = document.getElementById('addBlockBtn');
-  btn.disabled = true; btn.textContent = 'Saving…';
+  btn.disabled = true; btn.textContent = 'שומר…';
 
   const b = { id: uid(), block_number: num, label, week_start: ws, week_end: we, words: [], tests: [] };
   try {
@@ -424,11 +535,11 @@ async function addBlock() {
     toggleAddBlockForm();
     renderBlockList();
     selectBlock(b.id);
-    toast('Block added!');
+    toast('הבלוק נוסף!');
   } catch(e) {
-    toast('Failed to save block: ' + e.message, 'err');
+    toast('שמירת הבלוק נכשלה: ' + e.message, 'err');
   } finally {
-    btn.disabled = false; btn.textContent = 'Save Block';
+    btn.disabled = false; btn.textContent = 'שמירת בלוק';
   }
 }
 
@@ -439,13 +550,13 @@ function openEditBlock(id) {
   document.getElementById('ebLabel').value = b.label;
   document.getElementById('ebWeekStart').value = b.week_start || '';
   document.getElementById('ebWeekEnd').value = b.week_end || '';
-  document.getElementById('editBlockModal').style.display = 'flex';
+  openMdl('editBlockModal');
 }
 
 async function saveEditBlock() {
   const num = parseInt(document.getElementById('ebNum').value);
   const label = document.getElementById('ebLabel').value.trim();
-  if (!label || !num || num < 1) return toast('Number and label are required', 'err');
+  if (!label || !num || num < 1) return toast('מספר וכותרת הם שדות חובה', 'err');
   const b = block(editingBlockId);
   const ws = document.getElementById('ebWeekStart').value;
   const we = document.getElementById('ebWeekEnd').value;
@@ -459,9 +570,59 @@ async function saveEditBlock() {
     saveLocal();
     closeMdl('editBlockModal');
     renderBlockList(); renderDetail(editingBlockId);
-    toast('Block updated!');
+    toast('הבלוק עודכן!');
   } catch(e) {
-    toast('Failed to update block', 'err');
+    toast('עדכון הבלוק נכשל', 'err');
+  }
+}
+
+// ── Block delete (with double confirmation) ───────────────
+function openDeleteBlock(id) {
+  const b = block(id);
+  if (!b) return;
+  pendingDelBlockId = id;
+  document.getElementById('delBlockLabel').textContent = `בלוק ${b.block_number} — ${b.label}`;
+  const wc = (b.words||[]).length, tc = (b.tests||[]).length;
+  document.getElementById('delBlockDetails').textContent =
+    `יימחקו לצמיתות: ${wordsCount(wc)}, ${testsCount(tc)} וכל תוצאות התלמידים שנשמרו עבורם.`;
+  document.getElementById('delBlockConfirmChk').checked = false;
+  document.getElementById('delBlockBtn').disabled = true;
+  openMdl('delBlockModal');
+}
+
+async function confirmDelBlock() {
+  const b = block(pendingDelBlockId);
+  if (!b) return;
+  const btn = document.getElementById('delBlockBtn');
+  btn.disabled = true; btn.textContent = 'מוחק…';
+  try {
+    const testIds = (b.tests||[]).map(t => t.id);
+    if (testIds.length) {
+      const { error: rErr } = await sb.from('test_results').delete().in('test_id', testIds);
+      if (rErr) throw rErr;
+      const { error: tErr } = await sb.from('tests').delete().eq('block_id', b.id);
+      if (tErr) throw tErr;
+    }
+    const { error: wErr } = await sb.from('words').delete().eq('block_id', b.id);
+    if (wErr) throw wErr;
+    const { error: bErr } = await sb.from('blocks').delete().eq('id', b.id);
+    if (bErr) throw bErr;
+
+    blocks = blocks.filter(x => x.id !== b.id);
+    saveLocal();
+    closeMdl('delBlockModal');
+    activeId = null;
+    renderBlockList();
+    if (blocks.length) selectBlock(blocks[0].id);
+    else {
+      document.getElementById('detailPanel').innerHTML = `<div class="card"><div class="card-body empty-state"><div class="ei" aria-hidden="true">📚</div><p>בחרו בלוק מהרשימה כדי לנהל<br>את המילים והמבחנים שלו.</p></div></div>`;
+      updateClassViewBtn(null);
+    }
+    toast('הבלוק נמחק');
+  } catch(e) {
+    toast('מחיקת הבלוק נכשלה: ' + (e.message || ''), 'err');
+  } finally {
+    btn.textContent = 'מחיקה סופית';
   }
 }
 
@@ -486,7 +647,7 @@ function openClassView() {
   const b = block(activeId);
   if (!b) return;
   const activeTest = (b.tests||[]).find(t => t.status === 'active');
-  if (!activeTest) { toast('No active test in this block', 'err'); return; }
+  if (!activeTest) { toast('אין מבחן פעיל בבלוק הזה', 'err'); return; }
   window.open(`class_overview.html?test=${activeTest.id}`, '_blank');
 }
 
@@ -494,23 +655,23 @@ function openClassView() {
 function renderBlockList() {
   const el = document.getElementById('blockList');
   if (!blocks.length) {
-    el.innerHTML = `<div class="empty-state" style="padding:32px 16px"><div class="ei">📦</div><p>No blocks yet.<br>Click "+ Add Block" to create one.</p></div>`;
+    el.innerHTML = `<div class="empty-state" style="padding:32px 16px"><div class="ei" aria-hidden="true">📦</div><p>אין עדיין בלוקים.<br>לחצו על "+ בלוק חדש" כדי להתחיל,<br>או על "❓ מדריך למורה" להסבר מלא.</p></div>`;
     return;
   }
   el.innerHTML = blocks.map(b => {
     const wc = (b.words||[]).length, tc = (b.tests||[]).length;
-    const meta = [b.week_start ? fmtDate(b.week_start) : '', b.week_end ? '→ '+fmtDate(b.week_end) : ''].filter(Boolean).join(' ');
-    return `<div class="block-item${b.id===activeId?' active':''}" onclick="selectBlock('${b.id}')">
-      <div class="block-item-left">
-        <span class="block-item-num">Block ${b.block_number}</span>
+    const meta = [b.week_start ? fmtDate(b.week_start) : '', b.week_end ? '← '+fmtDate(b.week_end) : ''].filter(Boolean).join(' ');
+    return `<button type="button" class="block-item${b.id===activeId?' active':''}" role="listitem" onclick="selectBlock('${b.id}')" aria-current="${b.id===activeId ? 'true' : 'false'}">
+      <span class="block-item-left">
+        <span class="block-item-num">בלוק ${b.block_number}</span>
         <span class="block-item-label">${esc(b.label)}</span>
         ${meta ? `<span class="block-item-meta">${meta}</span>` : ''}
-      </div>
-      <div class="block-item-badges">
-        <span class="badge">${wc} word${wc!==1?'s':''}</span>
-        ${tc ? `<span class="badge badge-purple">${tc} test${tc!==1?'s':''}</span>` : ''}
-      </div>
-    </div>`;
+      </span>
+      <span class="block-item-badges">
+        <span class="badge">${wordsCount(wc)}</span>
+        ${tc ? `<span class="badge badge-purple">${testsCount(tc)}</span>` : ''}
+      </span>
+    </button>`;
   }).join('');
 }
 
@@ -518,112 +679,133 @@ function renderBlockList() {
 function renderDetail(id) {
   const b = block(id);
   const panel = document.getElementById('detailPanel');
-  if (!b) { panel.innerHTML = `<div class="card"><div class="card-body empty-state"><div class="ei">📚</div><p>Select a block to manage its words.</p></div></div>`; return; }
+  if (!b) { panel.innerHTML = `<div class="card"><div class="card-body empty-state"><div class="ei" aria-hidden="true">📚</div><p>בחרו בלוק כדי לנהל את המילים שלו.</p></div></div>`; return; }
   const words = b.words || [];
   const tests = b.tests || [];
-  const meta = [b.week_start ? fmtDate(b.week_start) : '', b.week_end ? '→ '+fmtDate(b.week_end) : ''].filter(Boolean).join(' ');
+  const meta = [b.week_start ? fmtDate(b.week_start) : '', b.week_end ? '← '+fmtDate(b.week_end) : ''].filter(Boolean).join(' ');
 
   panel.innerHTML = `<div class="card">
     <div class="card-header">
       <div>
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Block ${b.block_number}</div>
+        <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:3px">בלוק ${b.block_number}</div>
         <h2 style="font-size:18px">${esc(b.label)}</h2>
         ${meta ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${meta}</div>` : ''}
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="openEditBlock('${b.id}')">✏️ Edit</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="openEditBlock('${b.id}')">✏️ עריכה</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="openDeleteBlock('${b.id}')" aria-label="מחיקת הבלוק">🗑 מחיקה</button>
+      </div>
     </div>
     <div class="card-body">
-      <div class="tabs">
-        <div class="tab" id="tabWords" onclick="switchTab('words')">Words (${words.length})</div>
-        <div class="tab" id="tabAdd" onclick="switchTab('add')">+ Add Word</div>
-        <div class="tab" id="tabBulk" onclick="switchTab('bulk')">↑ Bulk Upload</div>
-        ${tests.length ? `<div class="tab" id="tabTests" onclick="switchTab('tests')">Tests (${tests.length})</div>` : ''}
-        <div class="tab" id="tabResults" onclick="switchTab('results')">📊 Results</div>
+      <div class="tabs" role="tablist" aria-label="ניהול הבלוק">
+        <button class="tab" role="tab" id="tabWords" aria-selected="false" aria-controls="tcWords" onclick="switchTab('words')">מילים (${words.length})</button>
+        <button class="tab" role="tab" id="tabAdd" aria-selected="false" aria-controls="tcAdd" onclick="switchTab('add')">+ הוספת מילה</button>
+        <button class="tab" role="tab" id="tabBulk" aria-selected="false" aria-controls="tcBulk" onclick="switchTab('bulk')">↑ העלאה בכמות</button>
+        ${tests.length ? `<button class="tab" role="tab" id="tabTests" aria-selected="false" aria-controls="tcTests" onclick="switchTab('tests')">מבחנים (${tests.length})</button>` : ''}
+        <button class="tab" role="tab" id="tabResults" aria-selected="false" aria-controls="tcResults" onclick="switchTab('results')">📊 תוצאות</button>
       </div>
 
-      <div id="tcWords">
-        ${!words.length ? `<div class="empty-state"><div class="ei">📝</div><p>No words yet. Use "+ Add Word" or "↑ Bulk Upload".</p></div>` : `
-        <table class="word-table"><thead><tr>
-          <th style="width:36px">#</th><th>Hebrew / Aramaic</th><th style="width:88px">Type</th><th>English</th><th style="width:90px"></th>
+      <div id="tcWords" role="tabpanel" aria-labelledby="tabWords">
+        ${!words.length ? `<div class="empty-state"><div class="ei" aria-hidden="true">📝</div><p>אין עדיין מילים. השתמשו ב"+ הוספת מילה" או ב"↑ העלאה בכמות".</p></div>` : `
+        <div style="overflow-x:auto"><table class="word-table"><thead><tr>
+          <th style="width:36px">#</th><th>עברית / ארמית</th><th style="width:88px">סוג</th><th>אנגלית</th><th style="width:100px"><span class="visually-hidden">פעולות</span></th>
         </tr></thead><tbody>
           ${words.map((w,i) => wordRow(w, i+1, b.id)).join('')}
-        </tbody></table>`}
+        </tbody></table></div>`}
       </div>
 
-      <div id="tcAdd" style="display:none">
-        <div class="form-group"><label>Hebrew / Aramaic</label><input class="he-input" type="text" id="awHe" placeholder="e.g. מַיִם or א.מ.ר" /></div>
-        <div class="form-group"><label>Type</label>
+      <div id="tcAdd" role="tabpanel" aria-labelledby="tabAdd" style="display:none">
+        <div class="form-group"><label for="awHe">עברית / ארמית</label><input class="he-input" type="text" id="awHe" placeholder="לדוגמה: מַיִם או א.מ.ר" /></div>
+        <div class="form-group"><label for="awType">סוג</label>
           <select id="awType">
-            <option value="milah">מִלָּה — Milah (word)</option>
-            <option value="shoresh">שׁוֹרֶשׁ — Shoresh (root)</option>
+            <option value="milah">מִלָּה — מילה</option>
+            <option value="shoresh">שׁוֹרֶשׁ — שורש</option>
           </select>
         </div>
-        <div class="form-group"><label>English Meaning</label><input type="text" id="awEn" placeholder="e.g. Water" /></div>
-        <button class="btn btn-green" onclick="addWord('${b.id}')">+ Add Word</button>
+        <div class="form-group"><label for="awEn">פירוש באנגלית</label><input type="text" id="awEn" class="en-cell" placeholder="e.g. Water" /></div>
+        <button class="btn btn-green" onclick="addWord('${b.id}')">+ הוספת מילה</button>
       </div>
 
-      <div id="tcBulk" style="display:none">
-        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
-          One word per line: &nbsp;<code style="background:#f1f5f9;padding:2px 7px;border-radius:4px;font-size:12px">Hebrew | shoresh/milah | English</code>
+      <div id="tcBulk" role="tabpanel" aria-labelledby="tabBulk" style="display:none">
+        <p class="hint-en" style="margin-bottom:12px">
+          One word per line, in this format: &nbsp;<code class="fmt">Hebrew | shoresh/milah | English</code>
         </p>
         <div class="form-group">
-          <label>Word List</label>
+          <label for="bulkTA">רשימת מילים</label>
           <textarea class="bulk-textarea" id="bulkTA" placeholder="א.מ.ר | shoresh | Say, Speak&#10;מַיִם | milah | Water&#10;כְּלִי | milah | Vessel"></textarea>
         </div>
-        <button class="btn btn-primary" onclick="parseBulk('${b.id}')">Preview & Confirm →</button>
+        <button class="btn btn-primary" onclick="parseBulk('${b.id}')">← תצוגה מקדימה ואישור</button>
       </div>
 
-      <div id="tcTests" style="display:none">
+      <div id="tcTests" role="tabpanel" aria-labelledby="tabTests" style="display:none">
         ${!tests.length
-          ? `<div class="empty-state"><div class="ei">📋</div><p>No tests yet.</p></div>`
+          ? `<div class="empty-state"><div class="ei" aria-hidden="true">📋</div><p>אין עדיין מבחנים.</p></div>`
           : tests.map(t => testCard(t)).join('')}
       </div>
 
-      <div id="tcResults" style="display:none">
-        <div class="empty-state"><div class="ei">📊</div><p>Loading results…</p></div>
+      <div id="tcResults" role="tabpanel" aria-labelledby="tabResults" style="display:none">
+        <div class="empty-state"><div class="ei" aria-hidden="true">📊</div><p>טוען תוצאות…</p></div>
       </div>
 
-      ${words.length ? `<button class="btn btn-purple gen-btn" onclick="openTestModal('${b.id}')">✨ Generate Test from This Block (${words.length} words)</button>` : ''}
+      ${words.length ? `<button class="btn btn-purple gen-btn" onclick="openTestModal('${b.id}')">✨ יצירת מבחן מהבלוק הזה (${wordsCount(words.length)})</button>` : ''}
     </div>
   </div>`;
 
   switchTab(activeTab, false);
 }
 
-// ── Tab switching ─────────────────────────────────────────
+// ── Tab switching (accessible) ────────────────────────────
 function switchTab(tab, setActive = true) {
   if (setActive) activeTab = tab;
   ['words','add','bulk','tests','results'].forEach(t => {
     const tc = document.getElementById('tc' + cap(t));
     const tb = document.getElementById('tab' + cap(t));
     if (tc) tc.style.display = t === tab ? '' : 'none';
-    if (tb) tb.classList.toggle('active', t === tab);
+    if (tb) {
+      tb.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+      tb.tabIndex = t === tab ? 0 : -1;
+    }
   });
   if (tab === 'results' && activeId) loadAndRenderResults(activeId);
 }
+
+// Arrow-key navigation inside the tablist
+document.addEventListener('keydown', e => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const tablist = e.target.closest && e.target.closest('[role="tablist"]');
+  if (!tablist) return;
+  const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+  const i = tabs.indexOf(e.target);
+  if (i === -1) return;
+  e.preventDefault();
+  // RTL: ArrowLeft moves forward, ArrowRight moves back
+  const next = e.key === 'ArrowLeft' ? (i + 1) % tabs.length : (i - 1 + tabs.length) % tabs.length;
+  tabs[next].focus();
+  tabs[next].click();
+});
 
 // ── Word row ──────────────────────────────────────────────
 function wordRow(w, idx, blockId) {
   if (editingWordId === w.id) {
     return `<tr class="edit-row" id="row-${w.id}">
       <td style="color:var(--muted);font-size:12px">${idx}</td>
-      <td><input class="he-input" style="width:100%" id="eHe-${w.id}" value="${esc(w.hebrew)}" /></td>
-      <td><select id="eTy-${w.id}"><option value="milah"${w.type==='milah'?' selected':''}>milah</option><option value="shoresh"${w.type==='shoresh'?' selected':''}>shoresh</option></select></td>
-      <td><input style="width:100%" id="eEn-${w.id}" value="${esc(w.english)}" /></td>
+      <td><label class="visually-hidden" for="eHe-${w.id}">עברית</label><input class="he-input" style="width:100%" id="eHe-${w.id}" value="${esc(w.hebrew)}" /></td>
+      <td><label class="visually-hidden" for="eTy-${w.id}">סוג</label><select id="eTy-${w.id}"><option value="milah"${w.type==='milah'?' selected':''}>מילה</option><option value="shoresh"${w.type==='shoresh'?' selected':''}>שורש</option></select></td>
+      <td><label class="visually-hidden" for="eEn-${w.id}">אנגלית</label><input class="en-cell" style="width:100%" id="eEn-${w.id}" value="${esc(w.english)}" /></td>
       <td><div style="display:flex;gap:4px">
-        <button class="btn btn-green btn-sm" onclick="saveWord('${w.id}','${blockId}')">✓</button>
-        <button class="btn btn-ghost btn-sm" onclick="cancelEdit()">✕</button>
+        <button class="btn btn-green btn-sm" onclick="saveWord('${w.id}','${blockId}')" aria-label="שמירה">✓</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelEdit()" aria-label="ביטול">✕</button>
       </div></td>
     </tr>`;
   }
   return `<tr id="row-${w.id}">
     <td style="color:var(--muted);font-size:12px">${idx}</td>
-    <td class="word-he">${esc(w.hebrew)}</td>
-    <td><span class="type-badge type-${w.type}">${w.type}</span></td>
-    <td>${esc(w.english)}</td>
+    <td class="word-he" lang="he">${esc(w.hebrew)}</td>
+    <td><span class="type-badge type-${w.type}">${w.type === 'shoresh' ? 'שורש' : 'מילה'}</span></td>
+    <td class="en-cell">${esc(w.english)}</td>
     <td><div style="display:flex;gap:4px">
-      <button class="btn btn-ghost btn-sm" onclick="startEdit('${w.id}','${blockId}')">✏️</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="promptDel('${w.id}','${esc(w.hebrew)}')">🗑</button>
+      <button class="btn btn-ghost btn-sm" onclick="startEdit('${w.id}','${blockId}')" aria-label="עריכת ${esc(w.hebrew)}">✏️</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="promptDel('${w.id}','${esc(w.hebrew)}')" aria-label="מחיקת ${esc(w.hebrew)}">🗑</button>
     </div></td>
   </tr>`;
 }
@@ -633,8 +815,8 @@ async function addWord(blockId) {
   const he = document.getElementById('awHe').value.trim();
   const type = document.getElementById('awType').value;
   const en = document.getElementById('awEn').value.trim();
-  if (!he) return toast('Enter Hebrew/Aramaic text', 'err');
-  if (!en) return toast('Enter English meaning', 'err');
+  if (!he) return toast('נא להזין טקסט בעברית/ארמית', 'err');
+  if (!en) return toast('נא להזין פירוש באנגלית', 'err');
 
   const w = { id: uid(), hebrew: he, type, english: en };
   try {
@@ -647,9 +829,9 @@ async function addWord(blockId) {
     document.getElementById('awHe').focus();
     activeTab = 'words';
     renderDetail(blockId); renderBlockList();
-    toast('Word added!');
+    toast('המילה נוספה!');
   } catch(e) {
-    toast('Failed to save word', 'err');
+    toast('שמירת המילה נכשלה', 'err');
   }
 }
 
@@ -668,7 +850,7 @@ async function saveWord(wordId, blockId) {
   const he = document.getElementById(`eHe-${wordId}`)?.value.trim();
   const type = document.getElementById(`eTy-${wordId}`)?.value;
   const en = document.getElementById(`eEn-${wordId}`)?.value.trim();
-  if (!he || !en) return toast('Hebrew and English are required', 'err');
+  if (!he || !en) return toast('עברית ואנגלית הם שדות חובה', 'err');
 
   try {
     const { error } = await sb.from('words').update({ hebrew: he, type, english: en }).eq('id', wordId);
@@ -679,16 +861,16 @@ async function saveWord(wordId, blockId) {
     saveLocal();
     editingWordId = null;
     renderDetail(blockId); renderBlockList();
-    toast('Word updated!');
+    toast('המילה עודכנה!');
   } catch(e) {
-    toast('Failed to update word', 'err');
+    toast('עדכון המילה נכשל', 'err');
   }
 }
 
 function promptDel(wordId, label) {
   pendingDelWordId = wordId;
   document.getElementById('delWordLabel').textContent = label;
-  document.getElementById('delModal').style.display = 'flex';
+  openMdl('delModal');
 }
 
 async function confirmDelWord() {
@@ -701,10 +883,10 @@ async function confirmDelWord() {
       saveLocal();
       closeMdl('delModal');
       renderDetail(b.id); renderBlockList();
-      toast('Word deleted');
+      toast('המילה נמחקה');
     }
   } catch(e) {
-    toast('Failed to delete word', 'err');
+    toast('מחיקת המילה נכשלה', 'err');
   }
 }
 
@@ -712,7 +894,7 @@ async function confirmDelWord() {
 function parseBulk(blockId) {
   const raw = document.getElementById('bulkTA').value;
   const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-  if (!lines.length) return toast('Paste some words first', 'err');
+  if (!lines.length) return toast('נא להדביק מילים קודם', 'err');
   const rows = []; let errs = 0;
   lines.forEach(line => {
     const parts = line.split('|').map(p => p.trim());
@@ -721,27 +903,27 @@ function parseBulk(blockId) {
     const type = typeRaw.toLowerCase().includes('shoresh') ? 'shoresh' : 'milah';
     rows.push({ hebrew, type, english: english.trim(), _id: uid() });
   });
-  if (!rows.length) return toast(`All ${lines.length} lines had format errors`, 'err');
-  if (errs) toast(`${errs} line(s) skipped — wrong format`, 'err');
+  if (!rows.length) return toast(`בכל ${lines.length} השורות היו שגיאות פורמט`, 'err');
+  if (errs) toast(`${errs} שורות דולגו — פורמט שגוי`, 'err');
   bulkRows = rows;
   bulkBlockId = blockId;
   renderBulkPreview(rows);
-  document.getElementById('bulkModal').style.display = 'flex';
+  openMdl('bulkModal');
 }
 
 function renderBulkPreview(rows) {
   document.getElementById('previewTbody').innerHTML = rows.map((r, i) => `
     <tr>
       <td style="color:var(--muted)">${i+1}</td>
-      <td><input class="he-input" style="width:100%" value="${esc(r.hebrew)}" onchange="updateBulkRow('${r._id}','hebrew',this.value)" /></td>
-      <td><select onchange="updateBulkRow('${r._id}','type',this.value)">
-        <option value="milah"${r.type==='milah'?' selected':''}>milah</option>
-        <option value="shoresh"${r.type==='shoresh'?' selected':''}>shoresh</option>
+      <td><label class="visually-hidden" for="bh-${r._id}">עברית</label><input id="bh-${r._id}" class="he-input" style="width:100%" value="${esc(r.hebrew)}" onchange="updateBulkRow('${r._id}','hebrew',this.value)" /></td>
+      <td><label class="visually-hidden" for="bt-${r._id}">סוג</label><select id="bt-${r._id}" onchange="updateBulkRow('${r._id}','type',this.value)">
+        <option value="milah"${r.type==='milah'?' selected':''}>מילה</option>
+        <option value="shoresh"${r.type==='shoresh'?' selected':''}>שורש</option>
       </select></td>
-      <td><input style="width:100%" value="${esc(r.english)}" onchange="updateBulkRow('${r._id}','english',this.value)" /></td>
-      <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="removeBulkRow('${r._id}')">✕</button></td>
+      <td><label class="visually-hidden" for="be-${r._id}">אנגלית</label><input id="be-${r._id}" class="en-cell" style="width:100%" value="${esc(r.english)}" onchange="updateBulkRow('${r._id}','english',this.value)" /></td>
+      <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="removeBulkRow('${r._id}')" aria-label="הסרת שורה ${i+1}">✕</button></td>
     </tr>`).join('');
-  document.getElementById('previewCount').textContent = `${rows.length} word${rows.length!==1?'s':''} ready to insert`;
+  document.getElementById('previewCount').textContent = `${wordsCount(rows.length)} מוכנות להוספה`;
 }
 
 function updateBulkRow(id, field, val) {
@@ -755,9 +937,9 @@ function removeBulkRow(id) {
 }
 
 async function confirmBulk() {
-  if (!bulkRows.length) return toast('No words to insert', 'err');
+  if (!bulkRows.length) return toast('אין מילים להוספה', 'err');
   const btn = document.getElementById('confirmBulkBtn');
-  btn.disabled = true; btn.textContent = 'Saving…';
+  btn.disabled = true; btn.textContent = 'שומר…';
 
   const newWords = bulkRows.map(r => ({ id: uid(), hebrew: r.hebrew, type: r.type, english: r.english }));
   const rows = newWords.map(w => ({ id: w.id, block_id: bulkBlockId, hebrew: w.hebrew, type: w.type, english: w.english }));
@@ -771,11 +953,11 @@ async function confirmBulk() {
     document.getElementById('bulkTA') && (document.getElementById('bulkTA').value = '');
     activeTab = 'words';
     renderDetail(bulkBlockId); renderBlockList();
-    toast(`${newWords.length} word${newWords.length!==1?'s':''} inserted!`);
+    toast(`${wordsCount(newWords.length)} נוספו!`);
   } catch(e) {
-    toast('Failed to insert words: ' + e.message, 'err');
+    toast('הוספת המילים נכשלה: ' + e.message, 'err');
   } finally {
-    btn.disabled = false; btn.textContent = '✓ Insert All Words';
+    btn.disabled = false; btn.textContent = '✓ הוספת כל המילים';
   }
 }
 
@@ -788,25 +970,22 @@ function openTestModal(blockId) {
   (b.words||[]).forEach(w => testWordSel[w.id] = true);
 
   document.getElementById('testWordList').innerHTML = (b.words||[]).map(w => `
-    <div class="wsr" id="wsr-${w.id}" onclick="togWord('${w.id}')">
-      <input type="checkbox" checked id="chk-${w.id}" onclick="event.stopPropagation();togWord('${w.id}')" />
-      <span class="word-he" style="font-size:17px;flex:1">${esc(w.hebrew)}</span>
-      <span class="type-badge type-${w.type}" style="flex-shrink:0">${w.type}</span>
-      <span style="color:var(--muted);font-size:13px;min-width:120px;margin-left:8px">${esc(w.english)}</span>
-    </div>`).join('');
+    <label class="wsr" id="wsr-${w.id}">
+      <input type="checkbox" checked id="chk-${w.id}" onchange="togWord('${w.id}', this.checked)" />
+      <span class="word-he" lang="he" style="font-size:17px;flex:1">${esc(w.hebrew)}</span>
+      <span class="type-badge type-${w.type}" style="flex-shrink:0">${w.type === 'shoresh' ? 'שורש' : 'מילה'}</span>
+      <span class="en-cell" style="color:var(--muted);font-size:13px;min-width:120px">${esc(w.english)}</span>
+    </label>`).join('');
 
   document.getElementById('testTimer').value = 30;
-  document.getElementById('dirHE').classList.add('on');
-  document.getElementById('dirEN').classList.remove('on');
+  setDir('he_to_en');
   updateWordSelCount();
-  document.getElementById('testModal').style.display = 'flex';
+  openMdl('testModal');
 }
 
-function togWord(id) {
-  testWordSel[id] = !testWordSel[id];
-  document.getElementById(`wsr-${id}`)?.classList.toggle('off', !testWordSel[id]);
-  const chk = document.getElementById(`chk-${id}`);
-  if (chk) chk.checked = testWordSel[id];
+function togWord(id, checked) {
+  testWordSel[id] = checked;
+  document.getElementById(`wsr-${id}`)?.classList.toggle('off', !checked);
   updateWordSelCount();
 }
 
@@ -823,18 +1002,18 @@ function selAllWords(val) {
 function updateWordSelCount() {
   const sel = Object.values(testWordSel).filter(Boolean).length;
   const tot = Object.keys(testWordSel).length;
-  document.getElementById('wordSelCount').textContent = `${sel} of ${tot} selected`;
+  document.getElementById('wordSelCount').textContent = `נבחרו ${sel} מתוך ${tot}`;
 }
 
 function setDir(dir) {
   testDir = dir;
-  document.getElementById('dirHE').classList.toggle('on', dir === 'he_to_en');
-  document.getElementById('dirEN').classList.toggle('on', dir === 'en_to_he');
+  document.getElementById('dirHE').setAttribute('aria-checked', dir === 'he_to_en' ? 'true' : 'false');
+  document.getElementById('dirEN').setAttribute('aria-checked', dir === 'en_to_he' ? 'true' : 'false');
 }
 
 async function buildTest(status) {
   const wordIds = Object.entries(testWordSel).filter(([,v])=>v).map(([k])=>k);
-  if (!wordIds.length) { toast('Select at least one word', 'err'); return null; }
+  if (!wordIds.length) { toast('יש לבחור לפחות מילה אחת', 'err'); return null; }
   const timer = parseInt(document.getElementById('testTimer').value) || 30;
   const t = { id: uid(), blockId: testBlockId, timerPerWord: timer, direction: testDir, status, wordIds, createdAt: new Date().toISOString() };
 
@@ -842,7 +1021,7 @@ async function buildTest(status) {
     id: t.id, block_id: t.blockId, timer_per_word: t.timerPerWord,
     direction: t.direction, status: t.status, word_ids: t.wordIds
   });
-  if (error) { toast('Failed to save test: ' + (error.message || error.code || JSON.stringify(error)), 'err'); return null; }
+  if (error) { toast('שמירת המבחן נכשלה: ' + (error.message || error.code || JSON.stringify(error)), 'err'); return null; }
 
   block(testBlockId).tests = block(testBlockId).tests || [];
   block(testBlockId).tests.push(t);
@@ -856,7 +1035,7 @@ async function saveTestDraft() {
   closeMdl('testModal');
   activeTab = 'tests';
   renderDetail(testBlockId); renderBlockList();
-  toast('Test saved as draft!');
+  toast(`המבחן נשמר כטיוטה. קוד גישה: ${accessCode(t.id)}`);
 }
 
 async function startTestNow() {
@@ -865,57 +1044,97 @@ async function startTestNow() {
   closeMdl('testModal');
   activeTab = 'tests';
   renderDetail(testBlockId); renderBlockList();
+  updateClassViewBtn(testBlockId);
   window.open(`game_test.html?test=${t.id}`, '_blank');
-  toast('Test started — opened in new tab!');
+  toast(`המבחן הופעל! קוד גישה לתלמידים: ${accessCode(t.id)}`);
 }
 
 async function runTest(testId, blockId) {
   const b = block(blockId);
   const t = (b.tests||[]).find(t => t.id === testId);
   if (!t) return;
-  // Mark as active in DB
-  await sb.from('tests').update({ status: 'active' }).eq('id', testId);
-  t.status = 'active';
-  saveLocal();
-  window.open(`game_test.html?test=${testId}`, '_blank');
+  try {
+    const { error } = await sb.from('tests').update({ status: 'active' }).eq('id', testId);
+    if (error) throw error;
+    t.status = 'active';
+    saveLocal();
+    renderDetail(blockId);
+    updateClassViewBtn(blockId);
+    window.open(`game_test.html?test=${testId}`, '_blank');
+    toast(`המבחן פעיל! קוד גישה לתלמידים: ${accessCode(testId)}`);
+  } catch(e) {
+    toast('הפעלת המבחן נכשלה', 'err');
+  }
+}
+
+async function closeTest(testId, blockId) {
+  const b = block(blockId);
+  const t = (b.tests||[]).find(t => t.id === testId);
+  if (!t) return;
+  try {
+    const { error } = await sb.from('tests').update({ status: 'closed' }).eq('id', testId);
+    if (error) throw error;
+    t.status = 'closed';
+    saveLocal();
+    renderDetail(blockId);
+    updateClassViewBtn(blockId);
+    toast('המבחן נסגר — תלמידים לא יכולים להגיש יותר');
+  } catch(e) {
+    toast('סגירת המבחן נכשלה', 'err');
+  }
 }
 
 async function deleteTest(testId, blockId) {
-  if (!confirm('Delete this test?')) return;
+  if (!confirm('למחוק את המבחן? גם תוצאות התלמידים שלו יימחקו.')) return;
   try {
+    const { error: rErr } = await sb.from('test_results').delete().eq('test_id', testId);
+    if (rErr) throw rErr;
     const { error } = await sb.from('tests').delete().eq('id', testId);
     if (error) throw error;
     const b = block(blockId);
     b.tests = (b.tests||[]).filter(t => t.id !== testId);
     saveLocal();
     renderDetail(blockId); renderBlockList();
-    toast('Test deleted');
+    updateClassViewBtn(blockId);
+    toast('המבחן נמחק');
   } catch(e) {
-    toast('Failed to delete test', 'err');
+    toast('מחיקת המבחן נכשלה', 'err');
   }
 }
 
 function testCard(t) {
-  const dir = t.direction === 'he_to_en' ? 'Hebrew → English' : 'English → Hebrew';
+  const dir = t.direction === 'he_to_en' ? 'עברית → אנגלית' : 'אנגלית → עברית';
   const wc = (t.wordIds||[]).length;
   const date = t.createdAt ? fmtDate(t.createdAt.slice(0,10)) : '';
+  const statusHe = { draft: 'טיוטה', active: 'פעיל', closed: 'סגור' }[t.status] || t.status;
+  const code = accessCode(t.id);
+
+  let mainAction = '';
+  if (t.status === 'draft') mainAction = `<button class="btn btn-purple btn-sm" onclick="runTest('${t.id}','${t.blockId}')">▶ הפעלה</button>`;
+  else if (t.status === 'active') mainAction = `<button class="btn btn-red btn-sm" onclick="closeTest('${t.id}','${t.blockId}')">⏹ סיום המבחן</button>`;
+  else mainAction = `<button class="btn btn-ghost btn-sm" onclick="runTest('${t.id}','${t.blockId}')">↻ פתיחה מחדש</button>`;
+
   return `<div class="test-card">
     <div class="test-card-info">
-      <div class="title">${wc} word${wc!==1?'s':''} · ${t.timerPerWord}s/word · ${dir}</div>
+      <div class="title">${wordsCount(wc)} · ${t.timerPerWord} שנ' למילה · ${dir}</div>
       <div class="meta">${date}</div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span class="test-status ${t.status}">${t.status}</span>
-      <button class="btn btn-ghost btn-sm" onclick="copyTestLink('${t.id}')" title="Copy shareable link">📋</button>
-      <button class="btn btn-purple btn-sm" onclick="runTest('${t.id}','${t.blockId}')">▶ Run</button>
-      <button class="btn btn-ghost btn-sm" onclick="deleteTest('${t.id}','${t.blockId}')">✕</button>
+    <div class="test-actions">
+      <span class="access-code" title="קוד הגישה שהתלמידים מקלידים"><small>קוד</small> ${code}</span>
+      <span class="test-status ${t.status}">${statusHe}</span>
+      <button class="btn btn-ghost btn-sm" onclick="copyTestLink('${t.id}')" aria-label="העתקת קישור לתלמידים" title="העתקת קישור לתלמידים">📋</button>
+      ${mainAction}
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTest('${t.id}','${t.blockId}')" aria-label="מחיקת המבחן">✕</button>
     </div>
   </div>`;
 }
 
 function copyTestLink(testId) {
   const url = `https://yosidoch.github.io/gemara-games/game_test.html?test=${testId}`;
-  navigator.clipboard.writeText(url).then(() => toast('Link copied!'), () => toast('Copy failed', 'err'));
+  navigator.clipboard.writeText(url).then(
+    () => toast(`הקישור הועתק! אל תשכחו למסור לתלמידים את הקוד: ${accessCode(testId)}`),
+    () => toast('ההעתקה נכשלה', 'err')
+  );
 }
 
 // ── Results tab ───────────────────────────────────────────
@@ -926,23 +1145,23 @@ function showResultDetail(r, blockId) {
   const wordMap = {};
   (b.words||[]).forEach(w => wordMap[w.id] = w);
   const pct = Math.round(r.score / r.total * 100);
-  document.getElementById('rdTitle').textContent = `${r.student_name || 'Anonymous'} — ${r.score}/${r.total} (${pct}%)`;
+  document.getElementById('rdTitle').textContent = `${r.student_name || 'אנונימי'} — ${r.score}/${r.total} (${pct}%)`;
   const answers = Array.isArray(r.answers) ? r.answers : [];
   document.getElementById('rdBody').innerHTML = answers.length ? `
-    <table class="word-table">
-      <thead><tr><th>Hebrew</th><th>Correct Answer</th><th>Student wrote</th><th style="width:36px"></th></tr></thead>
+    <div style="overflow-x:auto"><table class="word-table">
+      <thead><tr><th>עברית</th><th>תשובה נכונה</th><th>מה התלמיד/ה כתב/ה</th><th style="width:36px"><span class="visually-hidden">נכון/שגוי</span></th></tr></thead>
       <tbody>${answers.map(a => {
         const w = wordMap[a.word_id] || {};
         const ok = a.correct;
-        return `<tr style="background:${ok?'#f0fdf4':'#fef2f2'}">
-          <td style="font-family:var(--font-he);font-size:18px;direction:rtl">${esc(w.hebrew||'')}</td>
-          <td>${esc(w.english||'')}</td>
-          <td style="color:${ok?'var(--green)':'var(--red)'}">${esc(a.given||'(no answer)')}</td>
+        return `<tr style="background:${ok?'#F0FDF4':'#FEF2F2'}">
+          <td style="font-family:var(--font-he);font-size:18px" lang="he">${esc(w.hebrew||'')}</td>
+          <td class="en-cell">${esc(w.english||'')}</td>
+          <td class="en-cell" style="color:${ok?'var(--green)':'var(--red)'}">${esc(a.given||'(ללא תשובה)')}</td>
           <td>${ok?'✅':'❌'}</td>
         </tr>`;
       }).join('')}</tbody>
-    </table>` : '<p style="color:var(--muted);padding:16px 0">No answer data available.</p>';
-  document.getElementById('resultDetailModal').style.display = 'flex';
+    </table></div>` : '<p style="color:var(--muted);padding:16px 0">אין נתוני תשובות.</p>';
+  openMdl('resultDetailModal');
 }
 
 async function loadAndRenderResults(blockId) {
@@ -952,11 +1171,11 @@ async function loadAndRenderResults(blockId) {
 
   const testIds = (b.tests||[]).map(t => t.id);
   if (!testIds.length) {
-    tc.innerHTML = `<div class="empty-state"><div class="ei">📊</div><p>No tests yet for this block.</p></div>`;
+    tc.innerHTML = `<div class="empty-state"><div class="ei" aria-hidden="true">📊</div><p>אין עדיין מבחנים בבלוק הזה.</p></div>`;
     return;
   }
 
-  tc.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading results…</div>`;
+  tc.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">טוען תוצאות…</div>`;
 
   try {
     const { data, error } = await sb.from('test_results')
@@ -967,7 +1186,7 @@ async function loadAndRenderResults(blockId) {
     if (error) throw error;
 
     if (!data || !data.length) {
-      tc.innerHTML = `<div class="empty-state"><div class="ei">📊</div><p>No student results yet.<br>Run a test so students can submit their answers.</p></div>`;
+      tc.innerHTML = `<div class="empty-state"><div class="ei" aria-hidden="true">📊</div><p>אין עדיין תוצאות תלמידים.<br>הפעילו מבחן כדי שהתלמידים יוכלו להגיש.</p></div>`;
       return;
     }
 
@@ -976,57 +1195,72 @@ async function loadAndRenderResults(blockId) {
 
     tc.innerHTML = `
       <div class="results-avg">
-        <span style="font-size:28px">📊</span>
+        <span style="font-size:28px" aria-hidden="true">📊</span>
         <div>
-          <div style="font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em">Class Average</div>
+          <div style="font-size:12px;font-weight:700;color:var(--accent-dark)">ממוצע כיתתי</div>
           <div style="font-size:26px;font-weight:800">${avg}%</div>
         </div>
-        <span style="margin-left:auto;font-size:13px;color:var(--muted)">${data.length} submission${data.length!==1?'s':''}</span>
+        <span style="margin-inline-start:auto;font-size:13px;color:var(--muted)">${data.length === 1 ? 'הגשה אחת' : data.length + ' הגשות'}</span>
       </div>
-      <table class="word-table">
+      <div style="overflow-x:auto"><table class="word-table">
         <thead><tr>
-          <th>Student</th>
-          <th style="width:90px">Score</th>
+          <th>תלמיד/ה</th>
+          <th style="width:90px">ציון</th>
           <th style="width:70px">%</th>
-          <th style="width:110px">Date</th>
-          <th style="width:40px"></th>
+          <th style="width:110px">תאריך</th>
+          <th style="width:44px"><span class="visually-hidden">מחיקה</span></th>
         </tr></thead>
         <tbody>
           ${data.map((r, i) => {
             const pct = Math.round(r.score / r.total * 100);
-            const color = pct >= 90 ? '#16a34a' : pct >= 70 ? '#2563eb' : pct >= 50 ? '#a16207' : '#dc2626';
-            return `<tr style="cursor:pointer" onclick="showResultDetail(lastResults[${i}], '${blockId}')">
-              <td style="font-weight:600">${esc(r.student_name || 'Anonymous')}</td>
-              <td>${r.score}/${r.total}</td>
+            const color = pct >= 90 ? '#15803D' : pct >= 70 ? '#1D4ED8' : pct >= 50 ? '#A16207' : '#DC2626';
+            return `<tr style="cursor:pointer" onclick="showResultDetail(lastResults[${i}], '${blockId}')" tabindex="0" onkeydown="if(event.key==='Enter'){showResultDetail(lastResults[${i}], '${blockId}')}" aria-label="פירוט התוצאה של ${esc(r.student_name || 'אנונימי')}">
+              <td style="font-weight:600" dir="auto">${esc(r.student_name || 'אנונימי')}</td>
+              <td dir="ltr" style="text-align:right">${r.score}/${r.total}</td>
               <td><span style="font-weight:700;color:${color}">${pct}%</span></td>
               <td style="font-size:12px;color:var(--muted)">${fmtDate((r.completed_at||'').slice(0,10))}</td>
-              <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="event.stopPropagation();deleteResult('${r.id}','${blockId}')">✕</button></td>
+              <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="event.stopPropagation();deleteResult('${r.id}','${blockId}')" aria-label="מחיקת התוצאה של ${esc(r.student_name || 'אנונימי')}">✕</button></td>
             </tr>`;
           }).join('')}
         </tbody>
-      </table>`;
+      </table></div>`;
   } catch(e) {
-    tc.innerHTML = `<div class="empty-state"><div class="ei">⚠️</div><p>Failed to load results.</p></div>`;
+    tc.innerHTML = `<div class="empty-state"><div class="ei" aria-hidden="true">⚠️</div><p>טעינת התוצאות נכשלה.</p></div>`;
   }
 }
 
 async function deleteResult(resultId, blockId) {
-  if (!confirm('Delete this result?')) return;
+  if (!confirm('למחוק את התוצאה הזו?')) return;
   try {
     const { error } = await sb.from('test_results').delete().eq('id', resultId);
     if (error) throw error;
     loadAndRenderResults(blockId);
-    toast('Result deleted');
+    toast('התוצאה נמחקה');
   } catch(e) {
-    toast('Failed to delete result', 'err');
+    toast('מחיקת התוצאה נכשלה', 'err');
   }
 }
 
-// ── Modal helper ──────────────────────────────────────────
+// ── Modal helpers (accessible) ────────────────────────────
+function openMdl(id) {
+  lastFocusEl = document.activeElement;
+  const bd = document.getElementById(id);
+  bd.style.display = 'flex';
+  const target = bd.querySelector('input:not([type=hidden]):not(:disabled), select, textarea, button:not(.modal-close)') || bd.querySelector('.modal');
+  if (target) setTimeout(() => target.focus(), 30);
+}
+
 function closeMdl(id, e) {
   if (e && e.target !== e.currentTarget) return;
   document.getElementById(id).style.display = 'none';
+  if (lastFocusEl && document.contains(lastFocusEl)) { lastFocusEl.focus(); lastFocusEl = null; }
 }
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const open = [...document.querySelectorAll('.modal-backdrop')].find(m => m.style.display === 'flex');
+  if (open) closeMdl(open.id);
+});
 
 // ── Utilities ─────────────────────────────────────────────
 function uid() { return crypto.randomUUID(); }
@@ -1034,14 +1268,14 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function fmtDate(d) {
   if (!d) return '';
-  try { return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+  try { return new Date(d+'T00:00:00').toLocaleDateString('he-IL',{day:'numeric',month:'short',year:'numeric'}); }
   catch { return d; }
 }
 function toast(msg, type = 'ok') {
   const el = document.getElementById('toast');
   el.textContent = msg; el.className = `toast ${type} show`;
   clearTimeout(window._tt);
-  window._tt = setTimeout(() => el.classList.remove('show'), 3000);
+  window._tt = setTimeout(() => el.classList.remove('show'), 4000);
 }
 
 // ── Start ─────────────────────────────────────────────────
