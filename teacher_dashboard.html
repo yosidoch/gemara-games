@@ -132,7 +132,7 @@
     .wsr.off { opacity: .45; text-decoration: line-through; }
     .wsr input[type=checkbox] { width: 20px; height: 20px; margin: 0; cursor: pointer; flex-shrink: 0; accent-color: var(--accent); }
 
-    .dir-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .dir-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
     .dir-card { border: 2px solid var(--border); background: #fff; border-radius: 12px; padding: 16px 14px; cursor: pointer; transition: all .15s; text-align: center; font-family: var(--font-ui); color: var(--text); }
     .dir-card:hover { border-color: var(--accent); }
     .dir-card[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); }
@@ -159,6 +159,27 @@
     .access-code small { font-size: 10.5px; font-weight: 700; letter-spacing: 0; }
 
     .results-avg { background: var(--accent-soft); border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+
+    /* Students roster card */
+    .student-item { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
+    .student-item:last-child { border-bottom: none; }
+    .student-item:hover { background: #FAFBFF; }
+    .student-item-name { font-weight: 600; flex: 1; min-width: 0; }
+    .student-item-nick { font-size: 12px; color: var(--muted); margin-inline-start: 4px; font-weight: 400; }
+    .student-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .student-edit-row { padding: 8px 12px; border-bottom: 1px solid var(--border); background: #FAFBFF; }
+    .student-edit-row input { margin-bottom: 6px; }
+    .student-add-form { padding: 12px 16px; border-top: 1px solid var(--border); background: #FAFBFF; display: none; }
+    .student-add-form.open { display: block; }
+    .student-count-badge { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+    .radio-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+    .radio-row label { display: flex; align-items: center; gap: 7px; font-size: 14px; cursor: pointer; min-height: 36px; }
+    .radio-row input[type=radio] { width: 18px; height: 18px; accent-color: var(--accent); }
+
+    .status-pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+    .status-pill.done { background: var(--green-soft); color: #15803D; }
+    .status-pill.pending { background: var(--amber-soft); color: var(--amber); }
 
     hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
@@ -231,6 +252,23 @@
         </div>
       </div>
       <div class="block-list" id="blockList" role="list"></div>
+    </div>
+
+    <!-- Students roster card -->
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <h2>👥 תלמידים <span class="student-count-badge" id="studentCountBadge"></span></h2>
+        <button class="btn btn-primary btn-sm" onclick="toggleAddStudentForm()" aria-expanded="false" id="addStudentToggle">+ תלמיד/ה</button>
+      </div>
+      <div class="student-add-form" id="addStudentForm">
+        <div class="form-group"><label for="nsName">שם מלא *</label><input type="text" id="nsName" placeholder="לדוגמה: משה כהן" /></div>
+        <div class="form-group"><label for="nsNick">כינוי (לא חובה)</label><input type="text" id="nsNick" placeholder="לדוגמה: מוישי" /></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddStudentForm()">ביטול</button>
+          <button class="btn btn-green btn-sm" id="addStudentBtn" onclick="addStudent()">שמירה</button>
+        </div>
+      </div>
+      <div id="studentList"><div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">טוען…</div></div>
     </div>
   </aside>
 
@@ -330,8 +368,20 @@
         <button type="button" class="dir-card" role="radio" aria-checked="false" id="dirEN" onclick="setDir('en_to_he')">
           <div class="icon" aria-hidden="true">⌨️</div>
           <div class="lbl">אנגלית → עברית</div>
-          <div class="desc">Student sees the English meaning and types the Hebrew (needs a Hebrew keyboard)</div>
+          <div class="desc">Student sees the English meaning and types the Hebrew (a virtual Hebrew keyboard is provided)</div>
         </button>
+        <button type="button" class="dir-card" role="radio" aria-checked="false" id="dirMIX" onclick="setDir('mixed')">
+          <div class="icon" aria-hidden="true">🔀</div>
+          <div class="lbl">מעורב</div>
+          <div class="desc">Each question randomly switches direction — the student uses the right keyboard for each</div>
+        </button>
+      </div>
+      <hr />
+      <div class="section-lbl" id="scoreDispLbl">4. איך יוצג הציון בכרטיס הציון?</div>
+      <div class="radio-row" role="radiogroup" aria-labelledby="scoreDispLbl">
+        <label><input type="radio" name="scoreDisplay" value="fraction" checked /> X מתוך Y (למשל 8/10)</label>
+        <label><input type="radio" name="scoreDisplay" value="percent" /> אחוזים (למשל 80%)</label>
+        <label><input type="radio" name="scoreDisplay" value="both" /> שניהם</label>
       </div>
     </div>
     <div class="modal-footer">
@@ -362,7 +412,7 @@
   <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="rdTitle">
     <div class="modal-header"><h2 id="rdTitle">תוצאת תלמיד/ה</h2><button class="modal-close" onclick="closeMdl('resultDetailModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body" id="rdBody"></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">סגירה</button></div>
+    <div class="modal-footer" id="rdFooter"><button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">סגירה</button></div>
   </div>
 </div>
 
@@ -374,8 +424,9 @@
       <h3>What is this app?</h3>
       <p>A weekly vocabulary system for Gemara class: you create <strong>blocks</strong> of words, generate timed <strong>tests</strong>, and students take them on their Chromebooks through a shared link with an <strong>access code</strong>.</p>
 
-      <h3>1 · Blocks</h3>
+      <h3>1 · Blocks &amp; Students</h3>
       <p>Each block is one week of vocabulary. Click <span class="kbd">+ בלוק חדש</span>, give it a number, a title and the week dates. Select a block to manage its words and tests.</p>
+      <p>In the <span class="kbd">👥 תלמידים</span> card, add your class roster (name + optional nickname). When a roster exists, students simply <strong>tap their name</strong> at the start of a test instead of typing it.</p>
 
       <h3>2 · Words</h3>
       <ul>
@@ -386,18 +437,20 @@
 
       <h3>3 · Tests</h3>
       <ul>
-        <li>Click <span class="kbd">✨ יצירת מבחן</span>, pick the words, the timer per word, and the direction.</li>
+        <li>Click <span class="kbd">✨ יצירת מבחן</span>, pick the words, the timer per word, and the direction — Hebrew→English, English→Hebrew (a virtual Hebrew keyboard is provided), or <strong>Mixed</strong> (each question flips randomly).</li>
+        <li>Choose how the printed score card shows the grade: fraction (8/10), percent (80%), or both.</li>
         <li><strong>Save as draft</strong> — students cannot open it yet. <strong>Start now</strong> — the test goes live immediately.</li>
         <li>Every test has a <strong>4-digit access code</strong> shown on its card. Write it on the board — students must type it before starting. This stops anyone without the code from taking the test.</li>
         <li>Click 📋 to copy the student link and share it (email, Google Classroom, etc.).</li>
         <li>When the lesson is over, click <span class="kbd">⏹ סיום</span> to close the test — students can no longer submit. You can reopen it later.</li>
       </ul>
 
-      <h3>4 · Results</h3>
+      <h3>4 · Results, Grading &amp; Score Cards</h3>
       <ul>
-        <li>The <span class="kbd">📊 תוצאות</span> tab shows every submission with the class average. Click a row to see exactly what the student answered.</li>
-        <li><span class="kbd">📊 תצוגת כיתה</span> (top of the page, when a test is live) opens a live board that refreshes every 10 seconds — great for projecting during the test. It also shows the access code.</li>
-        <li>Students who click "Try Again" after finishing do a practice run — it is <em>not</em> saved twice.</li>
+        <li>Students do <strong>not</strong> see their grade — they see "Your teacher will give you your grade." You review first.</li>
+        <li>The <span class="kbd">📊 תוצאות</span> tab shows every submission with the class average. Click a row to review it: toggle any ✅/❌ to override a grade (e.g. accept a typo), then click <span class="kbd">✓ אישור סופי</span>.</li>
+        <li><span class="kbd">🖨 הדפסת כרטיסי ציון</span> prints handout cards (6 per page, ב״ה header) for all finalized results, using the score format you chose.</li>
+        <li><span class="kbd">📊 תצוגת כיתה</span> (top of the page, when a test is live) opens a live board that refreshes every 10 seconds — great for projecting. It also shows the access code.</li>
       </ul>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="closeMdl('helpModal')">Got it</button></div>
@@ -424,6 +477,9 @@ let testDir = 'he_to_en';
 let testWordSel = {};
 let activeTab = 'words';
 let lastFocusEl = null;
+let students = [];          // [{id, name, nickname}]
+let editingStudentId = null;
+let overrideResult = null;  // working copy while the teacher overrides grades
 
 // Access code: derived deterministically from the test UUID (same formula in game_test.html)
 function accessCode(id) {
@@ -438,11 +494,13 @@ async function init() {
   try {
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     await loadFromDB();
+    await loadStudents();
     document.getElementById('dbBadge').textContent = 'מחובר למסד הנתונים';
     document.getElementById('dbBadge').className = 'db-badge connected';
   } catch(e) {
     console.error('Supabase init failed:', e);
     loadLocal();
+    renderStudentList();
     document.getElementById('dbBadge').textContent = 'לא מקוון (עותק מקומי)';
     document.getElementById('dbBadge').className = 'db-badge local';
     toast('אין חיבור: ' + (e.message || e.code || String(e)), 'err');
@@ -979,6 +1037,8 @@ function openTestModal(blockId) {
 
   document.getElementById('testTimer').value = 30;
   setDir('he_to_en');
+  const fracRadio = document.querySelector('input[name="scoreDisplay"][value="fraction"]');
+  if (fracRadio) fracRadio.checked = true;
   updateWordSelCount();
   openMdl('testModal');
 }
@@ -1009,17 +1069,20 @@ function setDir(dir) {
   testDir = dir;
   document.getElementById('dirHE').setAttribute('aria-checked', dir === 'he_to_en' ? 'true' : 'false');
   document.getElementById('dirEN').setAttribute('aria-checked', dir === 'en_to_he' ? 'true' : 'false');
+  document.getElementById('dirMIX').setAttribute('aria-checked', dir === 'mixed' ? 'true' : 'false');
 }
 
 async function buildTest(status) {
   const wordIds = Object.entries(testWordSel).filter(([,v])=>v).map(([k])=>k);
   if (!wordIds.length) { toast('יש לבחור לפחות מילה אחת', 'err'); return null; }
   const timer = parseInt(document.getElementById('testTimer').value) || 30;
-  const t = { id: uid(), blockId: testBlockId, timerPerWord: timer, direction: testDir, status, wordIds, createdAt: new Date().toISOString() };
+  const scoreDisplay = document.querySelector('input[name="scoreDisplay"]:checked')?.value || 'fraction';
+  const t = { id: uid(), blockId: testBlockId, timerPerWord: timer, direction: testDir, status, wordIds, scoreDisplay, createdAt: new Date().toISOString() };
 
   const { error } = await sb.from('tests').insert({
     id: t.id, block_id: t.blockId, timer_per_word: t.timerPerWord,
-    direction: t.direction, status: t.status, word_ids: t.wordIds
+    direction: t.direction, status: t.status, word_ids: t.wordIds,
+    score_display: t.scoreDisplay
   });
   if (error) { toast('שמירת המבחן נכשלה: ' + (error.message || error.code || JSON.stringify(error)), 'err'); return null; }
 
@@ -1103,7 +1166,7 @@ async function deleteTest(testId, blockId) {
 }
 
 function testCard(t) {
-  const dir = t.direction === 'he_to_en' ? 'עברית → אנגלית' : 'אנגלית → עברית';
+  const dir = t.direction === 'he_to_en' ? 'עברית → אנגלית' : t.direction === 'en_to_he' ? 'אנגלית → עברית' : 'מעורב 🔀';
   const wc = (t.wordIds||[]).length;
   const date = t.createdAt ? fmtDate(t.createdAt.slice(0,10)) : '';
   const statusHe = { draft: 'טיוטה', active: 'פעיל', closed: 'סגור' }[t.status] || t.status;
@@ -1137,31 +1200,291 @@ function copyTestLink(testId) {
   );
 }
 
+// ── Students roster ───────────────────────────────────────
+async function loadStudents() {
+  try {
+    const { data, error } = await sb.from('students').select('*').order('name');
+    if (error) throw error;
+    students = (data || []).map(s => ({ id: s.id, name: s.name, nickname: s.nickname || '' }));
+  } catch(e) {
+    students = [];
+  }
+  renderStudentList();
+}
+
+function renderStudentList() {
+  const el = document.getElementById('studentList');
+  const badge = document.getElementById('studentCountBadge');
+  if (!el) return;
+  if (badge) badge.textContent = students.length ? `(${students.length})` : '';
+  if (!students.length) {
+    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">אין עדיין תלמידים.<br>הוסיפו את רשימת הכיתה — התלמידים יבחרו את שמם במבחן.</div>`;
+    return;
+  }
+  el.innerHTML = students.map(s => {
+    if (editingStudentId === s.id) {
+      return `<div class="student-edit-row" id="sedit-${s.id}">
+        <label class="visually-hidden" for="seName-${s.id}">שם מלא</label>
+        <input type="text" id="seName-${s.id}" value="${esc(s.name)}" placeholder="שם מלא" />
+        <label class="visually-hidden" for="seNick-${s.id}">כינוי</label>
+        <input type="text" id="seNick-${s.id}" value="${esc(s.nickname)}" placeholder="כינוי (לא חובה)" />
+        <div style="display:flex;gap:6px;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="cancelStudentEdit()">ביטול</button>
+          <button class="btn btn-green btn-sm" onclick="saveStudentEdit('${s.id}')">✓ שמירה</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="student-item" id="sitem-${s.id}">
+      <span class="student-item-name" dir="auto">${esc(s.name)}${s.nickname ? `<span class="student-item-nick">(${esc(s.nickname)})</span>` : ''}</span>
+      <div class="student-item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="startStudentEdit('${s.id}')" aria-label="עריכת ${esc(s.name)}">✏️</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteStudent('${s.id}','${esc(s.name)}')" aria-label="מחיקת ${esc(s.name)}">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleAddStudentForm() {
+  const f = document.getElementById('addStudentForm');
+  f.classList.toggle('open');
+  const open = f.classList.contains('open');
+  document.getElementById('addStudentToggle').setAttribute('aria-expanded', open);
+  if (open) {
+    document.getElementById('nsName').value = '';
+    document.getElementById('nsNick').value = '';
+    document.getElementById('nsName').focus();
+  }
+}
+
+async function addStudent() {
+  const name = document.getElementById('nsName').value.trim();
+  const nick = document.getElementById('nsNick').value.trim();
+  if (!name) return toast('שם הוא שדה חובה', 'err');
+  const btn = document.getElementById('addStudentBtn');
+  btn.disabled = true; btn.textContent = 'שומר…';
+  try {
+    const id = uid();
+    const { error } = await sb.from('students').insert({ id, name, nickname: nick || null });
+    if (error) throw error;
+    students.push({ id, name, nickname: nick });
+    students.sort((a, b) => a.name.localeCompare(b.name));
+    toggleAddStudentForm();
+    renderStudentList();
+    toast('התלמיד/ה נוסף/ה!');
+  } catch(e) {
+    toast('הוספת התלמיד/ה נכשלה: ' + (e.message || ''), 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'שמירה';
+  }
+}
+
+function startStudentEdit(id) {
+  editingStudentId = id;
+  renderStudentList();
+  document.getElementById(`seName-${id}`)?.focus();
+}
+
+function cancelStudentEdit() {
+  editingStudentId = null;
+  renderStudentList();
+}
+
+async function saveStudentEdit(id) {
+  const name = document.getElementById(`seName-${id}`).value.trim();
+  const nick = document.getElementById(`seNick-${id}`).value.trim();
+  if (!name) return toast('שם הוא שדה חובה', 'err');
+  try {
+    const { error } = await sb.from('students').update({ name, nickname: nick || null }).eq('id', id);
+    if (error) throw error;
+    const s = students.find(x => x.id === id);
+    if (s) { s.name = name; s.nickname = nick; }
+    students.sort((a, b) => a.name.localeCompare(b.name));
+    editingStudentId = null;
+    renderStudentList();
+    toast('פרטי התלמיד/ה עודכנו!');
+  } catch(e) {
+    toast('עדכון התלמיד/ה נכשל', 'err');
+  }
+}
+
+async function deleteStudent(id, name) {
+  if (!confirm(`להסיר את ${name} מרשימת הכיתה?`)) return;
+  try {
+    const { error } = await sb.from('students').delete().eq('id', id);
+    if (error) throw error;
+    students = students.filter(s => s.id !== id);
+    renderStudentList();
+    toast('התלמיד/ה הוסר/ה');
+  } catch(e) {
+    toast('הסרת התלמיד/ה נכשלה', 'err');
+  }
+}
+
 // ── Results tab ───────────────────────────────────────────
 let lastResults = [];
 
 function showResultDetail(r, blockId) {
+  overrideResult = { ...r, blockId, answers: Array.isArray(r.answers) ? r.answers.map(a => ({...a})) : [] };
   const b = block(blockId);
   const wordMap = {};
   (b.words||[]).forEach(w => wordMap[w.id] = w);
-  const pct = Math.round(r.score / r.total * 100);
-  document.getElementById('rdTitle').textContent = `${r.student_name || 'אנונימי'} — ${r.score}/${r.total} (${pct}%)`;
-  const answers = Array.isArray(r.answers) ? r.answers : [];
-  document.getElementById('rdBody').innerHTML = answers.length ? `
+
+  const score = overrideResult.answers.filter(a => a.correct).length;
+  const total = overrideResult.total;
+  const pct = total ? Math.round(score / total * 100) : 0;
+  const finalized = r.finalized;
+
+  document.getElementById('rdTitle').textContent = `${r.student_name || 'אנונימי'} — בדיקה ועריכת ציון`;
+
+  document.getElementById('rdBody').innerHTML = `
+    <div style="background:var(--accent-soft);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--accent-dark)">ציון נוכחי</div>
+        <div style="font-size:24px;font-weight:800" id="overrideScoreDisplay" dir="ltr">${score}/${total} (${pct}%)</div>
+      </div>
+      ${finalized
+        ? `<span class="status-pill done" style="margin-inline-start:auto">✓ אושר סופית</span>`
+        : `<span class="status-pill pending" style="margin-inline-start:auto">ממתין לבדיקה</span>`}
+    </div>
+    <p class="hint-en" style="margin-bottom:12px">Click the ✅/❌ on any row to change that answer's grade, then click "Finalize" to save the score.</p>
+    ${overrideResult.answers.length ? `
     <div style="overflow-x:auto"><table class="word-table">
-      <thead><tr><th>עברית</th><th>תשובה נכונה</th><th>מה התלמיד/ה כתב/ה</th><th style="width:36px"><span class="visually-hidden">נכון/שגוי</span></th></tr></thead>
-      <tbody>${answers.map(a => {
-        const w = wordMap[a.word_id] || {};
-        const ok = a.correct;
-        return `<tr style="background:${ok?'#F0FDF4':'#FEF2F2'}">
-          <td style="font-family:var(--font-he);font-size:18px" lang="he">${esc(w.hebrew||'')}</td>
-          <td class="en-cell">${esc(w.english||'')}</td>
-          <td class="en-cell" style="color:${ok?'var(--green)':'var(--red)'}">${esc(a.given||'(ללא תשובה)')}</td>
-          <td>${ok?'✅':'❌'}</td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table></div>` : '<p style="color:var(--muted);padding:16px 0">אין נתוני תשובות.</p>';
+      <thead><tr><th>המילה שהוצגה</th><th>תשובה נכונה</th><th>מה התלמיד/ה כתב/ה</th><th style="width:56px;text-align:center">ציון</th></tr></thead>
+      <tbody id="overrideTbody">
+        ${overrideResult.answers.map((a, i) => {
+          const w = wordMap[a.word_id] || {};
+          const shownHe = a.dir === 'he_to_en' || !a.dir;
+          return `<tr id="ovrow-${i}" style="background:${a.correct?'#F0FDF4':'#FEF2F2'}">
+            <td style="font-family:${shownHe?'var(--font-he)':'var(--font-ui)'};font-size:${shownHe?'18':'14'}px" ${shownHe?'lang="he"':'class="en-cell"'}>${esc(shownHe ? (w.hebrew||'') : (w.english||''))}</td>
+            <td ${shownHe?'class="en-cell"':'style="font-family:var(--font-he);font-size:17px" lang="he"'}>${esc(shownHe ? (w.english||'') : (w.hebrew||''))}</td>
+            <td class="en-cell" style="color:${a.correct?'var(--green)':'var(--red)'}">${esc(a.given||'(ללא תשובה)')}</td>
+            <td style="text-align:center">
+              <button onclick="toggleOverride(${i})" style="font-size:20px;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px;min-width:38px;min-height:38px" aria-label="החלפת ציון לשאלה ${i+1}" title="לחיצה הופכת נכון/שגוי">${a.correct?'✅':'❌'}</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>` : '<p style="color:var(--muted);padding:16px 0">אין נתוני תשובות.</p>'}`;
+
+  document.getElementById('rdFooter').innerHTML = `
+    <button class="btn btn-green" onclick="printScoreCards('${blockId}')" style="margin-inline-end:auto">🖨 הדפסת כרטיסי ציון</button>
+    <button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">סגירה</button>
+    <button class="btn btn-primary" onclick="finalizeResult('${r.id}','${blockId}')">✓ אישור סופי של הציון</button>`;
+
   openMdl('resultDetailModal');
+}
+
+function toggleOverride(idx) {
+  if (!overrideResult) return;
+  overrideResult.answers[idx].correct = !overrideResult.answers[idx].correct;
+  const row = document.getElementById(`ovrow-${idx}`);
+  const ok = overrideResult.answers[idx].correct;
+  if (row) {
+    row.style.background = ok ? '#F0FDF4' : '#FEF2F2';
+    const btn = row.querySelector('button');
+    if (btn) btn.textContent = ok ? '✅' : '❌';
+    const givenCell = row.cells[2];
+    if (givenCell) givenCell.style.color = ok ? 'var(--green)' : 'var(--red)';
+  }
+  const score = overrideResult.answers.filter(a => a.correct).length;
+  const total = overrideResult.total;
+  const pct = total ? Math.round(score / total * 100) : 0;
+  const sd = document.getElementById('overrideScoreDisplay');
+  if (sd) sd.textContent = `${score}/${total} (${pct}%)`;
+}
+
+async function finalizeResult(resultId, blockId) {
+  if (!overrideResult) return;
+  const score = overrideResult.answers.filter(a => a.correct).length;
+  try {
+    const { error } = await sb.from('test_results').update({
+      score,
+      answers: overrideResult.answers,
+      finalized: true
+    }).eq('id', resultId);
+    if (error) throw error;
+    const idx = lastResults.findIndex(r => r.id === resultId);
+    if (idx >= 0) { lastResults[idx].score = score; lastResults[idx].answers = overrideResult.answers; lastResults[idx].finalized = true; }
+    toast('הציון אושר סופית ✓');
+    closeMdl('resultDetailModal');
+    loadAndRenderResults(blockId);
+  } catch(e) {
+    toast('השמירה נכשלה: ' + (e.message || ''), 'err');
+  }
+}
+
+// ── Score cards print ─────────────────────────────────────
+async function printScoreCards(blockId) {
+  const b = block(blockId);
+  if (!lastResults || !lastResults.length) { toast('אין תוצאות להדפסה', 'err'); return; }
+
+  // score_display setting comes from the test of the first result
+  const testId = lastResults[0]?.test_id;
+  let scoreDisplay = 'fraction';
+  try {
+    const { data } = await sb.from('tests').select('score_display').eq('id', testId).single();
+    if (data?.score_display) scoreDisplay = data.score_display;
+  } catch(e) {}
+
+  const studentMap = {};
+  students.forEach(s => { studentMap[s.id] = s.nickname || s.name; });
+
+  const finalized = lastResults.filter(r => r.finalized);
+  if (!finalized.length) { toast('אין עדיין ציונים מאושרים. יש לאשר ציונים קודם.', 'err'); return; }
+
+  const blockLabel = b.label || 'Vocabulary Test';
+  const cards = finalized.map(r => {
+    const name = (r.student_id && studentMap[r.student_id]) ? studentMap[r.student_id] : (r.student_name || 'Student');
+    const pct = r.total ? Math.round(r.score / r.total * 100) : 0;
+    let scoreText = '';
+    if (scoreDisplay === 'fraction') scoreText = `${r.score} / ${r.total}`;
+    else if (scoreDisplay === 'percent') scoreText = `${pct}%`;
+    else scoreText = `${r.score} / ${r.total} &nbsp;·&nbsp; ${pct}%`;
+    return `<div class="score-card">
+      <div class="sc-bh">ב״ה</div>
+      <div class="sc-test">${esc(blockLabel)}</div>
+      <div class="sc-name">${esc(name)}</div>
+      <div class="sc-score">${scoreText}</div>
+    </div>`;
+  });
+
+  while (cards.length % 6 !== 0) cards.push(`<div class="score-card sc-blank"></div>`);
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Score Cards — ${esc(blockLabel)}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Rubik', sans-serif; background: #fff; }
+  @page { size: letter; margin: 0.4in; }
+  .page { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.25in; page-break-after: always; height: calc(11in - 0.8in); }
+  .page:last-child { page-break-after: auto; }
+  .score-card { border: 2px solid #1e293b; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; }
+  .sc-blank { border: 2px dashed #e2e8f0; }
+  .sc-bh { font-size: 14px; color: #64748b; align-self: flex-end; font-weight: 600; }
+  .sc-test { font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+  .sc-name { font-size: 26px; font-weight: 800; color: #1e293b; margin: 4px 0; }
+  .sc-score { font-size: 36px; font-weight: 800; color: #8b5cf6; }
+</style>
+</head>
+<body>
+${chunk(cards, 6).map(group => `<div class="page">${group.join('')}</div>`).join('')}
+<script>window.onload = () => window.print();<\/script>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+}
+
+function chunk(arr, n) {
+  const r = [];
+  for (let i = 0; i < arr.length; i += n) r.push(arr.slice(i, i + n));
+  return r;
 }
 
 async function loadAndRenderResults(blockId) {
@@ -1193,6 +1516,9 @@ async function loadAndRenderResults(blockId) {
     const avg = Math.round(data.reduce((s, r) => s + (r.score / r.total * 100), 0) / data.length);
     lastResults = data;
 
+    const studentMap = {};
+    students.forEach(s => { studentMap[s.id] = s.nickname || s.name; });
+
     tc.innerHTML = `
       <div class="results-avg">
         <span style="font-size:28px" aria-hidden="true">📊</span>
@@ -1207,6 +1533,7 @@ async function loadAndRenderResults(blockId) {
           <th>תלמיד/ה</th>
           <th style="width:90px">ציון</th>
           <th style="width:70px">%</th>
+          <th style="width:90px">סטטוס</th>
           <th style="width:110px">תאריך</th>
           <th style="width:44px"><span class="visually-hidden">מחיקה</span></th>
         </tr></thead>
@@ -1214,12 +1541,17 @@ async function loadAndRenderResults(blockId) {
           ${data.map((r, i) => {
             const pct = Math.round(r.score / r.total * 100);
             const color = pct >= 90 ? '#15803D' : pct >= 70 ? '#1D4ED8' : pct >= 50 ? '#A16207' : '#DC2626';
-            return `<tr style="cursor:pointer" onclick="showResultDetail(lastResults[${i}], '${blockId}')" tabindex="0" onkeydown="if(event.key==='Enter'){showResultDetail(lastResults[${i}], '${blockId}')}" aria-label="פירוט התוצאה של ${esc(r.student_name || 'אנונימי')}">
-              <td style="font-weight:600" dir="auto">${esc(r.student_name || 'אנונימי')}</td>
+            const displayName = (r.student_id && studentMap[r.student_id]) ? esc(studentMap[r.student_id]) : esc(r.student_name || 'אנונימי');
+            const statusBadge = r.finalized
+              ? `<span class="status-pill done">✓ אושר</span>`
+              : `<span class="status-pill pending">ממתין</span>`;
+            return `<tr style="cursor:pointer" onclick="showResultDetail(lastResults[${i}], '${blockId}')" tabindex="0" onkeydown="if(event.key==='Enter'){showResultDetail(lastResults[${i}], '${blockId}')}" aria-label="בדיקת התוצאה של ${displayName}">
+              <td style="font-weight:600" dir="auto">${displayName}</td>
               <td dir="ltr" style="text-align:right">${r.score}/${r.total}</td>
               <td><span style="font-weight:700;color:${color}">${pct}%</span></td>
+              <td>${statusBadge}</td>
               <td style="font-size:12px;color:var(--muted)">${fmtDate((r.completed_at||'').slice(0,10))}</td>
-              <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="event.stopPropagation();deleteResult('${r.id}','${blockId}')" aria-label="מחיקת התוצאה של ${esc(r.student_name || 'אנונימי')}">✕</button></td>
+              <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="event.stopPropagation();deleteResult('${r.id}','${blockId}')" aria-label="מחיקת התוצאה של ${displayName}">✕</button></td>
             </tr>`;
           }).join('')}
         </tbody>

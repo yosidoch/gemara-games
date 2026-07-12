@@ -276,7 +276,7 @@ async function init() {
     testRow = test;
 
     const wordCount = Array.isArray(test.word_ids) ? test.word_ids.length : 0;
-    const dir = test.direction === 'he_to_en' ? 'עברית → אנגלית' : 'אנגלית → עברית';
+    const dir = test.direction === 'he_to_en' ? 'עברית → אנגלית' : test.direction === 'en_to_he' ? 'אנגלית → עברית' : 'מעורב 🔀';
     const statusHe = { draft: 'טיוטה', active: 'פעיל', closed: 'סגור' }[test.status] || test.status;
     document.getElementById('headerSub').textContent = `${wordCount} מילים · ${test.timer_per_word} שנ' למילה · ${dir}`;
 
