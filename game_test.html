@@ -46,6 +46,15 @@
     .topbar .brand { font-weight: 900; font-size: 16px; letter-spacing: .02em; }
     .topbar .brand span { color: var(--gg-yellow); }
     .topbar .block-tag { font-size: 13px; font-weight: 700; color: var(--gg-lavender); }
+    .topbar-end { display: flex; align-items: center; gap: 12px; }
+
+    .lang-btn {
+      background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.28); color: #fff;
+      border-radius: 999px; padding: 7px 16px; font-family: var(--font-ui); font-weight: 800;
+      font-size: 14px; cursor: pointer; min-height: 40px; transition: background .15s;
+    }
+    .lang-btn:hover { background: rgba(255,255,255,0.24); }
+    .lang-btn:focus-visible { outline: 3px solid var(--gg-yellow); outline-offset: 2px; }
 
     .screen { display: none; flex: 1; align-items: center; justify-content: center; padding: 24px 16px; }
     .screen.active { display: flex; animation: ggScreenIn 0.45s cubic-bezier(0.34,1.56,0.64,1); }
@@ -65,6 +74,7 @@
       100% { transform: translate(-50%, calc(-50% - 110px)) scale(1); opacity: 0; }
     }
     @keyframes ggConfettiFall { to { transform: translateY(105vh) rotate(720deg); } }
+    @keyframes ggKbUp { 0% { transform: translate(-50%, 30px); opacity: 0; } 100% { transform: translate(-50%, 0); opacity: 1; } }
 
     .gg-xp {
       position: fixed; z-index: 9999; transform: translate(-50%, -50%);
@@ -86,7 +96,7 @@
     .card h1 { font-family: var(--font-ui); font-size: clamp(1.6rem, 5vw, 2rem); font-weight: 900; margin-bottom: 8px; }
     .card .meta { font-size: 14px; font-weight: 600; color: #6B5CA5; margin-bottom: 26px; line-height: 1.6; }
 
-    .field { text-align: left; margin-bottom: 16px; }
+    .field { text-align: start; margin-bottom: 16px; }
     .field label { display: block; font-size: 13px; font-weight: 800; color: var(--gg-ink); margin-bottom: 6px; }
     .field .hint { font-size: 12px; font-weight: 600; color: #6B5CA5; margin-top: 5px; }
     .text-input {
@@ -102,7 +112,7 @@
     .form-error.visible { display: block; }
 
     /* ── Student roster picker ── */
-    .picker-hint { font-size: 14px; font-weight: 700; color: #6B5CA5; margin-bottom: 10px; text-align: left; }
+    .picker-hint { font-size: 14px; font-weight: 700; color: #6B5CA5; margin-bottom: 10px; text-align: start; }
     .picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 18px; max-height: 300px; overflow-y: auto; }
     .picker-btn {
       padding: 12px 8px; border: 3px solid #D9CCF0; border-radius: var(--gg-r-sm); background: #fff;
@@ -113,26 +123,40 @@
     .picker-btn:focus-visible { outline: 4px solid var(--gg-blue); outline-offset: 2px; }
     .picker-btn[aria-pressed="true"] { border-color: var(--gg-purple); background: var(--gg-purple); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 
-    /* ── Hebrew virtual keyboard ── */
-    .heb-kb-wrap { margin-bottom: 14px; }
-    .heb-kb-toggle {
-      background: #EDE6F7; border: none; border-radius: var(--gg-r-sm); padding: 8px 14px;
-      font-size: 14px; font-weight: 700; color: var(--gg-ink); cursor: pointer; font-family: var(--font-ui);
-      margin-bottom: 8px; min-height: 42px; box-shadow: 0 3px 0 rgba(0,0,0,0.12);
+    /* ── Floating Hebrew virtual keyboard ── */
+    .heb-fab {
+      position: fixed; bottom: 20px; inset-inline-end: 20px; z-index: 600;
+      width: 62px; height: 62px; border-radius: 50%; border: none; cursor: pointer;
+      background: var(--gg-yellow); color: var(--gg-ink); font-size: 28px;
+      box-shadow: var(--gg-shadow-btn); display: none; align-items: center; justify-content: center;
+      transition: transform .08s, background .15s; touch-action: manipulation;
     }
-    .heb-kb-toggle:hover { background: #E0D3F5; }
-    .heb-kb { display: none; background: #F4EEFB; border: 2px solid #D9CCF0; border-radius: var(--gg-r-md); padding: 10px 8px; }
-    .heb-kb.open { display: block; }
-    .heb-kb-row { display: flex; justify-content: center; gap: 5px; margin-bottom: 5px; flex-wrap: wrap; }
+    .heb-fab.show { display: flex; animation: ggPopIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+    .heb-fab:hover { transform: translateY(-3px); }
+    .heb-fab:active { transform: translateY(3px); box-shadow: var(--gg-shadow-btn-press); }
+    .heb-fab:focus-visible { outline: 4px solid #fff; outline-offset: 3px; }
+    .heb-fab[aria-expanded="true"] { background: var(--gg-green-bright); }
+
+    .heb-kb {
+      display: none; position: fixed; left: 50%; transform: translateX(-50%);
+      bottom: 96px; z-index: 590; width: min(600px, calc(100vw - 12px));
+      background: #fff; border: 3px solid var(--gg-purple); border-radius: var(--gg-r-lg);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5); padding: 14px 10px 10px;
+    }
+    .heb-kb.open { display: block; animation: ggKbUp 0.22s ease-out; }
+    .heb-kb-row { display: flex; gap: 6px; margin-bottom: 6px; }
+    .heb-kb-row:last-child { margin-bottom: 0; }
     .heb-key {
-      width: 40px; height: 42px; border: 2px solid #D9CCF0; border-radius: 8px; background: #fff;
-      font-family: var(--font-he); font-size: 18px; cursor: pointer; display: flex; align-items: center;
-      justify-content: center; transition: all .1s; color: var(--gg-ink); padding: 0; box-shadow: none;
+      flex: 1; height: 52px; border: 2px solid #D9CCF0; border-radius: 10px; background: #F9F6FF;
+      font-family: var(--font-he); font-size: 24px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; color: var(--gg-ink); padding: 0; transition: background .1s;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     }
     .heb-key:hover { background: var(--gg-purple); color: #fff; border-color: var(--gg-purple); }
-    .heb-key:active { transform: scale(.92); }
-    .heb-key.wide { width: 68px; font-size: 12px; font-family: var(--font-ui); font-weight: 700; color: #6B5CA5; }
-    .heb-key.wide:hover { color: #fff; }
+    .heb-key:active { transform: scale(.9); background: var(--gg-purple); color: #fff; }
+    .heb-key:focus-visible { outline: 3px solid var(--gg-blue); outline-offset: 1px; }
+    .heb-key.wide { flex: 2.2; font-size: 15px; font-family: var(--font-ui); font-weight: 800; color: #6B5CA5; }
+    .heb-key.wide:hover, .heb-key.wide:active { color: #fff; }
 
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -154,7 +178,7 @@
 
     .progress-bar-wrap { background: rgba(255,255,255,0.2); border-radius: 999px; height: 18px; margin-bottom: 8px; overflow: hidden; }
     .progress-bar-fill { height: 100%; background: var(--gg-green-bright); border-radius: 999px; transition: width .4s; }
-    .progress-label { font-size: 14px; font-weight: 800; color: var(--gg-lavender); text-align: right; margin-bottom: 18px; }
+    .progress-label { font-size: 14px; font-weight: 800; color: var(--gg-lavender); text-align: end; margin-bottom: 18px; }
 
     .timer-circle {
       width: 96px; height: 96px; border-radius: 50%; margin: -76px auto 14px;
@@ -173,7 +197,7 @@
     .q-direction { font-size: 14px; font-weight: 900; color: var(--gg-purple-light); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 18px; }
     .q-prompt { margin-bottom: 8px; min-height: 84px; display: flex; align-items: center; justify-content: center; }
     .q-prompt .he-text { font-family: var(--font-he); font-size: clamp(34px, 8vw, 48px); font-weight: 700; direction: rtl; line-height: 1.3; }
-    .q-prompt .en-text { font-size: clamp(24px, 6vw, 32px); font-weight: 900; line-height: 1.4; }
+    .q-prompt .en-text { font-size: clamp(24px, 6vw, 32px); font-weight: 900; line-height: 1.4; direction: ltr; }
     .q-type-hint { font-size: 13px; font-weight: 700; color: #6B5CA5; margin-bottom: 18px; }
 
     .answer-input {
@@ -200,13 +224,13 @@
     .results-card h2 { font-size: 26px; font-weight: 900; margin-bottom: 6px; }
     .results-card .sub { font-size: 15px; font-weight: 600; color: #6B5CA5; margin-bottom: 24px; line-height: 1.5; }
 
-    .result-rows { text-align: left; margin-bottom: 24px; max-height: 300px; overflow-y: auto; border: 2px solid #EDE6F7; border-radius: var(--gg-r-md); padding: 4px 14px; }
+    .result-rows { text-align: start; margin-bottom: 24px; max-height: 300px; overflow-y: auto; border: 2px solid #EDE6F7; border-radius: var(--gg-r-md); padding: 4px 14px; }
     .result-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 2px solid #F4EEFB; }
     .result-row:last-child { border-bottom: none; }
     .result-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
     .result-row .he { font-family: var(--font-he); font-size: 19px; direction: rtl; text-align: right; }
     .result-row .rr-body { flex: 1; min-width: 0; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
-    .result-row .en { font-size: 13px; font-weight: 600; color: #6B5CA5; }
+    .result-row .en { font-size: 13px; font-weight: 600; color: #6B5CA5; direction: ltr; }
     .result-row .given { font-size: 13px; font-weight: 700; color: var(--gg-red); }
 
     .result-actions { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -228,6 +252,9 @@
     @media (max-width: 480px) {
       .card, .q-card { padding-left: 20px; padding-right: 20px; }
       .timer-circle { width: 78px; height: 78px; font-size: 28px; margin-top: -66px; }
+      .heb-fab { width: 56px; height: 56px; font-size: 24px; bottom: 14px; }
+      .heb-kb { bottom: 82px; }
+      .heb-key { height: 46px; font-size: 20px; }
     }
   </style>
 </head>
@@ -235,16 +262,19 @@
 
 <div class="topbar">
   <div class="brand">Gemara <span>Games</span></div>
-  <div class="block-tag" id="topBlockTag"></div>
+  <div class="topbar-end">
+    <div class="block-tag" id="topBlockTag"></div>
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()">עברית</button>
+  </div>
 </div>
 
 <!-- Screen: no test -->
 <div class="screen active" id="screenNoTest">
   <div class="card info-card">
     <div class="ei">📋</div>
-    <h1 style="font-size:22px">No Active Test</h1>
-    <p>A teacher needs to start a test and share the link with you first.</p>
-    <a class="btn btn-dark" href="index.html">← Back to Games</a>
+    <h1 style="font-size:22px" id="noTestTitle">No Active Test</h1>
+    <p id="noTestMsg">A teacher needs to start a test and share the link with you first.</p>
+    <a class="btn btn-dark" href="index.html" id="noTestBack">← Back to Games</a>
   </div>
 </div>
 
@@ -254,7 +284,7 @@
     <div class="ei">🔒</div>
     <h1 style="font-size:22px" id="closedTitle">This Test Is Closed</h1>
     <p id="closedMsg">Your teacher has closed this test. You can't submit answers anymore.</p>
-    <a class="btn btn-dark" href="index.html">← Back to Games</a>
+    <a class="btn btn-dark" href="index.html" id="closedBack">← Back to Games</a>
   </div>
 </div>
 
@@ -267,19 +297,19 @@
 
     <!-- Roster picker (shown when the teacher added students) -->
     <div id="rosterPicker" style="display:none">
-      <p class="picker-hint">Tap your name to begin:</p>
+      <p class="picker-hint" id="pickerHint">Tap your name to begin:</p>
       <div class="picker-grid" id="pickerGrid" role="group" aria-label="Choose your name"></div>
     </div>
 
     <!-- Fallback free-text (shown when the roster is empty) -->
     <div class="field" id="fallbackInput" style="display:none">
-      <label for="nameInput">Your name <span aria-hidden="true" style="color:var(--gg-red)">*</span></label>
+      <label for="nameInput"><span id="nameLabel">Your name</span> <span aria-hidden="true" style="color:var(--gg-red)">*</span></label>
       <input class="text-input" id="nameInput" type="text" placeholder="Type your name…" maxlength="40"
              autocomplete="off" required aria-required="true" />
     </div>
 
     <div class="field" id="codeField" style="display:none">
-      <label for="codeInput">Access code <span aria-hidden="true" style="color:var(--gg-red)">*</span></label>
+      <label for="codeInput"><span id="codeLabel">Access code</span> <span aria-hidden="true" style="color:var(--gg-red)">*</span></label>
       <input class="text-input code-input" id="codeInput" type="text" inputmode="numeric" pattern="[0-9]*"
              placeholder="• • • •" maxlength="4" autocomplete="off" aria-describedby="codeHint" />
       <p class="hint" id="codeHint">Ask your teacher for the 4-digit code.</p>
@@ -306,24 +336,6 @@
       <div class="q-type-hint" id="qTypeHint"></div>
       <label class="visually-hidden" for="answerInput">Your answer</label>
       <input class="answer-input" id="answerInput" type="text" placeholder="Type your answer…" autocomplete="off" autocorrect="off" spellcheck="false" />
-      <!-- Hebrew virtual keyboard — shown only when the answer is in Hebrew -->
-      <div class="heb-kb-wrap" id="hebKbWrap" style="display:none">
-        <button type="button" class="heb-kb-toggle" onclick="toggleHebKb()" aria-expanded="false" aria-controls="hebKb">⌨️ אבג Hebrew keyboard</button>
-        <div class="heb-kb" id="hebKb">
-          <div class="heb-kb-row">
-            <button type="button" class="heb-key" onclick="hebType('ק')">ק</button><button type="button" class="heb-key" onclick="hebType('ר')">ר</button><button type="button" class="heb-key" onclick="hebType('א')">א</button><button type="button" class="heb-key" onclick="hebType('ט')">ט</button><button type="button" class="heb-key" onclick="hebType('ו')">ו</button><button type="button" class="heb-key" onclick="hebType('ן')">ן</button><button type="button" class="heb-key" onclick="hebType('ם')">ם</button><button type="button" class="heb-key" onclick="hebType('פ')">פ</button><button type="button" class="heb-key" onclick="hebType('ף')">ף</button>
-          </div>
-          <div class="heb-kb-row">
-            <button type="button" class="heb-key" onclick="hebType('ש')">ש</button><button type="button" class="heb-key" onclick="hebType('ד')">ד</button><button type="button" class="heb-key" onclick="hebType('ג')">ג</button><button type="button" class="heb-key" onclick="hebType('כ')">כ</button><button type="button" class="heb-key" onclick="hebType('ע')">ע</button><button type="button" class="heb-key" onclick="hebType('י')">י</button><button type="button" class="heb-key" onclick="hebType('ח')">ח</button><button type="button" class="heb-key" onclick="hebType('ל')">ל</button><button type="button" class="heb-key" onclick="hebType('ך')">ך</button>
-          </div>
-          <div class="heb-kb-row">
-            <button type="button" class="heb-key" onclick="hebType('ז')">ז</button><button type="button" class="heb-key" onclick="hebType('ס')">ס</button><button type="button" class="heb-key" onclick="hebType('ב')">ב</button><button type="button" class="heb-key" onclick="hebType('ה')">ה</button><button type="button" class="heb-key" onclick="hebType('נ')">נ</button><button type="button" class="heb-key" onclick="hebType('מ')">מ</button><button type="button" class="heb-key" onclick="hebType('צ')">צ</button><button type="button" class="heb-key" onclick="hebType('ת')">ת</button><button type="button" class="heb-key" onclick="hebType('ץ')">ץ</button>
-          </div>
-          <div class="heb-kb-row">
-            <button type="button" class="heb-key" onclick="hebType('ּ')" title="דגש">ּ</button><button type="button" class="heb-key wide" onclick="hebType(' ')">Space</button><button type="button" class="heb-key wide" onclick="hebBackspace()">⌫</button>
-          </div>
-        </div>
-      </div>
       <button class="btn btn-blue" id="submitBtn" style="width:100%" onclick="submitAnswer()">Submit →</button>
       <div class="feedback" id="feedback" aria-live="assertive"></div>
       <button class="btn btn-dark next-btn" id="nextBtn" onclick="nextQuestion()">Next →</button>
@@ -340,8 +352,26 @@
     <div class="result-rows" id="resultRows" tabindex="0" aria-label="Your answers"></div>
     <div class="saved-badge" id="savedBadge" role="status"></div>
     <div class="result-actions">
-      <button class="btn btn-ghost" onclick="goHome()">← Back to Games</button>
+      <button class="btn btn-ghost" onclick="goHome()" id="resultsBack">← Back to Games</button>
     </div>
+  </div>
+</div>
+
+<!-- Floating Hebrew keyboard: icon button + pop-up keyboard.
+     Available on every question — works with mouse and touch. -->
+<button class="heb-fab" id="hebFab" onclick="toggleHebKb()" aria-expanded="false" aria-controls="hebKb" title="Hebrew keyboard — מקלדת עברית" aria-label="Hebrew keyboard">⌨️</button>
+<div class="heb-kb" id="hebKb" role="group" aria-label="Hebrew virtual keyboard" dir="ltr">
+  <div class="heb-kb-row">
+    <button type="button" class="heb-key" onclick="hebType('ק')">ק</button><button type="button" class="heb-key" onclick="hebType('ר')">ר</button><button type="button" class="heb-key" onclick="hebType('א')">א</button><button type="button" class="heb-key" onclick="hebType('ט')">ט</button><button type="button" class="heb-key" onclick="hebType('ו')">ו</button><button type="button" class="heb-key" onclick="hebType('ן')">ן</button><button type="button" class="heb-key" onclick="hebType('ם')">ם</button><button type="button" class="heb-key" onclick="hebType('פ')">פ</button><button type="button" class="heb-key" onclick="hebType('ף')">ף</button>
+  </div>
+  <div class="heb-kb-row">
+    <button type="button" class="heb-key" onclick="hebType('ש')">ש</button><button type="button" class="heb-key" onclick="hebType('ד')">ד</button><button type="button" class="heb-key" onclick="hebType('ג')">ג</button><button type="button" class="heb-key" onclick="hebType('כ')">כ</button><button type="button" class="heb-key" onclick="hebType('ע')">ע</button><button type="button" class="heb-key" onclick="hebType('י')">י</button><button type="button" class="heb-key" onclick="hebType('ח')">ח</button><button type="button" class="heb-key" onclick="hebType('ל')">ל</button><button type="button" class="heb-key" onclick="hebType('ך')">ך</button>
+  </div>
+  <div class="heb-kb-row">
+    <button type="button" class="heb-key" onclick="hebType('ז')">ז</button><button type="button" class="heb-key" onclick="hebType('ס')">ס</button><button type="button" class="heb-key" onclick="hebType('ב')">ב</button><button type="button" class="heb-key" onclick="hebType('ה')">ה</button><button type="button" class="heb-key" onclick="hebType('נ')">נ</button><button type="button" class="heb-key" onclick="hebType('מ')">מ</button><button type="button" class="heb-key" onclick="hebType('צ')">צ</button><button type="button" class="heb-key" onclick="hebType('ת')">ת</button><button type="button" class="heb-key" onclick="hebType('ץ')">ץ</button>
+  </div>
+  <div class="heb-kb-row">
+    <button type="button" class="heb-key" onclick="hebType('ּ')" title="דגש">ּ</button><button type="button" class="heb-key wide" onclick="hebType(' ')">Space</button><button type="button" class="heb-key wide" onclick="hebBackspace()">⌫</button>
   </div>
 </div>
 
@@ -349,6 +379,84 @@
 // ── Supabase ──────────────────────────────────────────────
 let sb = null;
 try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
+
+// ── UI language (en default; students can switch to Hebrew) ─
+const STR = {
+  en: {
+    langBtn: 'עברית',
+    noTestTitle: 'No Active Test',
+    noTestMsg: 'A teacher needs to start a test and share the link with you first.',
+    back: '← Back to Games',
+    closedTitle: 'This Test Is Closed',
+    closedMsg: "Your teacher has closed this test. You can't submit answers anymore.",
+    draftTitle: 'Test Not Started Yet',
+    draftMsg: "Your teacher hasn't started this test yet. Please wait and refresh the page.",
+    vocabTest: 'Vocabulary Test',
+    blockTag: 'Block · ',
+    meta: (n, t, dir) => `${n} words · ${t}s per word · ${dir}`,
+    dirHeEn: 'Hebrew → English', dirEnHe: 'English → Hebrew', dirMixed: 'Mixed directions',
+    pickerHint: 'Tap your name to begin:',
+    nameLabel: 'Your name', namePh: 'Type your name…',
+    codeLabel: 'Access code', codeHint: 'Ask your teacher for the 4-digit code.',
+    start: 'Start Test →',
+    errTapName: 'Please tap your name first.',
+    errTypeName: 'Please type your name first.',
+    errNoCode: 'Please type the access code your teacher gave you.',
+    errWrongCode: 'Wrong code. Ask your teacher and try again.',
+    qOf: (i, n) => `Question ${i} of ${n}`,
+    whatEn: 'What is the English meaning?', whatHe: 'What is the Hebrew/Aramaic?',
+    hintShoresh: 'שורש — root', hintMilah: 'מילה — word',
+    phEn: 'Type the English meaning…', phHe: 'Type in Hebrew…',
+    submit: 'Submit →',
+    correct: '✓ Correct!',
+    timeUp: '⏱ Time’s up! The answer was:',
+    notQuite: '✗ Not quite. The answer is:',
+    next: 'Next →', seeResults: 'See Results →',
+    complete: 'Test Complete! 🎉',
+    answeredMsg: n => `You answered ${n} question${n !== 1 ? 's' : ''}. Your teacher will give you your grade.`,
+    youWrote: 'You wrote:', noAnswer: 'No answer / time expired',
+    correctSr: 'Correct:', wrongSr: 'Wrong:',
+    saved: '✓ Saved'
+  },
+  he: {
+    langBtn: 'English',
+    noTestTitle: 'אין מבחן פעיל',
+    noTestMsg: 'המורה צריך להפעיל מבחן ולשתף אתכם בקישור.',
+    back: '→ חזרה למשחקים',
+    closedTitle: 'המבחן סגור',
+    closedMsg: 'המורה סגר את המבחן. אי אפשר להגיש יותר.',
+    draftTitle: 'המבחן עוד לא התחיל',
+    draftMsg: 'המורה עוד לא הפעיל את המבחן. חכו ורעננו את הדף.',
+    vocabTest: 'מבחן אוצר מילים',
+    blockTag: 'בלוק · ',
+    meta: (n, t, dir) => `${n} מילים · ${t} שנ׳ למילה · ${dir}`,
+    dirHeEn: 'עברית → אנגלית', dirEnHe: 'אנגלית → עברית', dirMixed: 'כיוונים מעורבים',
+    pickerHint: 'לחצו על השם שלכם כדי להתחיל:',
+    nameLabel: 'השם שלך', namePh: 'הקלידו את שמכם…',
+    codeLabel: 'קוד גישה', codeHint: 'בקשו מהמורה את הקוד בן 4 הספרות.',
+    start: 'התחלת המבחן',
+    errTapName: 'קודם לחצו על השם שלכם.',
+    errTypeName: 'קודם הקלידו את שמכם.',
+    errNoCode: 'הקלידו את קוד הגישה שקיבלתם מהמורה.',
+    errWrongCode: 'קוד שגוי. בדקו עם המורה ונסו שוב.',
+    qOf: (i, n) => `שאלה ${i} מתוך ${n}`,
+    whatEn: 'מה הפירוש באנגלית?', whatHe: 'מה המילה בעברית/ארמית?',
+    hintShoresh: 'שורש', hintMilah: 'מילה',
+    phEn: 'הקלידו את הפירוש באנגלית…', phHe: 'הקלידו בעברית…',
+    submit: 'שליחה',
+    correct: '✓ נכון!',
+    timeUp: '⏱ נגמר הזמן! התשובה היא:',
+    notQuite: '✗ לא בדיוק. התשובה היא:',
+    next: 'לשאלה הבאה', seeResults: 'לסיכום',
+    complete: 'סיימתם את המבחן! 🎉',
+    answeredMsg: n => `עניתם על ${n} שאלות. המורה ייתן לכם את הציון.`,
+    youWrote: 'כתבתם:', noAnswer: 'ללא תשובה / נגמר הזמן',
+    correctSr: 'נכון:', wrongSr: 'שגוי:',
+    saved: '✓ נשמר'
+  }
+};
+let LANG = localStorage.getItem('gg_test_lang') === 'he' ? 'he' : 'en';
+function t(k) { return STR[LANG][k]; }
 
 // ── State ─────────────────────────────────────────────────
 let testData = null;
@@ -362,6 +470,8 @@ let studentName = '';
 let studentId = null;         // linked to the students roster table
 let currentDir = 'he_to_en';  // direction of the current question (supports 'mixed' tests)
 let requireCode = false;
+let closedState = null;       // 'closed' | 'draft' — which message screenClosed shows
+let saveState = null;         // 'ok' | error text — for re-rendering the saved badge on lang switch
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Access code: derived deterministically from the test UUID (same formula as the dashboard)
@@ -370,6 +480,70 @@ function accessCode(id) {
   const n = parseInt(hex, 16);
   if (isNaN(n)) return '';
   return String(n % 10000).padStart(4, '0');
+}
+
+// ── Language switch ───────────────────────────────────────
+function dirLabel() {
+  return testData.direction === 'he_to_en' ? t('dirHeEn')
+       : testData.direction === 'en_to_he' ? t('dirEnHe')
+       : t('dirMixed');
+}
+
+function setTxt(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+function applyLang() {
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'he' ? 'rtl' : 'ltr';
+  setTxt('langBtn', t('langBtn'));
+
+  setTxt('noTestTitle', t('noTestTitle'));
+  setTxt('noTestMsg', t('noTestMsg'));
+  setTxt('noTestBack', t('back'));
+  setTxt('closedBack', t('back'));
+  setTxt('resultsBack', t('back'));
+  if (closedState) {
+    setTxt('closedTitle', closedState === 'draft' ? t('draftTitle') : t('closedTitle'));
+    setTxt('closedMsg', closedState === 'draft' ? t('draftMsg') : t('closedMsg'));
+  }
+
+  setTxt('pickerHint', t('pickerHint'));
+  setTxt('nameLabel', t('nameLabel'));
+  document.getElementById('nameInput').placeholder = t('namePh');
+  setTxt('codeLabel', t('codeLabel'));
+  setTxt('codeHint', t('codeHint'));
+  setTxt('startBtn', t('start'));
+
+  if (testData && testData.words && testData.words.length) {
+    setTxt('splashTitle', testData.blockLabel ? testData.blockLabel : t('vocabTest'));
+    setTxt('splashBlock', testData.blockLabel ? t('blockTag') + testData.blockLabel : t('vocabTest'));
+    setTxt('splashMeta', t('meta')(words.length || testData.words.length, testData.timerPerWord, dirLabel()));
+  }
+
+  // Live question screen: refresh the labels without restarting the timer
+  if (document.getElementById('screenQ').classList.contains('active') && words.length) {
+    const w = words[idx];
+    const isHeEn = currentDir === 'he_to_en';
+    setTxt('progressLabel', t('qOf')(idx + 1, words.length));
+    setTxt('qDirection', isHeEn ? t('whatEn') : t('whatHe'));
+    setTxt('qTypeHint', w.type === 'shoresh' ? t('hintShoresh') : t('hintMilah'));
+    document.getElementById('answerInput').placeholder = isHeEn ? t('phEn') : t('phHe');
+    setTxt('submitBtn', t('submit'));
+    if (answered) setTxt('nextBtn', idx < words.length - 1 ? t('next') : t('seeResults'));
+  }
+
+  // Results screen: re-render texts from state
+  if (document.getElementById('screenResults').classList.contains('active') && results.length) {
+    setTxt('resultTitle', t('complete'));
+    setTxt('resultSub', t('answeredMsg')(results.length));
+    renderResultRows();
+    if (saveState === 'ok') setTxt('savedBadge', t('saved'));
+  }
+}
+
+function toggleLang() {
+  LANG = LANG === 'he' ? 'en' : 'he';
+  localStorage.setItem('gg_test_lang', LANG);
+  applyLang();
 }
 
 // ── GG helpers ────────────────────────────────────────────
@@ -405,11 +579,27 @@ function shakeEl(el) {
   el.classList.remove('gg-shake'); void el.offsetWidth; el.classList.add('gg-shake');
 }
 
-// ── Hebrew virtual keyboard ───────────────────────────────
+// ── Floating Hebrew virtual keyboard ──────────────────────
+function setHebFab(visible) {
+  const fab = document.getElementById('hebFab');
+  fab.classList.toggle('show', !!visible);
+  if (!visible) closeHebKb();
+}
+
 function toggleHebKb() {
   const kb = document.getElementById('hebKb');
   kb.classList.toggle('open');
-  document.querySelector('.heb-kb-toggle').setAttribute('aria-expanded', kb.classList.contains('open'));
+  document.getElementById('hebFab').setAttribute('aria-expanded', kb.classList.contains('open'));
+}
+
+function openHebKb() {
+  document.getElementById('hebKb').classList.add('open');
+  document.getElementById('hebFab').setAttribute('aria-expanded', 'true');
+}
+
+function closeHebKb() {
+  document.getElementById('hebKb').classList.remove('open');
+  document.getElementById('hebFab').setAttribute('aria-expanded', 'false');
 }
 
 function hebType(char) {
@@ -444,13 +634,8 @@ async function loadTestFromDB(testId) {
     const { data: test, error: testErr } = await sb.from('tests').select('*').eq('id', testId).single();
     if (testErr || !test) throw testErr || new Error('Test not found');
 
-    if (test.status === 'closed') { show('screenClosed'); return; }
-    if (test.status === 'draft') {
-      document.getElementById('closedTitle').textContent = 'Test Not Started Yet';
-      document.getElementById('closedMsg').textContent = 'Your teacher hasn’t started this test yet. Please wait and refresh the page.';
-      show('screenClosed');
-      return;
-    }
+    if (test.status === 'closed') { closedState = 'closed'; applyLang(); show('screenClosed'); return; }
+    if (test.status === 'draft') { closedState = 'draft'; applyLang(); show('screenClosed'); return; }
 
     const wordIds = Array.isArray(test.word_ids) ? test.word_ids : [];
     const { data: wordRows, error: wordErr } = await sb.from('words').select('*').in('id', wordIds);
@@ -490,14 +675,8 @@ async function initTestUI() {
   }
   words = shuffle([...testData.words]);
   show('screenName');
-  const blockTag = testData.blockLabel ? 'Block · ' + testData.blockLabel : 'Vocabulary Test';
-  document.getElementById('splashBlock').textContent = blockTag;
   document.getElementById('topBlockTag').textContent = testData.blockLabel || '';
-  const dir = testData.direction === 'he_to_en' ? 'Hebrew → English'
-            : testData.direction === 'en_to_he' ? 'English → Hebrew'
-            : 'Mixed directions';
-  document.getElementById('splashMeta').textContent =
-    `${words.length} words · ${testData.timerPerWord}s per word · ${dir}`;
+  applyLang(); // fills splash texts from testData
   document.getElementById('codeField').style.display = requireCode ? '' : 'none';
   await buildStudentPicker();
 }
@@ -539,6 +718,7 @@ function selectStudent(btn) {
 }
 
 // ── Init ──────────────────────────────────────────────────
+applyLang();
 const testId = new URLSearchParams(location.search).get('test');
 if (testId) {
   loadTestFromDB(testId);
@@ -570,14 +750,14 @@ function startTest() {
   if (rosterVisible) {
     // Roster mode: studentName/studentId are set by selectStudent()
     if (!studentName) {
-      showFormError('Please tap your name first.', null);
-      shakeEl(document.querySelector('.splash-card') || document.querySelector('#screenName .card'));
+      showFormError(t('errTapName'), null);
+      shakeEl(document.querySelector('#screenName .card'));
       return;
     }
   } else {
     const nameEl = document.getElementById('nameInput');
     const name = nameEl.value.trim();
-    if (!name) { showFormError('Please type your name first.', nameEl); return; }
+    if (!name) { showFormError(t('errTypeName'), nameEl); return; }
     studentName = name;
     studentId = null;
   }
@@ -585,8 +765,8 @@ function startTest() {
   if (requireCode) {
     const codeEl = document.getElementById('codeInput');
     const given = codeEl.value.trim();
-    if (!given) { showFormError('Please type the access code your teacher gave you.', codeEl); return; }
-    if (given !== accessCode(testData.id)) { showFormError('Wrong code. Ask your teacher and try again.', codeEl); return; }
+    if (!given) { showFormError(t('errNoCode'), codeEl); return; }
+    if (given !== accessCode(testData.id)) { showFormError(t('errWrongCode'), codeEl); return; }
   }
 
   idx = 0; results = [];
@@ -627,12 +807,12 @@ function showQuestion() {
 
   document.getElementById('progressFill').style.width = pct + '%';
   document.getElementById('progressBar').setAttribute('aria-valuenow', pct);
-  document.getElementById('progressLabel').textContent = `Question ${idx + 1} of ${total}`;
+  document.getElementById('progressLabel').textContent = t('qOf')(idx + 1, total);
 
   // Determine direction for this question ('mixed' tests flip randomly per question)
   const isHeEn = testData.direction === 'mixed' ? Math.random() < 0.5 : testData.direction === 'he_to_en';
   currentDir = isHeEn ? 'he_to_en' : 'en_to_he';
-  document.getElementById('qDirection').textContent = isHeEn ? 'What is the English meaning?' : 'What is the Hebrew/Aramaic?';
+  document.getElementById('qDirection').textContent = isHeEn ? t('whatEn') : t('whatHe');
 
   const promptEl = document.getElementById('qPrompt');
   if (isHeEn) {
@@ -641,19 +821,19 @@ function showQuestion() {
     promptEl.innerHTML = `<span class="en-text">${esc(w.english)}</span>`;
   }
 
-  document.getElementById('qTypeHint').textContent = w.type === 'shoresh' ? 'שורש — root' : 'מילה — word';
+  document.getElementById('qTypeHint').textContent = w.type === 'shoresh' ? t('hintShoresh') : t('hintMilah');
 
   const ansInput = document.getElementById('answerInput');
   ansInput.value = '';
   ansInput.className = 'answer-input' + (!isHeEn ? ' he-answer' : '');
-  ansInput.placeholder = isHeEn ? 'Type the English meaning…' : 'Type in Hebrew…';
+  ansInput.placeholder = isHeEn ? t('phEn') : t('phHe');
   ansInput.setAttribute('lang', isHeEn ? 'en' : 'he');
   ansInput.disabled = false;
 
-  // Hebrew virtual keyboard only when the answer should be in Hebrew
-  document.getElementById('hebKbWrap').style.display = isHeEn ? 'none' : '';
-  document.getElementById('hebKb').classList.remove('open');
-  document.querySelector('.heb-kb-toggle').setAttribute('aria-expanded', 'false');
+  // Floating keyboard: icon is always available during questions;
+  // auto-opens when the answer should be typed in Hebrew.
+  setHebFab(true);
+  if (!isHeEn) openHebKb(); else closeHebKb();
 
   const fb = document.getElementById('feedback');
   fb.style.display = 'none';
@@ -661,6 +841,7 @@ function showQuestion() {
   fb.innerHTML = '';
   document.getElementById('nextBtn').style.display = 'none';
   document.getElementById('submitBtn').style.display = '';
+  document.getElementById('submitBtn').textContent = t('submit');
   document.getElementById('submitBtn').disabled = false;
 
   startTimer(testData.timerPerWord);
@@ -683,12 +864,12 @@ function finishQuestion(given, isCorrect, timedOut) {
   const fb = document.getElementById('feedback');
   fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
   if (isCorrect) {
-    fb.textContent = '✓ Correct!';
+    fb.textContent = t('correct');
     const r = ansInput.getBoundingClientRect();
     ggXpPop('+100', r.left + r.width / 2, r.top);
   } else {
     const ansCls = isHeEn ? 'correct-answer ltr' : 'correct-answer';
-    fb.innerHTML = (timedOut ? '⏱ Time’s up! The answer was:' : '✗ Not quite. The answer is:') +
+    fb.innerHTML = esc(timedOut ? t('timeUp') : t('notQuite')) +
       ` <span class="${ansCls}" ${isHeEn ? '' : 'lang="he"'}>${esc(correct)}</span>`;
     shakeEl(document.querySelector('.q-card'));
   }
@@ -696,7 +877,7 @@ function finishQuestion(given, isCorrect, timedOut) {
   document.getElementById('submitBtn').style.display = 'none';
   const nextBtn = document.getElementById('nextBtn');
   nextBtn.style.display = 'inline-flex';
-  nextBtn.textContent = idx < words.length - 1 ? 'Next →' : 'See Results →';
+  nextBtn.textContent = idx < words.length - 1 ? t('next') : t('seeResults');
   nextBtn.focus();
 }
 
@@ -746,31 +927,35 @@ function clearTimer() {
 // ── Results ───────────────────────────────────────────────
 // The final grade is NOT shown to the student — the teacher reviews,
 // can override per-answer grades, and hands out the score card.
-function showResults() {
-  clearTimer();
-  const correct = results.filter(r => r.isCorrect).length;
-  const total = results.length;
-
-  document.getElementById('resultStudentName').textContent = studentName;
-  document.getElementById('resultTitle').textContent = 'Test Complete! 🎉';
-  document.getElementById('resultSub').textContent =
-    `You answered ${total} question${total !== 1 ? 's' : ''}. Your teacher will give you your grade.`;
-
+function renderResultRows() {
   document.getElementById('resultRows').innerHTML = results.map(r => {
     const isHeQ = r.dir === 'en_to_he'; // question shown in English, answer in Hebrew
     return `
     <div class="result-row">
       <span class="result-icon" aria-hidden="true">${r.isCorrect ? '✅' : '❌'}</span>
-      <span class="visually-hidden">${r.isCorrect ? 'Correct:' : 'Wrong:'}</span>
+      <span class="visually-hidden">${r.isCorrect ? t('correctSr') : t('wrongSr')}</span>
       <div class="rr-body">
         <div>
           <div class="he" lang="he" style="${isHeQ ? 'font-size:15px;color:#6B5CA5' : ''}">${esc(r.word.hebrew)}</div>
-          ${!r.isCorrect && r.given ? `<div class="given">You wrote: "${esc(r.given)}"</div>` : ''}
-          ${!r.isCorrect && !r.given ? `<div class="given">No answer / time expired</div>` : ''}
+          ${!r.isCorrect && r.given ? `<div class="given">${esc(t('youWrote'))} "${esc(r.given)}"</div>` : ''}
+          ${!r.isCorrect && !r.given ? `<div class="given">${esc(t('noAnswer'))}</div>` : ''}
         </div>
         <div class="en" style="${isHeQ ? 'font-size:15px;font-weight:700;color:var(--gg-ink)' : ''}">${esc(r.word.english)}</div>
       </div>
     </div>`;}).join('');
+}
+
+function showResults() {
+  clearTimer();
+  setHebFab(false);
+  const correct = results.filter(r => r.isCorrect).length;
+  const total = results.length;
+
+  document.getElementById('resultStudentName').textContent = studentName;
+  document.getElementById('resultTitle').textContent = t('complete');
+  document.getElementById('resultSub').textContent = t('answeredMsg')(total);
+
+  renderResultRows();
 
   show('screenResults');
   ggConfetti(90);
@@ -798,9 +983,11 @@ async function saveResultToDB(correct, total) {
       submitted_at: new Date().toISOString()
     });
     if (error) throw error;
-    badge.textContent = '✓ Saved';
+    saveState = 'ok';
+    badge.textContent = t('saved');
     badge.className = 'saved-badge visible';
   } catch(e) {
+    saveState = 'err';
     badge.textContent = '⚠ ' + (e.message || e.code || JSON.stringify(e));
     badge.className = 'saved-badge visible error';
   }
@@ -819,6 +1006,7 @@ document.getElementById('answerInput').addEventListener('keydown', e => { if (e.
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  if (id !== 'screenQ') setHebFab(false);
 }
 
 function esc(s) {

@@ -74,7 +74,7 @@
     code.fmt { background: #EEF1F6; padding: 2px 7px; border-radius: 6px; font-size: 12px; direction: ltr; display: inline-block; }
 
     .block-list { display: flex; flex-direction: column; }
-    .block-item { width: 100%; text-align: right; background: none; border: none; border-bottom: 1px solid var(--border); font-family: var(--font-ui); padding: 13px 16px; cursor: pointer; transition: background .15s; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--text); }
+    .block-item { width: 100%; text-align: start; background: none; border: none; border-bottom: 1px solid var(--border); font-family: var(--font-ui); padding: 13px 16px; cursor: pointer; transition: background .15s; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--text); }
     .block-item:last-child { border-bottom: none; }
     .block-item:hover { background: #FAFBFF; }
     .block-item.active { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
@@ -95,7 +95,7 @@
     .tab:hover:not([aria-selected="true"]) { color: var(--text); }
 
     .word-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    .word-table th { text-align: right; font-size: 11.5px; font-weight: 700; color: var(--muted); padding: 10px 12px; background: #FAFBFF; border-bottom: 1px solid var(--border); }
+    .word-table th { text-align: start; font-size: 11.5px; font-weight: 700; color: var(--muted); padding: 10px 12px; background: #FAFBFF; border-bottom: 1px solid var(--border); }
     .word-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
     .word-table tr:last-child td { border-bottom: none; }
     .word-table tbody tr:hover td { background: #FAFBFF; }
@@ -120,7 +120,7 @@
     .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; background: #fff; }
 
     .preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .preview-table th { text-align: right; padding: 8px 10px; background: #FAFBFF; border-bottom: 1px solid var(--border); font-size: 11.5px; font-weight: 700; color: var(--muted); }
+    .preview-table th { text-align: start; padding: 8px 10px; background: #FAFBFF; border-bottom: 1px solid var(--border); font-size: 11.5px; font-weight: 700; color: var(--muted); }
     .preview-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
     .preview-table tr:last-child td { border-bottom: none; }
     .preview-table input, .preview-table select { padding: 6px 8px; font-size: 13px; min-height: 38px; }
@@ -221,16 +221,17 @@
 
 <header class="site-header">
   <div class="header-right">
-    <a class="back-link" href="index.html">→ חזרה למשחקים</a>
+    <a class="back-link" href="index.html" data-en="← Back to Games">→ חזרה למשחקים</a>
     <div class="site-title">
-      <h1>📋 לוח המורה</h1>
-      <p>ניהול בלוקים של אוצר מילים, מבחנים ותוצאות</p>
+      <h1 data-en="📋 Teacher Dashboard">📋 לוח המורה</h1>
+      <p data-en="Manage vocabulary blocks, tests and results">ניהול בלוקים של אוצר מילים, מבחנים ותוצאות</p>
     </div>
   </div>
   <div class="header-actions">
     <div id="dbBadge" class="db-badge loading" role="status">מתחבר…</div>
-    <button class="btn btn-ghost btn-sm" id="classViewBtn" onclick="openClassView()" style="display:none">📊 תצוגת כיתה</button>
-    <button class="btn btn-ghost btn-sm" onclick="openMdl('helpModal')" aria-haspopup="dialog">❓ מדריך למורה</button>
+    <button class="btn btn-ghost btn-sm" id="classViewBtn" onclick="openClassView()" style="display:none" data-en="📊 Class View">📊 תצוגת כיתה</button>
+    <button class="btn btn-ghost btn-sm" onclick="openMdl('helpModal')" aria-haspopup="dialog" data-en="❓ Teacher Guide">❓ מדריך למורה</button>
+    <button class="btn btn-ghost btn-sm" id="langBtn" onclick="toggleLang()">English</button>
   </div>
 </header>
 
@@ -238,17 +239,17 @@
   <aside aria-label="רשימת בלוקים">
     <div class="card">
       <div class="card-header">
-        <h2>בלוקים של אוצר מילים</h2>
-        <button class="btn btn-primary btn-sm" onclick="toggleAddBlockForm()" aria-expanded="false" id="addBlockToggle">+ בלוק חדש</button>
+        <h2 data-en="Vocabulary Blocks">בלוקים של אוצר מילים</h2>
+        <button class="btn btn-primary btn-sm" onclick="toggleAddBlockForm()" aria-expanded="false" id="addBlockToggle" data-en="+ New Block">+ בלוק חדש</button>
       </div>
       <div class="add-block-form" id="addBlockForm">
-        <div class="form-group"><label for="nbNum">מספר בלוק</label><input type="number" id="nbNum" min="1" /></div>
-        <div class="form-group"><label for="nbLabel">כותרת</label><input type="text" id="nbLabel" placeholder="לדוגמה: יונים קשורות וכלי" /></div>
-        <div class="form-group"><label for="nbWeekStart">תחילת שבוע</label><input type="date" id="nbWeekStart" /></div>
-        <div class="form-group"><label for="nbWeekEnd">סוף שבוע</label><input type="date" id="nbWeekEnd" /></div>
+        <div class="form-group"><label for="nbNum" data-en="Block number">מספר בלוק</label><input type="number" id="nbNum" min="1" /></div>
+        <div class="form-group"><label for="nbLabel" data-en="Title">כותרת</label><input type="text" id="nbLabel" placeholder="לדוגמה: יונים קשורות וכלי" data-en-ph="e.g. Tied Doves &amp; Vessels" /></div>
+        <div class="form-group"><label for="nbWeekStart" data-en="Week start">תחילת שבוע</label><input type="date" id="nbWeekStart" /></div>
+        <div class="form-group"><label for="nbWeekEnd" data-en="Week end">סוף שבוע</label><input type="date" id="nbWeekEnd" /></div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-ghost btn-sm" onclick="toggleAddBlockForm()">ביטול</button>
-          <button class="btn btn-primary btn-sm" id="addBlockBtn" onclick="addBlock()">שמירת בלוק</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddBlockForm()" data-en="Cancel">ביטול</button>
+          <button class="btn btn-primary btn-sm" id="addBlockBtn" onclick="addBlock()" data-en="Save Block">שמירת בלוק</button>
         </div>
       </div>
       <div class="block-list" id="blockList" role="list"></div>
@@ -257,18 +258,18 @@
     <!-- Students roster card -->
     <div class="card" style="margin-top:20px">
       <div class="card-header">
-        <h2>👥 תלמידים <span class="student-count-badge" id="studentCountBadge"></span></h2>
-        <button class="btn btn-primary btn-sm" onclick="toggleAddStudentForm()" aria-expanded="false" id="addStudentToggle">+ תלמיד/ה</button>
+        <h2><span data-en="👥 Students">👥 תלמידים</span> <span class="student-count-badge" id="studentCountBadge"></span></h2>
+        <button class="btn btn-primary btn-sm" onclick="toggleAddStudentForm()" aria-expanded="false" id="addStudentToggle" data-en="+ Student">+ תלמיד/ה</button>
       </div>
       <div class="student-add-form" id="addStudentForm">
-        <div class="form-group"><label for="nsName">שם מלא *</label><input type="text" id="nsName" placeholder="לדוגמה: משה כהן" /></div>
-        <div class="form-group"><label for="nsNick">כינוי (לא חובה)</label><input type="text" id="nsNick" placeholder="לדוגמה: מוישי" /></div>
+        <div class="form-group"><label for="nsName" data-en="Full name *">שם מלא *</label><input type="text" id="nsName" placeholder="לדוגמה: משה כהן" data-en-ph="e.g. Moshe Cohen" /></div>
+        <div class="form-group"><label for="nsNick" data-en="Nickname (optional)">כינוי (לא חובה)</label><input type="text" id="nsNick" placeholder="לדוגמה: מוישי" data-en-ph="e.g. Moishy" /></div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-ghost btn-sm" onclick="toggleAddStudentForm()">ביטול</button>
-          <button class="btn btn-green btn-sm" id="addStudentBtn" onclick="addStudent()">שמירה</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleAddStudentForm()" data-en="Cancel">ביטול</button>
+          <button class="btn btn-green btn-sm" id="addStudentBtn" onclick="addStudent()" data-en="Save">שמירה</button>
         </div>
       </div>
-      <div id="studentList"><div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">טוען…</div></div>
+      <div id="studentList"><div style="padding:20px;text-align:center;color:var(--muted);font-size:13px" data-en="Loading…">טוען…</div></div>
     </div>
   </aside>
 
@@ -276,7 +277,7 @@
     <div class="card">
       <div class="card-body empty-state">
         <div class="ei" aria-hidden="true">📚</div>
-        <p>בחרו בלוק מהרשימה כדי לנהל<br>את המילים והמבחנים שלו.</p>
+        <p data-en="Select a block from the list to manage<br>its words and tests.">בחרו בלוק מהרשימה כדי לנהל<br>את המילים והמבחנים שלו.</p>
       </div>
     </div>
   </main>
@@ -285,16 +286,16 @@
 <!-- MODAL: edit block -->
 <div class="modal-backdrop" id="editBlockModal" style="display:none" onclick="closeMdl('editBlockModal',event)">
   <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="editBlockTitle">
-    <div class="modal-header"><h2 id="editBlockTitle">עריכת בלוק</h2><button class="modal-close" onclick="closeMdl('editBlockModal')" aria-label="סגירה">×</button></div>
+    <div class="modal-header"><h2 id="editBlockTitle" data-en="Edit Block">עריכת בלוק</h2><button class="modal-close" onclick="closeMdl('editBlockModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body">
-      <div class="form-group"><label for="ebNum">מספר בלוק</label><input type="number" id="ebNum" min="1" /></div>
-      <div class="form-group"><label for="ebLabel">כותרת</label><input type="text" id="ebLabel" /></div>
-      <div class="form-group"><label for="ebWeekStart">תחילת שבוע</label><input type="date" id="ebWeekStart" /></div>
-      <div class="form-group"><label for="ebWeekEnd">סוף שבוע</label><input type="date" id="ebWeekEnd" /></div>
+      <div class="form-group"><label for="ebNum" data-en="Block number">מספר בלוק</label><input type="number" id="ebNum" min="1" /></div>
+      <div class="form-group"><label for="ebLabel" data-en="Title">כותרת</label><input type="text" id="ebLabel" /></div>
+      <div class="form-group"><label for="ebWeekStart" data-en="Week start">תחילת שבוע</label><input type="date" id="ebWeekStart" /></div>
+      <div class="form-group"><label for="ebWeekEnd" data-en="Week end">סוף שבוע</label><input type="date" id="ebWeekEnd" /></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeMdl('editBlockModal')">ביטול</button>
-      <button class="btn btn-primary" onclick="saveEditBlock()">שמירת שינויים</button>
+      <button class="btn btn-ghost" onclick="closeMdl('editBlockModal')" data-en="Cancel">ביטול</button>
+      <button class="btn btn-primary" onclick="saveEditBlock()" data-en="Save Changes">שמירת שינויים</button>
     </div>
   </div>
 </div>
@@ -302,18 +303,18 @@
 <!-- MODAL: delete block -->
 <div class="modal-backdrop" id="delBlockModal" style="display:none" onclick="closeMdl('delBlockModal',event)">
   <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="delBlockTitle">
-    <div class="modal-header"><h2 id="delBlockTitle">מחיקת בלוק</h2><button class="modal-close" onclick="closeMdl('delBlockModal')" aria-label="סגירה">×</button></div>
+    <div class="modal-header"><h2 id="delBlockTitle" data-en="Delete Block">מחיקת בלוק</h2><button class="modal-close" onclick="closeMdl('delBlockModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body">
-      <p style="font-size:15px">האם למחוק את הבלוק "<strong id="delBlockLabel"></strong>"?</p>
+      <p style="font-size:15px"><span data-en="Delete the block">האם למחוק את הבלוק</span> "<strong id="delBlockLabel"></strong>"?</p>
       <div class="danger-note" id="delBlockDetails"></div>
       <label class="confirm-check">
         <input type="checkbox" id="delBlockConfirmChk" onchange="document.getElementById('delBlockBtn').disabled = !this.checked" />
-        אני מבין/ה שהמחיקה סופית ולא ניתנת לשחזור
+        <span data-en="I understand this deletion is permanent and cannot be undone">אני מבין/ה שהמחיקה סופית ולא ניתנת לשחזור</span>
       </label>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeMdl('delBlockModal')">ביטול</button>
-      <button class="btn btn-red" id="delBlockBtn" onclick="confirmDelBlock()" disabled>מחיקה סופית</button>
+      <button class="btn btn-ghost" onclick="closeMdl('delBlockModal')" data-en="Cancel">ביטול</button>
+      <button class="btn btn-red" id="delBlockBtn" onclick="confirmDelBlock()" disabled data-en="Delete Permanently">מחיקה סופית</button>
     </div>
   </div>
 </div>
@@ -321,20 +322,20 @@
 <!-- MODAL: bulk preview -->
 <div class="modal-backdrop" id="bulkModal" style="display:none" onclick="closeMdl('bulkModal',event)">
   <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="bulkTitle">
-    <div class="modal-header"><h2 id="bulkTitle">בדיקה לפני הוספה</h2><button class="modal-close" onclick="closeMdl('bulkModal')" aria-label="סגירה">×</button></div>
+    <div class="modal-header"><h2 id="bulkTitle" data-en="Review Before Adding">בדיקה לפני הוספה</h2><button class="modal-close" onclick="closeMdl('bulkModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body">
       <p class="hint-en" style="margin-bottom:16px">Check the words below. You can edit any row before confirming, or click ✕ to remove a row.</p>
       <div style="overflow-x:auto">
         <table class="preview-table">
-          <thead><tr><th style="width:32px">#</th><th>עברית / ארמית</th><th style="width:110px">סוג</th><th>אנגלית</th><th style="width:44px"><span class="visually-hidden">הסרה</span></th></tr></thead>
+          <thead><tr><th style="width:32px">#</th><th data-en="Hebrew / Aramaic">עברית / ארמית</th><th style="width:110px" data-en="Type">סוג</th><th data-en="English">אנגלית</th><th style="width:44px"><span class="visually-hidden">הסרה</span></th></tr></thead>
           <tbody id="previewTbody"></tbody>
         </table>
       </div>
     </div>
     <div class="modal-footer">
       <span id="previewCount" style="font-size:13px;color:var(--muted);margin-inline-end:auto"></span>
-      <button class="btn btn-ghost" onclick="closeMdl('bulkModal')">ביטול</button>
-      <button class="btn btn-green" id="confirmBulkBtn" onclick="confirmBulk()">✓ הוספת כל המילים</button>
+      <button class="btn btn-ghost" onclick="closeMdl('bulkModal')" data-en="Cancel">ביטול</button>
+      <button class="btn btn-green" id="confirmBulkBtn" onclick="confirmBulk()" data-en="✓ Add All Words">✓ הוספת כל המילים</button>
     </div>
   </div>
 </div>
@@ -342,52 +343,52 @@
 <!-- MODAL: generate test -->
 <div class="modal-backdrop" id="testModal" style="display:none" onclick="closeMdl('testModal',event)">
   <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="testModalTitle">
-    <div class="modal-header"><h2 id="testModalTitle">יצירת מבחן</h2><button class="modal-close" onclick="closeMdl('testModal')" aria-label="סגירה">×</button></div>
+    <div class="modal-header"><h2 id="testModalTitle" data-en="Create a Test">יצירת מבחן</h2><button class="modal-close" onclick="closeMdl('testModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body">
-      <div class="section-lbl">1. אילו מילים ייכללו במבחן?</div>
+      <div class="section-lbl" data-en="1. Which words are included?">1. אילו מילים ייכללו במבחן?</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <button class="btn btn-ghost btn-sm" onclick="selAllWords(true)">בחירת הכל</button>
-        <button class="btn btn-ghost btn-sm" onclick="selAllWords(false)">ניקוי הכל</button>
+        <button class="btn btn-ghost btn-sm" onclick="selAllWords(true)" data-en="Select All">בחירת הכל</button>
+        <button class="btn btn-ghost btn-sm" onclick="selAllWords(false)" data-en="Clear All">ניקוי הכל</button>
         <span id="wordSelCount" style="font-size:13px;color:var(--muted);margin-inline-start:auto" aria-live="polite"></span>
       </div>
       <div class="word-selection" id="testWordList" role="group" aria-label="בחירת מילים למבחן"></div>
       <hr />
-      <div class="section-lbl"><label for="testTimer" style="font-size:13px;font-weight:700;color:var(--text)">2. זמן לכל מילה</label></div>
+      <div class="section-lbl"><label for="testTimer" style="font-size:13px;font-weight:700;color:var(--text)" data-en="2. Time per word">2. זמן לכל מילה</label></div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
         <input type="number" id="testTimer" value="30" min="5" max="120" style="width:90px" />
-        <span style="font-size:14px;color:var(--muted)">שניות לכל מילה</span>
+        <span style="font-size:14px;color:var(--muted)" data-en="seconds per word">שניות לכל מילה</span>
       </div>
       <hr />
-      <div class="section-lbl" id="dirGroupLbl">3. כיוון המבחן</div>
+      <div class="section-lbl" id="dirGroupLbl" data-en="3. Test direction">3. כיוון המבחן</div>
       <div class="dir-options" role="radiogroup" aria-labelledby="dirGroupLbl">
         <button type="button" class="dir-card" role="radio" aria-checked="true" id="dirHE" onclick="setDir('he_to_en')">
           <div class="icon" aria-hidden="true">🔤</div>
-          <div class="lbl">עברית → אנגלית</div>
+          <div class="lbl" data-en="Hebrew → English">עברית → אנגלית</div>
           <div class="desc">Student sees the Hebrew/Aramaic word and types the English meaning</div>
         </button>
         <button type="button" class="dir-card" role="radio" aria-checked="false" id="dirEN" onclick="setDir('en_to_he')">
           <div class="icon" aria-hidden="true">⌨️</div>
-          <div class="lbl">אנגלית → עברית</div>
+          <div class="lbl" data-en="English → Hebrew">אנגלית → עברית</div>
           <div class="desc">Student sees the English meaning and types the Hebrew (a virtual Hebrew keyboard is provided)</div>
         </button>
         <button type="button" class="dir-card" role="radio" aria-checked="false" id="dirMIX" onclick="setDir('mixed')">
           <div class="icon" aria-hidden="true">🔀</div>
-          <div class="lbl">מעורב</div>
+          <div class="lbl" data-en="Mixed">מעורב</div>
           <div class="desc">Each question randomly switches direction — the student uses the right keyboard for each</div>
         </button>
       </div>
       <hr />
-      <div class="section-lbl" id="scoreDispLbl">4. איך יוצג הציון בכרטיס הציון?</div>
+      <div class="section-lbl" id="scoreDispLbl" data-en="4. How should the grade appear on the score card?">4. איך יוצג הציון בכרטיס הציון?</div>
       <div class="radio-row" role="radiogroup" aria-labelledby="scoreDispLbl">
-        <label><input type="radio" name="scoreDisplay" value="fraction" checked /> X מתוך Y (למשל 8/10)</label>
-        <label><input type="radio" name="scoreDisplay" value="percent" /> אחוזים (למשל 80%)</label>
-        <label><input type="radio" name="scoreDisplay" value="both" /> שניהם</label>
+        <label><input type="radio" name="scoreDisplay" value="fraction" checked /> <span data-en="X out of Y (e.g. 8/10)">X מתוך Y (למשל 8/10)</span></label>
+        <label><input type="radio" name="scoreDisplay" value="percent" /> <span data-en="Percent (e.g. 80%)">אחוזים (למשל 80%)</span></label>
+        <label><input type="radio" name="scoreDisplay" value="both" /> <span data-en="Both">שניהם</span></label>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeMdl('testModal')">ביטול</button>
-      <button class="btn btn-ghost" onclick="saveTestDraft()">💾 שמירה כטיוטה</button>
-      <button class="btn btn-purple" onclick="startTestNow()">▶ הפעלת המבחן עכשיו</button>
+      <button class="btn btn-ghost" onclick="closeMdl('testModal')" data-en="Cancel">ביטול</button>
+      <button class="btn btn-ghost" onclick="saveTestDraft()" data-en="💾 Save as Draft">💾 שמירה כטיוטה</button>
+      <button class="btn btn-purple" onclick="startTestNow()" data-en="▶ Start Test Now">▶ הפעלת המבחן עכשיו</button>
     </div>
   </div>
 </div>
@@ -395,14 +396,14 @@
 <!-- MODAL: delete word -->
 <div class="modal-backdrop" id="delModal" style="display:none" onclick="closeMdl('delModal',event)">
   <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="delWordTitle">
-    <div class="modal-header"><h2 id="delWordTitle">מחיקת מילה</h2><button class="modal-close" onclick="closeMdl('delModal')" aria-label="סגירה">×</button></div>
+    <div class="modal-header"><h2 id="delWordTitle" data-en="Delete Word">מחיקת מילה</h2><button class="modal-close" onclick="closeMdl('delModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body">
-      <p style="font-size:15px">למחוק את "<strong id="delWordLabel"></strong>"?</p>
-      <p style="font-size:13px;color:var(--muted);margin-top:8px">לא ניתן לבטל את הפעולה.</p>
+      <p style="font-size:15px"><span data-en="Delete">למחוק את</span> "<strong id="delWordLabel"></strong>"?</p>
+      <p style="font-size:13px;color:var(--muted);margin-top:8px" data-en="This cannot be undone.">לא ניתן לבטל את הפעולה.</p>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeMdl('delModal')">ביטול</button>
-      <button class="btn btn-red" onclick="confirmDelWord()">מחיקה</button>
+      <button class="btn btn-ghost" onclick="closeMdl('delModal')" data-en="Cancel">ביטול</button>
+      <button class="btn btn-red" onclick="confirmDelWord()" data-en="Delete">מחיקה</button>
     </div>
   </div>
 </div>
@@ -410,9 +411,9 @@
 <!-- MODAL: result detail -->
 <div class="modal-backdrop" id="resultDetailModal" style="display:none" onclick="closeMdl('resultDetailModal',event)">
   <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="rdTitle">
-    <div class="modal-header"><h2 id="rdTitle">תוצאת תלמיד/ה</h2><button class="modal-close" onclick="closeMdl('resultDetailModal')" aria-label="סגירה">×</button></div>
+    <div class="modal-header"><h2 id="rdTitle" data-en="Student Result">תוצאת תלמיד/ה</h2><button class="modal-close" onclick="closeMdl('resultDetailModal')" aria-label="סגירה">×</button></div>
     <div class="modal-body" id="rdBody"></div>
-    <div class="modal-footer" id="rdFooter"><button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">סגירה</button></div>
+    <div class="modal-footer" id="rdFooter"><button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')" data-en="Close">סגירה</button></div>
   </div>
 </div>
 
@@ -463,6 +464,48 @@
 // ── Supabase ──────────────────────────────────────────────
 let sb = null;
 
+// ── UI language (Hebrew default; shared with class_overview) ─
+let LANG = localStorage.getItem('gm_lang') === 'en' ? 'en' : 'he';
+function T(he, en) { return LANG === 'he' ? he : en; }
+let dbState = 'loading';
+
+function setDbBadge(state) {
+  dbState = state;
+  const el = document.getElementById('dbBadge');
+  if (!el) return;
+  if (state === 'connected') { el.textContent = T('מחובר למסד הנתונים', 'Connected to database'); el.className = 'db-badge connected'; }
+  else if (state === 'local') { el.textContent = T('לא מקוון (עותק מקומי)', 'Offline (local copy)'); el.className = 'db-badge local'; }
+  else { el.textContent = T('מתחבר…', 'Connecting…'); el.className = 'db-badge loading'; }
+}
+
+// Static texts carry the Hebrew inline and the English in data-en;
+// the first applyLang() run stores the Hebrew original in data-he.
+function applyLang() {
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'he' ? 'rtl' : 'ltr';
+  document.title = T('לוח המורה — Gemara Games', 'Teacher Dashboard — Gemara Games');
+  document.querySelectorAll('[data-en]').forEach(el => {
+    if (el.dataset.he === undefined) el.dataset.he = el.innerHTML;
+    el.innerHTML = LANG === 'he' ? el.dataset.he : el.dataset.en;
+  });
+  document.querySelectorAll('[data-en-ph]').forEach(el => {
+    if (el.dataset.hePh === undefined) el.dataset.hePh = el.getAttribute('placeholder') || '';
+    el.setAttribute('placeholder', LANG === 'he' ? el.dataset.hePh : el.dataset.enPh);
+  });
+  const lb = document.getElementById('langBtn');
+  if (lb) lb.textContent = LANG === 'he' ? 'English' : 'עברית';
+  setDbBadge(dbState);
+}
+
+function toggleLang() {
+  LANG = LANG === 'he' ? 'en' : 'he';
+  localStorage.setItem('gm_lang', LANG);
+  applyLang();
+  renderBlockList();
+  renderStudentList();
+  if (activeId) renderDetail(activeId);
+}
+
 // ── State ─────────────────────────────────────────────────
 let blocks = [];
 let activeId = null;
@@ -491,19 +534,18 @@ function accessCode(id) {
 
 // ── Init ──────────────────────────────────────────────────
 async function init() {
+  applyLang();
   try {
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     await loadFromDB();
     await loadStudents();
-    document.getElementById('dbBadge').textContent = 'מחובר למסד הנתונים';
-    document.getElementById('dbBadge').className = 'db-badge connected';
+    setDbBadge('connected');
   } catch(e) {
     console.error('Supabase init failed:', e);
     loadLocal();
     renderStudentList();
-    document.getElementById('dbBadge').textContent = 'לא מקוון (עותק מקומי)';
-    document.getElementById('dbBadge').className = 'db-badge local';
-    toast('אין חיבור: ' + (e.message || e.code || String(e)), 'err');
+    setDbBadge('local');
+    toast(T('אין חיבור: ', 'No connection: ') + (e.message || e.code || String(e)), 'err');
   }
   renderBlockList();
   if (blocks.length) selectBlock(blocks[0].id);
@@ -549,9 +591,15 @@ function saveLocal() {
 
 function block(id) { return blocks.find(b => b.id === id); }
 
-// ── Hebrew plural helpers ─────────────────────────────────
-function wordsCount(n) { return n === 1 ? 'מילה אחת' : `${n} מילים`; }
-function testsCount(n) { return n === 1 ? 'מבחן אחד' : `${n} מבחנים`; }
+// ── Plural helpers (language-aware) ───────────────────────
+function wordsCount(n) {
+  if (LANG === 'he') return n === 1 ? 'מילה אחת' : `${n} מילים`;
+  return n === 1 ? '1 word' : `${n} words`;
+}
+function testsCount(n) {
+  if (LANG === 'he') return n === 1 ? 'מבחן אחד' : `${n} מבחנים`;
+  return n === 1 ? '1 test' : `${n} tests`;
+}
 
 // ── Block CRUD ────────────────────────────────────────────
 function toggleAddBlockForm() {
@@ -571,11 +619,11 @@ async function addBlock() {
   const label = document.getElementById('nbLabel').value.trim();
   const ws = document.getElementById('nbWeekStart').value;
   const we = document.getElementById('nbWeekEnd').value;
-  if (!label) return toast('נא להזין כותרת לבלוק', 'err');
-  if (!num || num < 1) return toast('נא להזין מספר בלוק תקין', 'err');
+  if (!label) return toast(T('נא להזין כותרת לבלוק', 'Please enter a block title'), 'err');
+  if (!num || num < 1) return toast(T('נא להזין מספר בלוק תקין', 'Please enter a valid block number'), 'err');
 
   const btn = document.getElementById('addBlockBtn');
-  btn.disabled = true; btn.textContent = 'שומר…';
+  btn.disabled = true; btn.textContent = T('שומר…', 'Saving…');
 
   const b = { id: uid(), block_number: num, label, week_start: ws, week_end: we, words: [], tests: [] };
   try {
@@ -593,11 +641,11 @@ async function addBlock() {
     toggleAddBlockForm();
     renderBlockList();
     selectBlock(b.id);
-    toast('הבלוק נוסף!');
+    toast(T('הבלוק נוסף!', 'Block added!'));
   } catch(e) {
-    toast('שמירת הבלוק נכשלה: ' + e.message, 'err');
+    toast(T('שמירת הבלוק נכשלה: ', 'Saving the block failed: ') + e.message, 'err');
   } finally {
-    btn.disabled = false; btn.textContent = 'שמירת בלוק';
+    btn.disabled = false; btn.textContent = T('שמירת בלוק', 'Save Block');
   }
 }
 
@@ -614,7 +662,7 @@ function openEditBlock(id) {
 async function saveEditBlock() {
   const num = parseInt(document.getElementById('ebNum').value);
   const label = document.getElementById('ebLabel').value.trim();
-  if (!label || !num || num < 1) return toast('מספר וכותרת הם שדות חובה', 'err');
+  if (!label || !num || num < 1) return toast(T('מספר וכותרת הם שדות חובה', 'Number and title are required'), 'err');
   const b = block(editingBlockId);
   const ws = document.getElementById('ebWeekStart').value;
   const we = document.getElementById('ebWeekEnd').value;
@@ -628,9 +676,9 @@ async function saveEditBlock() {
     saveLocal();
     closeMdl('editBlockModal');
     renderBlockList(); renderDetail(editingBlockId);
-    toast('הבלוק עודכן!');
+    toast(T('הבלוק עודכן!', 'Block updated!'));
   } catch(e) {
-    toast('עדכון הבלוק נכשל', 'err');
+    toast(T('עדכון הבלוק נכשל', 'Updating the block failed'), 'err');
   }
 }
 
@@ -639,10 +687,11 @@ function openDeleteBlock(id) {
   const b = block(id);
   if (!b) return;
   pendingDelBlockId = id;
-  document.getElementById('delBlockLabel').textContent = `בלוק ${b.block_number} — ${b.label}`;
+  document.getElementById('delBlockLabel').textContent = T(`בלוק ${b.block_number} — ${b.label}`, `Block ${b.block_number} — ${b.label}`);
   const wc = (b.words||[]).length, tc = (b.tests||[]).length;
   document.getElementById('delBlockDetails').textContent =
-    `יימחקו לצמיתות: ${wordsCount(wc)}, ${testsCount(tc)} וכל תוצאות התלמידים שנשמרו עבורם.`;
+    T(`יימחקו לצמיתות: ${wordsCount(wc)}, ${testsCount(tc)} וכל תוצאות התלמידים שנשמרו עבורם.`,
+      `Permanently deletes: ${wordsCount(wc)}, ${testsCount(tc)} and all saved student results.`);
   document.getElementById('delBlockConfirmChk').checked = false;
   document.getElementById('delBlockBtn').disabled = true;
   openMdl('delBlockModal');
@@ -652,7 +701,7 @@ async function confirmDelBlock() {
   const b = block(pendingDelBlockId);
   if (!b) return;
   const btn = document.getElementById('delBlockBtn');
-  btn.disabled = true; btn.textContent = 'מוחק…';
+  btn.disabled = true; btn.textContent = T('מוחק…', 'Deleting…');
   try {
     const testIds = (b.tests||[]).map(t => t.id);
     if (testIds.length) {
@@ -673,14 +722,14 @@ async function confirmDelBlock() {
     renderBlockList();
     if (blocks.length) selectBlock(blocks[0].id);
     else {
-      document.getElementById('detailPanel').innerHTML = `<div class="card"><div class="card-body empty-state"><div class="ei" aria-hidden="true">📚</div><p>בחרו בלוק מהרשימה כדי לנהל<br>את המילים והמבחנים שלו.</p></div></div>`;
+      document.getElementById('detailPanel').innerHTML = `<div class="card"><div class="card-body empty-state"><div class="ei" aria-hidden="true">📚</div><p>${T('בחרו בלוק מהרשימה כדי לנהל<br>את המילים והמבחנים שלו.', 'Select a block from the list to manage<br>its words and tests.')}</p></div></div>`;
       updateClassViewBtn(null);
     }
-    toast('הבלוק נמחק');
+    toast(T('הבלוק נמחק', 'Block deleted'));
   } catch(e) {
-    toast('מחיקת הבלוק נכשלה: ' + (e.message || ''), 'err');
+    toast(T('מחיקת הבלוק נכשלה: ', 'Deleting the block failed: ') + (e.message || ''), 'err');
   } finally {
-    btn.textContent = 'מחיקה סופית';
+    btn.textContent = T('מחיקה סופית', 'Delete Permanently');
   }
 }
 
@@ -705,7 +754,7 @@ function openClassView() {
   const b = block(activeId);
   if (!b) return;
   const activeTest = (b.tests||[]).find(t => t.status === 'active');
-  if (!activeTest) { toast('אין מבחן פעיל בבלוק הזה', 'err'); return; }
+  if (!activeTest) { toast(T('אין מבחן פעיל בבלוק הזה', 'No active test in this block'), 'err'); return; }
   window.open(`class_overview.html?test=${activeTest.id}`, '_blank');
 }
 
@@ -713,7 +762,7 @@ function openClassView() {
 function renderBlockList() {
   const el = document.getElementById('blockList');
   if (!blocks.length) {
-    el.innerHTML = `<div class="empty-state" style="padding:32px 16px"><div class="ei" aria-hidden="true">📦</div><p>אין עדיין בלוקים.<br>לחצו על "+ בלוק חדש" כדי להתחיל,<br>או על "❓ מדריך למורה" להסבר מלא.</p></div>`;
+    el.innerHTML = `<div class="empty-state" style="padding:32px 16px"><div class="ei" aria-hidden="true">📦</div><p>${T('אין עדיין בלוקים.<br>לחצו על "+ בלוק חדש" כדי להתחיל,<br>או על "❓ מדריך למורה" להסבר מלא.', 'No blocks yet.<br>Click "+ New Block" to start,<br>or "❓ Teacher Guide" for a full walkthrough.')}</p></div>`;
     return;
   }
   el.innerHTML = blocks.map(b => {
@@ -721,7 +770,7 @@ function renderBlockList() {
     const meta = [b.week_start ? fmtDate(b.week_start) : '', b.week_end ? '← '+fmtDate(b.week_end) : ''].filter(Boolean).join(' ');
     return `<button type="button" class="block-item${b.id===activeId?' active':''}" role="listitem" onclick="selectBlock('${b.id}')" aria-current="${b.id===activeId ? 'true' : 'false'}">
       <span class="block-item-left">
-        <span class="block-item-num">בלוק ${b.block_number}</span>
+        <span class="block-item-num">${T('בלוק', 'Block')} ${b.block_number}</span>
         <span class="block-item-label">${esc(b.label)}</span>
         ${meta ? `<span class="block-item-meta">${meta}</span>` : ''}
       </span>
@@ -737,7 +786,7 @@ function renderBlockList() {
 function renderDetail(id) {
   const b = block(id);
   const panel = document.getElementById('detailPanel');
-  if (!b) { panel.innerHTML = `<div class="card"><div class="card-body empty-state"><div class="ei" aria-hidden="true">📚</div><p>בחרו בלוק כדי לנהל את המילים שלו.</p></div></div>`; return; }
+  if (!b) { panel.innerHTML = `<div class="card"><div class="card-body empty-state"><div class="ei" aria-hidden="true">📚</div><p>${T('בחרו בלוק כדי לנהל את המילים שלו.', 'Select a block to manage its words.')}</p></div></div>`; return; }
   const words = b.words || [];
   const tests = b.tests || [];
   const meta = [b.week_start ? fmtDate(b.week_start) : '', b.week_end ? '← '+fmtDate(b.week_end) : ''].filter(Boolean).join(' ');
@@ -745,43 +794,43 @@ function renderDetail(id) {
   panel.innerHTML = `<div class="card">
     <div class="card-header">
       <div>
-        <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:3px">בלוק ${b.block_number}</div>
+        <div style="font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:3px">${T('בלוק', 'Block')} ${b.block_number}</div>
         <h2 style="font-size:18px">${esc(b.label)}</h2>
         ${meta ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${meta}</div>` : ''}
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="openEditBlock('${b.id}')">✏️ עריכה</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="openDeleteBlock('${b.id}')" aria-label="מחיקת הבלוק">🗑 מחיקה</button>
+        <button class="btn btn-ghost btn-sm" onclick="openEditBlock('${b.id}')">${T('✏️ עריכה', '✏️ Edit')}</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="openDeleteBlock('${b.id}')" aria-label="${T('מחיקת הבלוק', 'Delete block')}">${T('🗑 מחיקה', '🗑 Delete')}</button>
       </div>
     </div>
     <div class="card-body">
-      <div class="tabs" role="tablist" aria-label="ניהול הבלוק">
-        <button class="tab" role="tab" id="tabWords" aria-selected="false" aria-controls="tcWords" onclick="switchTab('words')">מילים (${words.length})</button>
-        <button class="tab" role="tab" id="tabAdd" aria-selected="false" aria-controls="tcAdd" onclick="switchTab('add')">+ הוספת מילה</button>
-        <button class="tab" role="tab" id="tabBulk" aria-selected="false" aria-controls="tcBulk" onclick="switchTab('bulk')">↑ העלאה בכמות</button>
-        ${tests.length ? `<button class="tab" role="tab" id="tabTests" aria-selected="false" aria-controls="tcTests" onclick="switchTab('tests')">מבחנים (${tests.length})</button>` : ''}
-        <button class="tab" role="tab" id="tabResults" aria-selected="false" aria-controls="tcResults" onclick="switchTab('results')">📊 תוצאות</button>
+      <div class="tabs" role="tablist" aria-label="${T('ניהול הבלוק', 'Manage block')}">
+        <button class="tab" role="tab" id="tabWords" aria-selected="false" aria-controls="tcWords" onclick="switchTab('words')">${T('מילים', 'Words')} (${words.length})</button>
+        <button class="tab" role="tab" id="tabAdd" aria-selected="false" aria-controls="tcAdd" onclick="switchTab('add')">${T('+ הוספת מילה', '+ Add Word')}</button>
+        <button class="tab" role="tab" id="tabBulk" aria-selected="false" aria-controls="tcBulk" onclick="switchTab('bulk')">${T('↑ העלאה בכמות', '↑ Bulk Upload')}</button>
+        ${tests.length ? `<button class="tab" role="tab" id="tabTests" aria-selected="false" aria-controls="tcTests" onclick="switchTab('tests')">${T('מבחנים', 'Tests')} (${tests.length})</button>` : ''}
+        <button class="tab" role="tab" id="tabResults" aria-selected="false" aria-controls="tcResults" onclick="switchTab('results')">${T('📊 תוצאות', '📊 Results')}</button>
       </div>
 
       <div id="tcWords" role="tabpanel" aria-labelledby="tabWords">
-        ${!words.length ? `<div class="empty-state"><div class="ei" aria-hidden="true">📝</div><p>אין עדיין מילים. השתמשו ב"+ הוספת מילה" או ב"↑ העלאה בכמות".</p></div>` : `
+        ${!words.length ? `<div class="empty-state"><div class="ei" aria-hidden="true">📝</div><p>${T('אין עדיין מילים. השתמשו ב"+ הוספת מילה" או ב"↑ העלאה בכמות".', 'No words yet. Use "+ Add Word" or "↑ Bulk Upload".')}</p></div>` : `
         <div style="overflow-x:auto"><table class="word-table"><thead><tr>
-          <th style="width:36px">#</th><th>עברית / ארמית</th><th style="width:88px">סוג</th><th>אנגלית</th><th style="width:100px"><span class="visually-hidden">פעולות</span></th>
+          <th style="width:36px">#</th><th>${T('עברית / ארמית', 'Hebrew / Aramaic')}</th><th style="width:88px">${T('סוג', 'Type')}</th><th>${T('אנגלית', 'English')}</th><th style="width:100px"><span class="visually-hidden">${T('פעולות', 'Actions')}</span></th>
         </tr></thead><tbody>
           ${words.map((w,i) => wordRow(w, i+1, b.id)).join('')}
         </tbody></table></div>`}
       </div>
 
       <div id="tcAdd" role="tabpanel" aria-labelledby="tabAdd" style="display:none">
-        <div class="form-group"><label for="awHe">עברית / ארמית</label><input class="he-input" type="text" id="awHe" placeholder="לדוגמה: מַיִם או א.מ.ר" /></div>
-        <div class="form-group"><label for="awType">סוג</label>
+        <div class="form-group"><label for="awHe">${T('עברית / ארמית', 'Hebrew / Aramaic')}</label><input class="he-input" type="text" id="awHe" placeholder="${T('לדוגמה: מַיִם או א.מ.ר', 'e.g. מַיִם or א.מ.ר')}" /></div>
+        <div class="form-group"><label for="awType">${T('סוג', 'Type')}</label>
           <select id="awType">
-            <option value="milah">מִלָּה — מילה</option>
-            <option value="shoresh">שׁוֹרֶשׁ — שורש</option>
+            <option value="milah">${T('מִלָּה — מילה', 'מִלָּה — word')}</option>
+            <option value="shoresh">${T('שׁוֹרֶשׁ — שורש', 'שׁוֹרֶשׁ — root')}</option>
           </select>
         </div>
-        <div class="form-group"><label for="awEn">פירוש באנגלית</label><input type="text" id="awEn" class="en-cell" placeholder="e.g. Water" /></div>
-        <button class="btn btn-green" onclick="addWord('${b.id}')">+ הוספת מילה</button>
+        <div class="form-group"><label for="awEn">${T('פירוש באנגלית', 'English meaning')}</label><input type="text" id="awEn" class="en-cell" placeholder="e.g. Water" /></div>
+        <button class="btn btn-green" onclick="addWord('${b.id}')">${T('+ הוספת מילה', '+ Add Word')}</button>
       </div>
 
       <div id="tcBulk" role="tabpanel" aria-labelledby="tabBulk" style="display:none">
@@ -789,23 +838,23 @@ function renderDetail(id) {
           One word per line, in this format: &nbsp;<code class="fmt">Hebrew | shoresh/milah | English</code>
         </p>
         <div class="form-group">
-          <label for="bulkTA">רשימת מילים</label>
+          <label for="bulkTA">${T('רשימת מילים', 'Word list')}</label>
           <textarea class="bulk-textarea" id="bulkTA" placeholder="א.מ.ר | shoresh | Say, Speak&#10;מַיִם | milah | Water&#10;כְּלִי | milah | Vessel"></textarea>
         </div>
-        <button class="btn btn-primary" onclick="parseBulk('${b.id}')">← תצוגה מקדימה ואישור</button>
+        <button class="btn btn-primary" onclick="parseBulk('${b.id}')">${T('← תצוגה מקדימה ואישור', '→ Preview & Confirm')}</button>
       </div>
 
       <div id="tcTests" role="tabpanel" aria-labelledby="tabTests" style="display:none">
         ${!tests.length
-          ? `<div class="empty-state"><div class="ei" aria-hidden="true">📋</div><p>אין עדיין מבחנים.</p></div>`
+          ? `<div class="empty-state"><div class="ei" aria-hidden="true">📋</div><p>${T('אין עדיין מבחנים.', 'No tests yet.')}</p></div>`
           : tests.map(t => testCard(t)).join('')}
       </div>
 
       <div id="tcResults" role="tabpanel" aria-labelledby="tabResults" style="display:none">
-        <div class="empty-state"><div class="ei" aria-hidden="true">📊</div><p>טוען תוצאות…</p></div>
+        <div class="empty-state"><div class="ei" aria-hidden="true">📊</div><p>${T('טוען תוצאות…', 'Loading results…')}</p></div>
       </div>
 
-      ${words.length ? `<button class="btn btn-purple gen-btn" onclick="openTestModal('${b.id}')">✨ יצירת מבחן מהבלוק הזה (${wordsCount(words.length)})</button>` : ''}
+      ${words.length ? `<button class="btn btn-purple gen-btn" onclick="openTestModal('${b.id}')">${T('✨ יצירת מבחן מהבלוק הזה', '✨ Create a test from this block')} (${wordsCount(words.length)})</button>` : ''}
     </div>
   </div>`;
 
@@ -836,8 +885,9 @@ document.addEventListener('keydown', e => {
   const i = tabs.indexOf(e.target);
   if (i === -1) return;
   e.preventDefault();
-  // RTL: ArrowLeft moves forward, ArrowRight moves back
-  const next = e.key === 'ArrowLeft' ? (i + 1) % tabs.length : (i - 1 + tabs.length) % tabs.length;
+  // RTL: ArrowLeft moves forward; LTR (English UI): ArrowRight moves forward
+  const forwardKey = LANG === 'he' ? 'ArrowLeft' : 'ArrowRight';
+  const next = e.key === forwardKey ? (i + 1) % tabs.length : (i - 1 + tabs.length) % tabs.length;
   tabs[next].focus();
   tabs[next].click();
 });
@@ -847,23 +897,23 @@ function wordRow(w, idx, blockId) {
   if (editingWordId === w.id) {
     return `<tr class="edit-row" id="row-${w.id}">
       <td style="color:var(--muted);font-size:12px">${idx}</td>
-      <td><label class="visually-hidden" for="eHe-${w.id}">עברית</label><input class="he-input" style="width:100%" id="eHe-${w.id}" value="${esc(w.hebrew)}" /></td>
-      <td><label class="visually-hidden" for="eTy-${w.id}">סוג</label><select id="eTy-${w.id}"><option value="milah"${w.type==='milah'?' selected':''}>מילה</option><option value="shoresh"${w.type==='shoresh'?' selected':''}>שורש</option></select></td>
-      <td><label class="visually-hidden" for="eEn-${w.id}">אנגלית</label><input class="en-cell" style="width:100%" id="eEn-${w.id}" value="${esc(w.english)}" /></td>
+      <td><label class="visually-hidden" for="eHe-${w.id}">${T('עברית', 'Hebrew')}</label><input class="he-input" style="width:100%" id="eHe-${w.id}" value="${esc(w.hebrew)}" /></td>
+      <td><label class="visually-hidden" for="eTy-${w.id}">${T('סוג', 'Type')}</label><select id="eTy-${w.id}"><option value="milah"${w.type==='milah'?' selected':''}>${T('מילה', 'Word')}</option><option value="shoresh"${w.type==='shoresh'?' selected':''}>${T('שורש', 'Root')}</option></select></td>
+      <td><label class="visually-hidden" for="eEn-${w.id}">${T('אנגלית', 'English')}</label><input class="en-cell" style="width:100%" id="eEn-${w.id}" value="${esc(w.english)}" /></td>
       <td><div style="display:flex;gap:4px">
-        <button class="btn btn-green btn-sm" onclick="saveWord('${w.id}','${blockId}')" aria-label="שמירה">✓</button>
-        <button class="btn btn-ghost btn-sm" onclick="cancelEdit()" aria-label="ביטול">✕</button>
+        <button class="btn btn-green btn-sm" onclick="saveWord('${w.id}','${blockId}')" aria-label="${T('שמירה', 'Save')}">✓</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelEdit()" aria-label="${T('ביטול', 'Cancel')}">✕</button>
       </div></td>
     </tr>`;
   }
   return `<tr id="row-${w.id}">
     <td style="color:var(--muted);font-size:12px">${idx}</td>
     <td class="word-he" lang="he">${esc(w.hebrew)}</td>
-    <td><span class="type-badge type-${w.type}">${w.type === 'shoresh' ? 'שורש' : 'מילה'}</span></td>
+    <td><span class="type-badge type-${w.type}">${w.type === 'shoresh' ? T('שורש', 'Root') : T('מילה', 'Word')}</span></td>
     <td class="en-cell">${esc(w.english)}</td>
     <td><div style="display:flex;gap:4px">
-      <button class="btn btn-ghost btn-sm" onclick="startEdit('${w.id}','${blockId}')" aria-label="עריכת ${esc(w.hebrew)}">✏️</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="promptDel('${w.id}','${esc(w.hebrew)}')" aria-label="מחיקת ${esc(w.hebrew)}">🗑</button>
+      <button class="btn btn-ghost btn-sm" onclick="startEdit('${w.id}','${blockId}')" aria-label="${T('עריכת', 'Edit')} ${esc(w.hebrew)}">✏️</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="promptDel('${w.id}','${esc(w.hebrew)}')" aria-label="${T('מחיקת', 'Delete')} ${esc(w.hebrew)}">🗑</button>
     </div></td>
   </tr>`;
 }
@@ -873,8 +923,8 @@ async function addWord(blockId) {
   const he = document.getElementById('awHe').value.trim();
   const type = document.getElementById('awType').value;
   const en = document.getElementById('awEn').value.trim();
-  if (!he) return toast('נא להזין טקסט בעברית/ארמית', 'err');
-  if (!en) return toast('נא להזין פירוש באנגלית', 'err');
+  if (!he) return toast(T('נא להזין טקסט בעברית/ארמית', 'Please enter the Hebrew/Aramaic text'), 'err');
+  if (!en) return toast(T('נא להזין פירוש באנגלית', 'Please enter the English meaning'), 'err');
 
   const w = { id: uid(), hebrew: he, type, english: en };
   try {
@@ -887,9 +937,9 @@ async function addWord(blockId) {
     document.getElementById('awHe').focus();
     activeTab = 'words';
     renderDetail(blockId); renderBlockList();
-    toast('המילה נוספה!');
+    toast(T('המילה נוספה!', 'Word added!'));
   } catch(e) {
-    toast('שמירת המילה נכשלה', 'err');
+    toast(T('שמירת המילה נכשלה', 'Saving the word failed'), 'err');
   }
 }
 
@@ -908,7 +958,7 @@ async function saveWord(wordId, blockId) {
   const he = document.getElementById(`eHe-${wordId}`)?.value.trim();
   const type = document.getElementById(`eTy-${wordId}`)?.value;
   const en = document.getElementById(`eEn-${wordId}`)?.value.trim();
-  if (!he || !en) return toast('עברית ואנגלית הם שדות חובה', 'err');
+  if (!he || !en) return toast(T('עברית ואנגלית הם שדות חובה', 'Hebrew and English are required'), 'err');
 
   try {
     const { error } = await sb.from('words').update({ hebrew: he, type, english: en }).eq('id', wordId);
@@ -919,9 +969,9 @@ async function saveWord(wordId, blockId) {
     saveLocal();
     editingWordId = null;
     renderDetail(blockId); renderBlockList();
-    toast('המילה עודכנה!');
+    toast(T('המילה עודכנה!', 'Word updated!'));
   } catch(e) {
-    toast('עדכון המילה נכשל', 'err');
+    toast(T('עדכון המילה נכשל', 'Updating the word failed'), 'err');
   }
 }
 
@@ -941,10 +991,10 @@ async function confirmDelWord() {
       saveLocal();
       closeMdl('delModal');
       renderDetail(b.id); renderBlockList();
-      toast('המילה נמחקה');
+      toast(T('המילה נמחקה', 'Word deleted'));
     }
   } catch(e) {
-    toast('מחיקת המילה נכשלה', 'err');
+    toast(T('מחיקת המילה נכשלה', 'Deleting the word failed'), 'err');
   }
 }
 
@@ -952,7 +1002,7 @@ async function confirmDelWord() {
 function parseBulk(blockId) {
   const raw = document.getElementById('bulkTA').value;
   const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-  if (!lines.length) return toast('נא להדביק מילים קודם', 'err');
+  if (!lines.length) return toast(T('נא להדביק מילים קודם', 'Paste some words first'), 'err');
   const rows = []; let errs = 0;
   lines.forEach(line => {
     const parts = line.split('|').map(p => p.trim());
@@ -961,8 +1011,8 @@ function parseBulk(blockId) {
     const type = typeRaw.toLowerCase().includes('shoresh') ? 'shoresh' : 'milah';
     rows.push({ hebrew, type, english: english.trim(), _id: uid() });
   });
-  if (!rows.length) return toast(`בכל ${lines.length} השורות היו שגיאות פורמט`, 'err');
-  if (errs) toast(`${errs} שורות דולגו — פורמט שגוי`, 'err');
+  if (!rows.length) return toast(T(`בכל ${lines.length} השורות היו שגיאות פורמט`, `All ${lines.length} lines had format errors`), 'err');
+  if (errs) toast(T(`${errs} שורות דולגו — פורמט שגוי`, `${errs} lines skipped — wrong format`), 'err');
   bulkRows = rows;
   bulkBlockId = blockId;
   renderBulkPreview(rows);
@@ -973,15 +1023,15 @@ function renderBulkPreview(rows) {
   document.getElementById('previewTbody').innerHTML = rows.map((r, i) => `
     <tr>
       <td style="color:var(--muted)">${i+1}</td>
-      <td><label class="visually-hidden" for="bh-${r._id}">עברית</label><input id="bh-${r._id}" class="he-input" style="width:100%" value="${esc(r.hebrew)}" onchange="updateBulkRow('${r._id}','hebrew',this.value)" /></td>
-      <td><label class="visually-hidden" for="bt-${r._id}">סוג</label><select id="bt-${r._id}" onchange="updateBulkRow('${r._id}','type',this.value)">
-        <option value="milah"${r.type==='milah'?' selected':''}>מילה</option>
-        <option value="shoresh"${r.type==='shoresh'?' selected':''}>שורש</option>
+      <td><label class="visually-hidden" for="bh-${r._id}">${T('עברית', 'Hebrew')}</label><input id="bh-${r._id}" class="he-input" style="width:100%" value="${esc(r.hebrew)}" onchange="updateBulkRow('${r._id}','hebrew',this.value)" /></td>
+      <td><label class="visually-hidden" for="bt-${r._id}">${T('סוג', 'Type')}</label><select id="bt-${r._id}" onchange="updateBulkRow('${r._id}','type',this.value)">
+        <option value="milah"${r.type==='milah'?' selected':''}>${T('מילה', 'Word')}</option>
+        <option value="shoresh"${r.type==='shoresh'?' selected':''}>${T('שורש', 'Root')}</option>
       </select></td>
-      <td><label class="visually-hidden" for="be-${r._id}">אנגלית</label><input id="be-${r._id}" class="en-cell" style="width:100%" value="${esc(r.english)}" onchange="updateBulkRow('${r._id}','english',this.value)" /></td>
-      <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="removeBulkRow('${r._id}')" aria-label="הסרת שורה ${i+1}">✕</button></td>
+      <td><label class="visually-hidden" for="be-${r._id}">${T('אנגלית', 'English')}</label><input id="be-${r._id}" class="en-cell" style="width:100%" value="${esc(r.english)}" onchange="updateBulkRow('${r._id}','english',this.value)" /></td>
+      <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="removeBulkRow('${r._id}')" aria-label="${T('הסרת שורה', 'Remove row')} ${i+1}">✕</button></td>
     </tr>`).join('');
-  document.getElementById('previewCount').textContent = `${wordsCount(rows.length)} מוכנות להוספה`;
+  document.getElementById('previewCount').textContent = T(`${wordsCount(rows.length)} מוכנות להוספה`, `${wordsCount(rows.length)} ready to add`);
 }
 
 function updateBulkRow(id, field, val) {
@@ -995,9 +1045,9 @@ function removeBulkRow(id) {
 }
 
 async function confirmBulk() {
-  if (!bulkRows.length) return toast('אין מילים להוספה', 'err');
+  if (!bulkRows.length) return toast(T('אין מילים להוספה', 'No words to add'), 'err');
   const btn = document.getElementById('confirmBulkBtn');
-  btn.disabled = true; btn.textContent = 'שומר…';
+  btn.disabled = true; btn.textContent = T('שומר…', 'Saving…');
 
   const newWords = bulkRows.map(r => ({ id: uid(), hebrew: r.hebrew, type: r.type, english: r.english }));
   const rows = newWords.map(w => ({ id: w.id, block_id: bulkBlockId, hebrew: w.hebrew, type: w.type, english: w.english }));
@@ -1011,11 +1061,11 @@ async function confirmBulk() {
     document.getElementById('bulkTA') && (document.getElementById('bulkTA').value = '');
     activeTab = 'words';
     renderDetail(bulkBlockId); renderBlockList();
-    toast(`${wordsCount(newWords.length)} נוספו!`);
+    toast(T(`${wordsCount(newWords.length)} נוספו!`, `${wordsCount(newWords.length)} added!`));
   } catch(e) {
-    toast('הוספת המילים נכשלה: ' + e.message, 'err');
+    toast(T('הוספת המילים נכשלה: ', 'Adding the words failed: ') + e.message, 'err');
   } finally {
-    btn.disabled = false; btn.textContent = '✓ הוספת כל המילים';
+    btn.disabled = false; btn.textContent = T('✓ הוספת כל המילים', '✓ Add All Words');
   }
 }
 
@@ -1031,7 +1081,7 @@ function openTestModal(blockId) {
     <label class="wsr" id="wsr-${w.id}">
       <input type="checkbox" checked id="chk-${w.id}" onchange="togWord('${w.id}', this.checked)" />
       <span class="word-he" lang="he" style="font-size:17px;flex:1">${esc(w.hebrew)}</span>
-      <span class="type-badge type-${w.type}" style="flex-shrink:0">${w.type === 'shoresh' ? 'שורש' : 'מילה'}</span>
+      <span class="type-badge type-${w.type}" style="flex-shrink:0">${w.type === 'shoresh' ? T('שורש', 'Root') : T('מילה', 'Word')}</span>
       <span class="en-cell" style="color:var(--muted);font-size:13px;min-width:120px">${esc(w.english)}</span>
     </label>`).join('');
 
@@ -1062,7 +1112,7 @@ function selAllWords(val) {
 function updateWordSelCount() {
   const sel = Object.values(testWordSel).filter(Boolean).length;
   const tot = Object.keys(testWordSel).length;
-  document.getElementById('wordSelCount').textContent = `נבחרו ${sel} מתוך ${tot}`;
+  document.getElementById('wordSelCount').textContent = T(`נבחרו ${sel} מתוך ${tot}`, `${sel} of ${tot} selected`);
 }
 
 function setDir(dir) {
@@ -1074,7 +1124,7 @@ function setDir(dir) {
 
 async function buildTest(status) {
   const wordIds = Object.entries(testWordSel).filter(([,v])=>v).map(([k])=>k);
-  if (!wordIds.length) { toast('יש לבחור לפחות מילה אחת', 'err'); return null; }
+  if (!wordIds.length) { toast(T('יש לבחור לפחות מילה אחת', 'Select at least one word'), 'err'); return null; }
   const timer = parseInt(document.getElementById('testTimer').value) || 30;
   const scoreDisplay = document.querySelector('input[name="scoreDisplay"]:checked')?.value || 'fraction';
   const t = { id: uid(), blockId: testBlockId, timerPerWord: timer, direction: testDir, status, wordIds, scoreDisplay, createdAt: new Date().toISOString() };
@@ -1084,7 +1134,7 @@ async function buildTest(status) {
     direction: t.direction, status: t.status, word_ids: t.wordIds,
     score_display: t.scoreDisplay
   });
-  if (error) { toast('שמירת המבחן נכשלה: ' + (error.message || error.code || JSON.stringify(error)), 'err'); return null; }
+  if (error) { toast(T('שמירת המבחן נכשלה: ', 'Saving the test failed: ') + (error.message || error.code || JSON.stringify(error)), 'err'); return null; }
 
   block(testBlockId).tests = block(testBlockId).tests || [];
   block(testBlockId).tests.push(t);
@@ -1098,7 +1148,7 @@ async function saveTestDraft() {
   closeMdl('testModal');
   activeTab = 'tests';
   renderDetail(testBlockId); renderBlockList();
-  toast(`המבחן נשמר כטיוטה. קוד גישה: ${accessCode(t.id)}`);
+  toast(T(`המבחן נשמר כטיוטה. קוד גישה: ${accessCode(t.id)}`, `Saved as draft. Access code: ${accessCode(t.id)}`));
 }
 
 async function startTestNow() {
@@ -1109,7 +1159,7 @@ async function startTestNow() {
   renderDetail(testBlockId); renderBlockList();
   updateClassViewBtn(testBlockId);
   window.open(`game_test.html?test=${t.id}`, '_blank');
-  toast(`המבחן הופעל! קוד גישה לתלמידים: ${accessCode(t.id)}`);
+  toast(T(`המבחן הופעל! קוד גישה לתלמידים: ${accessCode(t.id)}`, `Test is live! Student access code: ${accessCode(t.id)}`));
 }
 
 async function runTest(testId, blockId) {
@@ -1124,9 +1174,9 @@ async function runTest(testId, blockId) {
     renderDetail(blockId);
     updateClassViewBtn(blockId);
     window.open(`game_test.html?test=${testId}`, '_blank');
-    toast(`המבחן פעיל! קוד גישה לתלמידים: ${accessCode(testId)}`);
+    toast(T(`המבחן פעיל! קוד גישה לתלמידים: ${accessCode(testId)}`, `Test is live! Student access code: ${accessCode(testId)}`));
   } catch(e) {
-    toast('הפעלת המבחן נכשלה', 'err');
+    toast(T('הפעלת המבחן נכשלה', 'Starting the test failed'), 'err');
   }
 }
 
@@ -1141,14 +1191,14 @@ async function closeTest(testId, blockId) {
     saveLocal();
     renderDetail(blockId);
     updateClassViewBtn(blockId);
-    toast('המבחן נסגר — תלמידים לא יכולים להגיש יותר');
+    toast(T('המבחן נסגר — תלמידים לא יכולים להגיש יותר', 'Test closed — students can no longer submit'));
   } catch(e) {
-    toast('סגירת המבחן נכשלה', 'err');
+    toast(T('סגירת המבחן נכשלה', 'Closing the test failed'), 'err');
   }
 }
 
 async function deleteTest(testId, blockId) {
-  if (!confirm('למחוק את המבחן? גם תוצאות התלמידים שלו יימחקו.')) return;
+  if (!confirm(T('למחוק את המבחן? גם תוצאות התלמידים שלו יימחקו.', 'Delete this test? Its student results will also be deleted.'))) return;
   try {
     const { error: rErr } = await sb.from('test_results').delete().eq('test_id', testId);
     if (rErr) throw rErr;
@@ -1159,35 +1209,37 @@ async function deleteTest(testId, blockId) {
     saveLocal();
     renderDetail(blockId); renderBlockList();
     updateClassViewBtn(blockId);
-    toast('המבחן נמחק');
+    toast(T('המבחן נמחק', 'Test deleted'));
   } catch(e) {
-    toast('מחיקת המבחן נכשלה', 'err');
+    toast(T('מחיקת המבחן נכשלה', 'Deleting the test failed'), 'err');
   }
 }
 
 function testCard(t) {
-  const dir = t.direction === 'he_to_en' ? 'עברית → אנגלית' : t.direction === 'en_to_he' ? 'אנגלית → עברית' : 'מעורב 🔀';
+  const dir = t.direction === 'he_to_en' ? T('עברית → אנגלית', 'Hebrew → English')
+            : t.direction === 'en_to_he' ? T('אנגלית → עברית', 'English → Hebrew')
+            : T('מעורב 🔀', 'Mixed 🔀');
   const wc = (t.wordIds||[]).length;
   const date = t.createdAt ? fmtDate(t.createdAt.slice(0,10)) : '';
-  const statusHe = { draft: 'טיוטה', active: 'פעיל', closed: 'סגור' }[t.status] || t.status;
+  const statusLbl = { draft: T('טיוטה', 'Draft'), active: T('פעיל', 'Active'), closed: T('סגור', 'Closed') }[t.status] || t.status;
   const code = accessCode(t.id);
 
   let mainAction = '';
-  if (t.status === 'draft') mainAction = `<button class="btn btn-purple btn-sm" onclick="runTest('${t.id}','${t.blockId}')">▶ הפעלה</button>`;
-  else if (t.status === 'active') mainAction = `<button class="btn btn-red btn-sm" onclick="closeTest('${t.id}','${t.blockId}')">⏹ סיום המבחן</button>`;
-  else mainAction = `<button class="btn btn-ghost btn-sm" onclick="runTest('${t.id}','${t.blockId}')">↻ פתיחה מחדש</button>`;
+  if (t.status === 'draft') mainAction = `<button class="btn btn-purple btn-sm" onclick="runTest('${t.id}','${t.blockId}')">${T('▶ הפעלה', '▶ Start')}</button>`;
+  else if (t.status === 'active') mainAction = `<button class="btn btn-red btn-sm" onclick="closeTest('${t.id}','${t.blockId}')">${T('⏹ סיום המבחן', '⏹ End Test')}</button>`;
+  else mainAction = `<button class="btn btn-ghost btn-sm" onclick="runTest('${t.id}','${t.blockId}')">${T('↻ פתיחה מחדש', '↻ Reopen')}</button>`;
 
   return `<div class="test-card">
     <div class="test-card-info">
-      <div class="title">${wordsCount(wc)} · ${t.timerPerWord} שנ' למילה · ${dir}</div>
+      <div class="title">${wordsCount(wc)} · ${t.timerPerWord} ${T("שנ' למילה", 's per word')} · ${dir}</div>
       <div class="meta">${date}</div>
     </div>
     <div class="test-actions">
-      <span class="access-code" title="קוד הגישה שהתלמידים מקלידים"><small>קוד</small> ${code}</span>
-      <span class="test-status ${t.status}">${statusHe}</span>
-      <button class="btn btn-ghost btn-sm" onclick="copyTestLink('${t.id}')" aria-label="העתקת קישור לתלמידים" title="העתקת קישור לתלמידים">📋</button>
+      <span class="access-code" title="${T('קוד הגישה שהתלמידים מקלידים', 'The code students must type')}"><small>${T('קוד', 'CODE')}</small> ${code}</span>
+      <span class="test-status ${t.status}">${statusLbl}</span>
+      <button class="btn btn-ghost btn-sm" onclick="copyTestLink('${t.id}')" aria-label="${T('העתקת קישור לתלמידים', 'Copy student link')}" title="${T('העתקת קישור לתלמידים', 'Copy student link')}">📋</button>
       ${mainAction}
-      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTest('${t.id}','${t.blockId}')" aria-label="מחיקת המבחן">✕</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTest('${t.id}','${t.blockId}')" aria-label="${T('מחיקת המבחן', 'Delete test')}">✕</button>
     </div>
   </div>`;
 }
@@ -1195,8 +1247,8 @@ function testCard(t) {
 function copyTestLink(testId) {
   const url = `https://yosidoch.github.io/gemara-games/game_test.html?test=${testId}`;
   navigator.clipboard.writeText(url).then(
-    () => toast(`הקישור הועתק! אל תשכחו למסור לתלמידים את הקוד: ${accessCode(testId)}`),
-    () => toast('ההעתקה נכשלה', 'err')
+    () => toast(T(`הקישור הועתק! אל תשכחו למסור לתלמידים את הקוד: ${accessCode(testId)}`, `Link copied! Don't forget to give students the code: ${accessCode(testId)}`)),
+    () => toast(T('ההעתקה נכשלה', 'Copy failed'), 'err')
   );
 }
 
@@ -1218,27 +1270,27 @@ function renderStudentList() {
   if (!el) return;
   if (badge) badge.textContent = students.length ? `(${students.length})` : '';
   if (!students.length) {
-    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">אין עדיין תלמידים.<br>הוסיפו את רשימת הכיתה — התלמידים יבחרו את שמם במבחן.</div>`;
+    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">${T('אין עדיין תלמידים.<br>הוסיפו את רשימת הכיתה — התלמידים יבחרו את שמם במבחן.', 'No students yet.<br>Add your class roster — students will tap their name in the test.')}</div>`;
     return;
   }
   el.innerHTML = students.map(s => {
     if (editingStudentId === s.id) {
       return `<div class="student-edit-row" id="sedit-${s.id}">
-        <label class="visually-hidden" for="seName-${s.id}">שם מלא</label>
-        <input type="text" id="seName-${s.id}" value="${esc(s.name)}" placeholder="שם מלא" />
-        <label class="visually-hidden" for="seNick-${s.id}">כינוי</label>
-        <input type="text" id="seNick-${s.id}" value="${esc(s.nickname)}" placeholder="כינוי (לא חובה)" />
+        <label class="visually-hidden" for="seName-${s.id}">${T('שם מלא', 'Full name')}</label>
+        <input type="text" id="seName-${s.id}" value="${esc(s.name)}" placeholder="${T('שם מלא', 'Full name')}" />
+        <label class="visually-hidden" for="seNick-${s.id}">${T('כינוי', 'Nickname')}</label>
+        <input type="text" id="seNick-${s.id}" value="${esc(s.nickname)}" placeholder="${T('כינוי (לא חובה)', 'Nickname (optional)')}" />
         <div style="display:flex;gap:6px;justify-content:flex-end">
-          <button class="btn btn-ghost btn-sm" onclick="cancelStudentEdit()">ביטול</button>
-          <button class="btn btn-green btn-sm" onclick="saveStudentEdit('${s.id}')">✓ שמירה</button>
+          <button class="btn btn-ghost btn-sm" onclick="cancelStudentEdit()">${T('ביטול', 'Cancel')}</button>
+          <button class="btn btn-green btn-sm" onclick="saveStudentEdit('${s.id}')">${T('✓ שמירה', '✓ Save')}</button>
         </div>
       </div>`;
     }
     return `<div class="student-item" id="sitem-${s.id}">
       <span class="student-item-name" dir="auto">${esc(s.name)}${s.nickname ? `<span class="student-item-nick">(${esc(s.nickname)})</span>` : ''}</span>
       <div class="student-item-actions">
-        <button class="btn btn-ghost btn-sm" onclick="startStudentEdit('${s.id}')" aria-label="עריכת ${esc(s.name)}">✏️</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteStudent('${s.id}','${esc(s.name)}')" aria-label="מחיקת ${esc(s.name)}">🗑</button>
+        <button class="btn btn-ghost btn-sm" onclick="startStudentEdit('${s.id}')" aria-label="${T('עריכת', 'Edit')} ${esc(s.name)}">✏️</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteStudent('${s.id}','${esc(s.name)}')" aria-label="${T('מחיקת', 'Delete')} ${esc(s.name)}">🗑</button>
       </div>
     </div>`;
   }).join('');
@@ -1259,9 +1311,9 @@ function toggleAddStudentForm() {
 async function addStudent() {
   const name = document.getElementById('nsName').value.trim();
   const nick = document.getElementById('nsNick').value.trim();
-  if (!name) return toast('שם הוא שדה חובה', 'err');
+  if (!name) return toast(T('שם הוא שדה חובה', 'Name is required'), 'err');
   const btn = document.getElementById('addStudentBtn');
-  btn.disabled = true; btn.textContent = 'שומר…';
+  btn.disabled = true; btn.textContent = T('שומר…', 'Saving…');
   try {
     const id = uid();
     const { error } = await sb.from('students').insert({ id, name, nickname: nick || null });
@@ -1270,11 +1322,11 @@ async function addStudent() {
     students.sort((a, b) => a.name.localeCompare(b.name));
     toggleAddStudentForm();
     renderStudentList();
-    toast('התלמיד/ה נוסף/ה!');
+    toast(T('התלמיד/ה נוסף/ה!', 'Student added!'));
   } catch(e) {
-    toast('הוספת התלמיד/ה נכשלה: ' + (e.message || ''), 'err');
+    toast(T('הוספת התלמיד/ה נכשלה: ', 'Adding the student failed: ') + (e.message || ''), 'err');
   } finally {
-    btn.disabled = false; btn.textContent = 'שמירה';
+    btn.disabled = false; btn.textContent = T('שמירה', 'Save');
   }
 }
 
@@ -1292,7 +1344,7 @@ function cancelStudentEdit() {
 async function saveStudentEdit(id) {
   const name = document.getElementById(`seName-${id}`).value.trim();
   const nick = document.getElementById(`seNick-${id}`).value.trim();
-  if (!name) return toast('שם הוא שדה חובה', 'err');
+  if (!name) return toast(T('שם הוא שדה חובה', 'Name is required'), 'err');
   try {
     const { error } = await sb.from('students').update({ name, nickname: nick || null }).eq('id', id);
     if (error) throw error;
@@ -1301,22 +1353,22 @@ async function saveStudentEdit(id) {
     students.sort((a, b) => a.name.localeCompare(b.name));
     editingStudentId = null;
     renderStudentList();
-    toast('פרטי התלמיד/ה עודכנו!');
+    toast(T('פרטי התלמיד/ה עודכנו!', 'Student updated!'));
   } catch(e) {
-    toast('עדכון התלמיד/ה נכשל', 'err');
+    toast(T('עדכון התלמיד/ה נכשל', 'Updating the student failed'), 'err');
   }
 }
 
 async function deleteStudent(id, name) {
-  if (!confirm(`להסיר את ${name} מרשימת הכיתה?`)) return;
+  if (!confirm(T(`להסיר את ${name} מרשימת הכיתה?`, `Remove ${name} from the class roster?`))) return;
   try {
     const { error } = await sb.from('students').delete().eq('id', id);
     if (error) throw error;
     students = students.filter(s => s.id !== id);
     renderStudentList();
-    toast('התלמיד/ה הוסר/ה');
+    toast(T('התלמיד/ה הוסר/ה', 'Student removed'));
   } catch(e) {
-    toast('הסרת התלמיד/ה נכשלה', 'err');
+    toast(T('הסרת התלמיד/ה נכשלה', 'Removing the student failed'), 'err');
   }
 }
 
@@ -1334,22 +1386,22 @@ function showResultDetail(r, blockId) {
   const pct = total ? Math.round(score / total * 100) : 0;
   const finalized = r.finalized;
 
-  document.getElementById('rdTitle').textContent = `${r.student_name || 'אנונימי'} — בדיקה ועריכת ציון`;
+  document.getElementById('rdTitle').textContent = `${r.student_name || T('אנונימי', 'Anonymous')} — ${T('בדיקה ועריכת ציון', 'Review & Edit Grade')}`;
 
   document.getElementById('rdBody').innerHTML = `
     <div style="background:var(--accent-soft);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <div>
-        <div style="font-size:11px;font-weight:700;color:var(--accent-dark)">ציון נוכחי</div>
+        <div style="font-size:11px;font-weight:700;color:var(--accent-dark)">${T('ציון נוכחי', 'Current grade')}</div>
         <div style="font-size:24px;font-weight:800" id="overrideScoreDisplay" dir="ltr">${score}/${total} (${pct}%)</div>
       </div>
       ${finalized
-        ? `<span class="status-pill done" style="margin-inline-start:auto">✓ אושר סופית</span>`
-        : `<span class="status-pill pending" style="margin-inline-start:auto">ממתין לבדיקה</span>`}
+        ? `<span class="status-pill done" style="margin-inline-start:auto">${T('✓ אושר סופית', '✓ Finalized')}</span>`
+        : `<span class="status-pill pending" style="margin-inline-start:auto">${T('ממתין לבדיקה', 'Awaiting review')}</span>`}
     </div>
     <p class="hint-en" style="margin-bottom:12px">Click the ✅/❌ on any row to change that answer's grade, then click "Finalize" to save the score.</p>
     ${overrideResult.answers.length ? `
     <div style="overflow-x:auto"><table class="word-table">
-      <thead><tr><th>המילה שהוצגה</th><th>תשובה נכונה</th><th>מה התלמיד/ה כתב/ה</th><th style="width:56px;text-align:center">ציון</th></tr></thead>
+      <thead><tr><th>${T('המילה שהוצגה', 'Word shown')}</th><th>${T('תשובה נכונה', 'Correct answer')}</th><th>${T('מה התלמיד/ה כתב/ה', 'Student wrote')}</th><th style="width:56px;text-align:center">${T('ציון', 'Grade')}</th></tr></thead>
       <tbody id="overrideTbody">
         ${overrideResult.answers.map((a, i) => {
           const w = wordMap[a.word_id] || {};
@@ -1357,19 +1409,19 @@ function showResultDetail(r, blockId) {
           return `<tr id="ovrow-${i}" style="background:${a.correct?'#F0FDF4':'#FEF2F2'}">
             <td style="font-family:${shownHe?'var(--font-he)':'var(--font-ui)'};font-size:${shownHe?'18':'14'}px" ${shownHe?'lang="he"':'class="en-cell"'}>${esc(shownHe ? (w.hebrew||'') : (w.english||''))}</td>
             <td ${shownHe?'class="en-cell"':'style="font-family:var(--font-he);font-size:17px" lang="he"'}>${esc(shownHe ? (w.english||'') : (w.hebrew||''))}</td>
-            <td class="en-cell" style="color:${a.correct?'var(--green)':'var(--red)'}">${esc(a.given||'(ללא תשובה)')}</td>
+            <td class="en-cell" style="color:${a.correct?'var(--green)':'var(--red)'}">${esc(a.given||T('(ללא תשובה)', '(no answer)'))}</td>
             <td style="text-align:center">
-              <button onclick="toggleOverride(${i})" style="font-size:20px;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px;min-width:38px;min-height:38px" aria-label="החלפת ציון לשאלה ${i+1}" title="לחיצה הופכת נכון/שגוי">${a.correct?'✅':'❌'}</button>
+              <button onclick="toggleOverride(${i})" style="font-size:20px;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px;min-width:38px;min-height:38px" aria-label="${T('החלפת ציון לשאלה', 'Toggle grade for question')} ${i+1}" title="${T('לחיצה הופכת נכון/שגוי', 'Click to flip correct/wrong')}">${a.correct?'✅':'❌'}</button>
             </td>
           </tr>`;
         }).join('')}
       </tbody>
-    </table></div>` : '<p style="color:var(--muted);padding:16px 0">אין נתוני תשובות.</p>'}`;
+    </table></div>` : `<p style="color:var(--muted);padding:16px 0">${T('אין נתוני תשובות.', 'No answer data.')}</p>`}`;
 
   document.getElementById('rdFooter').innerHTML = `
-    <button class="btn btn-green" onclick="printScoreCards('${blockId}')" style="margin-inline-end:auto">🖨 הדפסת כרטיסי ציון</button>
-    <button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">סגירה</button>
-    <button class="btn btn-primary" onclick="finalizeResult('${r.id}','${blockId}')">✓ אישור סופי של הציון</button>`;
+    <button class="btn btn-green" onclick="printScoreCards('${blockId}')" style="margin-inline-end:auto">${T('🖨 הדפסת כרטיסי ציון', '🖨 Print Score Cards')}</button>
+    <button class="btn btn-ghost" onclick="closeMdl('resultDetailModal')">${T('סגירה', 'Close')}</button>
+    <button class="btn btn-primary" onclick="finalizeResult('${r.id}','${blockId}')">${T('✓ אישור סופי של הציון', '✓ Finalize Grade')}</button>`;
 
   openMdl('resultDetailModal');
 }
@@ -1405,18 +1457,18 @@ async function finalizeResult(resultId, blockId) {
     if (error) throw error;
     const idx = lastResults.findIndex(r => r.id === resultId);
     if (idx >= 0) { lastResults[idx].score = score; lastResults[idx].answers = overrideResult.answers; lastResults[idx].finalized = true; }
-    toast('הציון אושר סופית ✓');
+    toast(T('הציון אושר סופית ✓', 'Grade finalized ✓'));
     closeMdl('resultDetailModal');
     loadAndRenderResults(blockId);
   } catch(e) {
-    toast('השמירה נכשלה: ' + (e.message || ''), 'err');
+    toast(T('השמירה נכשלה: ', 'Saving failed: ') + (e.message || ''), 'err');
   }
 }
 
 // ── Score cards print ─────────────────────────────────────
 async function printScoreCards(blockId) {
   const b = block(blockId);
-  if (!lastResults || !lastResults.length) { toast('אין תוצאות להדפסה', 'err'); return; }
+  if (!lastResults || !lastResults.length) { toast(T('אין תוצאות להדפסה', 'No results to print'), 'err'); return; }
 
   // score_display setting comes from the test of the first result
   const testId = lastResults[0]?.test_id;
@@ -1430,7 +1482,7 @@ async function printScoreCards(blockId) {
   students.forEach(s => { studentMap[s.id] = s.nickname || s.name; });
 
   const finalized = lastResults.filter(r => r.finalized);
-  if (!finalized.length) { toast('אין עדיין ציונים מאושרים. יש לאשר ציונים קודם.', 'err'); return; }
+  if (!finalized.length) { toast(T('אין עדיין ציונים מאושרים. יש לאשר ציונים קודם.', 'No finalized grades yet. Finalize grades first.'), 'err'); return; }
 
   const blockLabel = b.label || 'Vocabulary Test';
   const cards = finalized.map(r => {
@@ -1494,11 +1546,11 @@ async function loadAndRenderResults(blockId) {
 
   const testIds = (b.tests||[]).map(t => t.id);
   if (!testIds.length) {
-    tc.innerHTML = `<div class="empty-state"><div class="ei" aria-hidden="true">📊</div><p>אין עדיין מבחנים בבלוק הזה.</p></div>`;
+    tc.innerHTML = `<div class="empty-state"><div class="ei" aria-hidden="true">📊</div><p>${T('אין עדיין מבחנים בבלוק הזה.', 'No tests in this block yet.')}</p></div>`;
     return;
   }
 
-  tc.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">טוען תוצאות…</div>`;
+  tc.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">${T('טוען תוצאות…', 'Loading results…')}</div>`;
 
   try {
     const { data, error } = await sb.from('test_results')
@@ -1509,7 +1561,7 @@ async function loadAndRenderResults(blockId) {
     if (error) throw error;
 
     if (!data || !data.length) {
-      tc.innerHTML = `<div class="empty-state"><div class="ei" aria-hidden="true">📊</div><p>אין עדיין תוצאות תלמידים.<br>הפעילו מבחן כדי שהתלמידים יוכלו להגיש.</p></div>`;
+      tc.innerHTML = `<div class="empty-state"><div class="ei" aria-hidden="true">📊</div><p>${T('אין עדיין תוצאות תלמידים.<br>הפעילו מבחן כדי שהתלמידים יוכלו להגיש.', 'No student results yet.<br>Start a test so students can submit.')}</p></div>`;
       return;
     }
 
@@ -1523,53 +1575,53 @@ async function loadAndRenderResults(blockId) {
       <div class="results-avg">
         <span style="font-size:28px" aria-hidden="true">📊</span>
         <div>
-          <div style="font-size:12px;font-weight:700;color:var(--accent-dark)">ממוצע כיתתי</div>
+          <div style="font-size:12px;font-weight:700;color:var(--accent-dark)">${T('ממוצע כיתתי', 'Class Average')}</div>
           <div style="font-size:26px;font-weight:800">${avg}%</div>
         </div>
-        <span style="margin-inline-start:auto;font-size:13px;color:var(--muted)">${data.length === 1 ? 'הגשה אחת' : data.length + ' הגשות'}</span>
+        <span style="margin-inline-start:auto;font-size:13px;color:var(--muted)">${data.length === 1 ? T('הגשה אחת', '1 submission') : T(data.length + ' הגשות', data.length + ' submissions')}</span>
       </div>
       <div style="overflow-x:auto"><table class="word-table">
         <thead><tr>
-          <th>תלמיד/ה</th>
-          <th style="width:90px">ציון</th>
+          <th>${T('תלמיד/ה', 'Student')}</th>
+          <th style="width:90px">${T('ציון', 'Score')}</th>
           <th style="width:70px">%</th>
-          <th style="width:90px">סטטוס</th>
-          <th style="width:110px">תאריך</th>
-          <th style="width:44px"><span class="visually-hidden">מחיקה</span></th>
+          <th style="width:90px">${T('סטטוס', 'Status')}</th>
+          <th style="width:110px">${T('תאריך', 'Date')}</th>
+          <th style="width:44px"><span class="visually-hidden">${T('מחיקה', 'Delete')}</span></th>
         </tr></thead>
         <tbody>
           ${data.map((r, i) => {
             const pct = Math.round(r.score / r.total * 100);
             const color = pct >= 90 ? '#15803D' : pct >= 70 ? '#1D4ED8' : pct >= 50 ? '#A16207' : '#DC2626';
-            const displayName = (r.student_id && studentMap[r.student_id]) ? esc(studentMap[r.student_id]) : esc(r.student_name || 'אנונימי');
+            const displayName = (r.student_id && studentMap[r.student_id]) ? esc(studentMap[r.student_id]) : esc(r.student_name || T('אנונימי', 'Anonymous'));
             const statusBadge = r.finalized
-              ? `<span class="status-pill done">✓ אושר</span>`
-              : `<span class="status-pill pending">ממתין</span>`;
-            return `<tr style="cursor:pointer" onclick="showResultDetail(lastResults[${i}], '${blockId}')" tabindex="0" onkeydown="if(event.key==='Enter'){showResultDetail(lastResults[${i}], '${blockId}')}" aria-label="בדיקת התוצאה של ${displayName}">
+              ? `<span class="status-pill done">${T('✓ אושר', '✓ Finalized')}</span>`
+              : `<span class="status-pill pending">${T('ממתין', 'Pending')}</span>`;
+            return `<tr style="cursor:pointer" onclick="showResultDetail(lastResults[${i}], '${blockId}')" tabindex="0" onkeydown="if(event.key==='Enter'){showResultDetail(lastResults[${i}], '${blockId}')}" aria-label="${T('בדיקת התוצאה של', 'Review the result of')} ${displayName}">
               <td style="font-weight:600" dir="auto">${displayName}</td>
-              <td dir="ltr" style="text-align:right">${r.score}/${r.total}</td>
+              <td dir="ltr" style="text-align:${LANG === 'he' ? 'right' : 'left'}">${r.score}/${r.total}</td>
               <td><span style="font-weight:700;color:${color}">${pct}%</span></td>
               <td>${statusBadge}</td>
               <td style="font-size:12px;color:var(--muted)">${fmtDate((r.completed_at||'').slice(0,10))}</td>
-              <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="event.stopPropagation();deleteResult('${r.id}','${blockId}')" aria-label="מחיקת התוצאה של ${displayName}">✕</button></td>
+              <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="event.stopPropagation();deleteResult('${r.id}','${blockId}')" aria-label="${T('מחיקת התוצאה של', 'Delete the result of')} ${displayName}">✕</button></td>
             </tr>`;
           }).join('')}
         </tbody>
       </table></div>`;
   } catch(e) {
-    tc.innerHTML = `<div class="empty-state"><div class="ei" aria-hidden="true">⚠️</div><p>טעינת התוצאות נכשלה.</p></div>`;
+    tc.innerHTML = `<div class="empty-state"><div class="ei" aria-hidden="true">⚠️</div><p>${T('טעינת התוצאות נכשלה.', 'Loading results failed.')}</p></div>`;
   }
 }
 
 async function deleteResult(resultId, blockId) {
-  if (!confirm('למחוק את התוצאה הזו?')) return;
+  if (!confirm(T('למחוק את התוצאה הזו?', 'Delete this result?'))) return;
   try {
     const { error } = await sb.from('test_results').delete().eq('id', resultId);
     if (error) throw error;
     loadAndRenderResults(blockId);
-    toast('התוצאה נמחקה');
+    toast(T('התוצאה נמחקה', 'Result deleted'));
   } catch(e) {
-    toast('מחיקת התוצאה נכשלה', 'err');
+    toast(T('מחיקת התוצאה נכשלה', 'Deleting the result failed'), 'err');
   }
 }
 
@@ -1600,7 +1652,7 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function fmtDate(d) {
   if (!d) return '';
-  try { return new Date(d+'T00:00:00').toLocaleDateString('he-IL',{day:'numeric',month:'short',year:'numeric'}); }
+  try { return new Date(d+'T00:00:00').toLocaleDateString(LANG === 'he' ? 'he-IL' : 'en-US',{day:'numeric',month:'short',year:'numeric'}); }
   catch { return d; }
 }
 function toast(msg, type = 'ok') {
