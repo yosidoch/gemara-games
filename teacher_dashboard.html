@@ -737,6 +737,7 @@ function selectBlock(id) {
   activeId = id;
   activeTab = 'words';
   editingWordId = null;
+  resultsFilter = null;
   renderBlockList();
   renderDetail(id);
   updateClassViewBtn(id);
@@ -753,9 +754,29 @@ function updateClassViewBtn(id) {
 function openClassView() {
   const b = block(activeId);
   if (!b) return;
-  const activeTest = (b.tests||[]).find(t => t.status === 'active');
+  // Newest active test first, in case more than one is live
+  const actives = (b.tests||[]).filter(t => t.status === 'active')
+    .sort((a, c) => String(c.createdAt||'').localeCompare(String(a.createdAt||'')));
+  const activeTest = actives[0];
   if (!activeTest) { toast(T('אין מבחן פעיל בבלוק הזה', 'No active test in this block'), 'err'); return; }
   window.open(`class_overview.html?test=${activeTest.id}`, '_blank');
+}
+
+// Only one live test per block: closing the others prevents students from
+// opening an old link and keeps the results view unambiguous.
+async function closeOtherActiveTests(blockId, exceptId) {
+  const b = block(blockId);
+  const others = (b.tests||[]).filter(t => t.status === 'active' && t.id !== exceptId);
+  if (!others.length) return 0;
+  try {
+    const { error } = await sb.from('tests').update({ status: 'closed' }).in('id', others.map(t => t.id));
+    if (error) throw error;
+    others.forEach(t => t.status = 'closed');
+    saveLocal();
+    return others.length;
+  } catch(e) {
+    return 0;
+  }
 }
 
 // ── Render: block list ────────────────────────────────────
@@ -913,7 +934,7 @@ function wordRow(w, idx, blockId) {
     <td class="en-cell">${esc(w.english)}</td>
     <td><div style="display:flex;gap:4px">
       <button class="btn btn-ghost btn-sm" onclick="startEdit('${w.id}','${blockId}')" aria-label="${T('עריכת', 'Edit')} ${esc(w.hebrew)}">✏️</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="promptDel('${w.id}','${esc(w.hebrew)}')" aria-label="${T('מחיקת', 'Delete')} ${esc(w.hebrew)}">🗑</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="promptDel('${w.id}','${blockId}')" aria-label="${T('מחיקת', 'Delete')} ${esc(w.hebrew)}">🗑</button>
     </div></td>
   </tr>`;
 }
@@ -975,9 +996,11 @@ async function saveWord(wordId, blockId) {
   }
 }
 
-function promptDel(wordId, label) {
+function promptDel(wordId, blockId) {
   pendingDelWordId = wordId;
-  document.getElementById('delWordLabel').textContent = label;
+  const b = block(blockId);
+  const w = b && (b.words || []).find(x => x.id === wordId);
+  document.getElementById('delWordLabel').textContent = w ? w.hebrew : '';
   openMdl('delModal');
 }
 
@@ -1154,12 +1177,14 @@ async function saveTestDraft() {
 async function startTestNow() {
   const t = await buildTest('active');
   if (!t) return;
+  const closed = await closeOtherActiveTests(testBlockId, t.id);
   closeMdl('testModal');
   activeTab = 'tests';
   renderDetail(testBlockId); renderBlockList();
   updateClassViewBtn(testBlockId);
   window.open(`game_test.html?test=${t.id}`, '_blank');
-  toast(T(`המבחן הופעל! קוד גישה לתלמידים: ${accessCode(t.id)}`, `Test is live! Student access code: ${accessCode(t.id)}`));
+  const closedNote = closed ? T(` (${closed} מבחנים פעילים קודמים נסגרו)`, ` (${closed} previously active tests were closed)`) : '';
+  toast(T(`המבחן הופעל! קוד גישה לתלמידים: ${accessCode(t.id)}`, `Test is live! Student access code: ${accessCode(t.id)}`) + closedNote);
 }
 
 async function runTest(testId, blockId) {
@@ -1171,10 +1196,12 @@ async function runTest(testId, blockId) {
     if (error) throw error;
     t.status = 'active';
     saveLocal();
+    const closed = await closeOtherActiveTests(blockId, testId);
     renderDetail(blockId);
     updateClassViewBtn(blockId);
     window.open(`game_test.html?test=${testId}`, '_blank');
-    toast(T(`המבחן פעיל! קוד גישה לתלמידים: ${accessCode(testId)}`, `Test is live! Student access code: ${accessCode(testId)}`));
+    const closedNote = closed ? T(` (${closed} מבחנים פעילים קודמים נסגרו)`, ` (${closed} previously active tests were closed)`) : '';
+    toast(T(`המבחן פעיל! קוד גישה לתלמידים: ${accessCode(testId)}`, `Test is live! Student access code: ${accessCode(testId)}`) + closedNote);
   } catch(e) {
     toast(T('הפעלת המבחן נכשלה', 'Starting the test failed'), 'err');
   }
@@ -1290,7 +1317,7 @@ function renderStudentList() {
       <span class="student-item-name" dir="auto">${esc(s.name)}${s.nickname ? `<span class="student-item-nick">(${esc(s.nickname)})</span>` : ''}</span>
       <div class="student-item-actions">
         <button class="btn btn-ghost btn-sm" onclick="startStudentEdit('${s.id}')" aria-label="${T('עריכת', 'Edit')} ${esc(s.name)}">✏️</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteStudent('${s.id}','${esc(s.name)}')" aria-label="${T('מחיקת', 'Delete')} ${esc(s.name)}">🗑</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteStudent('${s.id}')" aria-label="${T('מחיקת', 'Delete')} ${esc(s.name)}">🗑</button>
       </div>
     </div>`;
   }).join('');
@@ -1359,7 +1386,9 @@ async function saveStudentEdit(id) {
   }
 }
 
-async function deleteStudent(id, name) {
+async function deleteStudent(id) {
+  const s = students.find(x => x.id === id);
+  const name = s ? s.name : '';
   if (!confirm(T(`להסיר את ${name} מרשימת הכיתה?`, `Remove ${name} from the class roster?`))) return;
   try {
     const { error } = await sb.from('students').delete().eq('id', id);
@@ -1374,6 +1403,7 @@ async function deleteStudent(id, name) {
 
 // ── Results tab ───────────────────────────────────────────
 let lastResults = [];
+let resultsFilter = null;   // test id, 'all', or null (= newest test)
 
 function showResultDetail(r, blockId) {
   overrideResult = { ...r, blockId, answers: Array.isArray(r.answers) ? r.answers.map(a => ({...a})) : [] };
@@ -1539,6 +1569,25 @@ function chunk(arr, n) {
   return r;
 }
 
+function resultsTestLabel(t) {
+  const dir = t.direction === 'he_to_en' ? T('עברית→אנגלית', 'He→En')
+            : t.direction === 'en_to_he' ? T('אנגלית→עברית', 'En→He')
+            : T('מעורב', 'Mixed');
+  const date = t.createdAt ? fmtDate(t.createdAt.slice(0,10)) : '';
+  const status = { draft: T('טיוטה','Draft'), active: T('פעיל','Active'), closed: T('סגור','Closed') }[t.status] || t.status;
+  return `${date} · ${dir} · ${T('קוד','code')} ${accessCode(t.id)} · ${status}`;
+}
+
+function resultsFilterBar(blockId, testsSorted, selected) {
+  return `<div class="form-group" style="max-width:460px">
+    <label for="resultsTestSel">${T('הצגת תוצאות עבור', 'Show results for')}</label>
+    <select id="resultsTestSel" onchange="resultsFilter=this.value;loadAndRenderResults('${blockId}')">
+      ${testsSorted.map(t => `<option value="${t.id}"${selected === t.id ? ' selected' : ''}>${esc(resultsTestLabel(t))}</option>`).join('')}
+      <option value="all"${selected === 'all' ? ' selected' : ''}>${T('כל המבחנים של הבלוק', 'All tests in this block')}</option>
+    </select>
+  </div>`;
+}
+
 async function loadAndRenderResults(blockId) {
   const b = block(blockId);
   const tc = document.getElementById('tcResults');
@@ -1550,28 +1599,34 @@ async function loadAndRenderResults(blockId) {
     return;
   }
 
-  tc.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">${T('טוען תוצאות…', 'Loading results…')}</div>`;
+  // Newest test first; default the filter to the newest test
+  const testsSorted = [...(b.tests||[])].sort((a, c) => String(c.createdAt||'').localeCompare(String(a.createdAt||'')));
+  const selected = (resultsFilter && (resultsFilter === 'all' || testsSorted.some(t => t.id === resultsFilter)))
+    ? resultsFilter : testsSorted[0].id;
+  resultsFilter = selected;
+  const filterBar = resultsFilterBar(blockId, testsSorted, selected);
+
+  tc.innerHTML = filterBar + `<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">${T('טוען תוצאות…', 'Loading results…')}</div>`;
 
   try {
-    const { data, error } = await sb.from('test_results')
-      .select('*')
-      .in('test_id', testIds)
-      .order('completed_at', { ascending: false });
+    let query = sb.from('test_results').select('*').order('completed_at', { ascending: false });
+    query = selected === 'all' ? query.in('test_id', testIds) : query.eq('test_id', selected);
+    const { data, error } = await query;
 
     if (error) throw error;
 
     if (!data || !data.length) {
-      tc.innerHTML = `<div class="empty-state"><div class="ei" aria-hidden="true">📊</div><p>${T('אין עדיין תוצאות תלמידים.<br>הפעילו מבחן כדי שהתלמידים יוכלו להגיש.', 'No student results yet.<br>Start a test so students can submit.')}</p></div>`;
+      tc.innerHTML = filterBar + `<div class="empty-state"><div class="ei" aria-hidden="true">📊</div><p>${T('אין עדיין תוצאות תלמידים למבחן הזה.<br>אפשר לבחור מבחן אחר למעלה.', 'No student results for this test yet.<br>You can pick another test above.')}</p></div>`;
       return;
     }
 
-    const avg = Math.round(data.reduce((s, r) => s + (r.score / r.total * 100), 0) / data.length);
+    const avg = Math.round(data.reduce((s, r) => s + (r.total ? r.score / r.total * 100 : 0), 0) / data.length);
     lastResults = data;
 
     const studentMap = {};
     students.forEach(s => { studentMap[s.id] = s.nickname || s.name; });
 
-    tc.innerHTML = `
+    tc.innerHTML = filterBar + `
       <div class="results-avg">
         <span style="font-size:28px" aria-hidden="true">📊</span>
         <div>
@@ -1591,7 +1646,7 @@ async function loadAndRenderResults(blockId) {
         </tr></thead>
         <tbody>
           ${data.map((r, i) => {
-            const pct = Math.round(r.score / r.total * 100);
+            const pct = r.total ? Math.round(r.score / r.total * 100) : 0;
             const color = pct >= 90 ? '#15803D' : pct >= 70 ? '#1D4ED8' : pct >= 50 ? '#A16207' : '#DC2626';
             const displayName = (r.student_id && studentMap[r.student_id]) ? esc(studentMap[r.student_id]) : esc(r.student_name || T('אנונימי', 'Anonymous'));
             const statusBadge = r.finalized
@@ -1648,7 +1703,7 @@ document.addEventListener('keydown', e => {
 
 // ── Utilities ─────────────────────────────────────────────
 function uid() { return crypto.randomUUID(); }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function fmtDate(d) {
   if (!d) return '';

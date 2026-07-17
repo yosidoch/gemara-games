@@ -157,6 +157,11 @@
     .heb-key:focus-visible { outline: 3px solid var(--gg-blue); outline-offset: 1px; }
     .heb-key.wide { flex: 2.2; font-size: 15px; font-family: var(--font-ui); font-weight: 800; color: #6B5CA5; }
     .heb-key.wide:hover, .heb-key.wide:active { color: #fff; }
+    .heb-key.go { flex: 2.2; font-family: var(--font-ui); font-weight: 900; font-size: 18px; background: var(--gg-green-bright); border-color: var(--gg-green); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    .heb-key.go:hover, .heb-key.go:active { background: var(--gg-green); border-color: var(--gg-green); }
+
+    /* Lift the question card above the open keyboard so Submit stays reachable */
+    body.kb-open .screen.active { align-items: flex-start; padding-bottom: 380px; }
 
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -299,6 +304,7 @@
     <div id="rosterPicker" style="display:none">
       <p class="picker-hint" id="pickerHint">Tap your name to begin:</p>
       <div class="picker-grid" id="pickerGrid" role="group" aria-label="Choose your name"></div>
+      <button type="button" class="btn btn-ghost" id="notListedBtn" onclick="useFreeName()" style="width:100%;margin-bottom:16px;min-height:44px;font-size:14px">My name isn't listed</button>
     </div>
 
     <!-- Fallback free-text (shown when the roster is empty) -->
@@ -351,6 +357,7 @@
     <p class="sub" id="resultSub"></p>
     <div class="result-rows" id="resultRows" tabindex="0" aria-label="Your answers"></div>
     <div class="saved-badge" id="savedBadge" role="status"></div>
+    <button class="btn btn-blue" id="retryBtn" style="display:none;width:100%;margin-bottom:14px" onclick="saveResultToDB()">↻ Try saving again</button>
     <div class="result-actions">
       <button class="btn btn-ghost" onclick="goHome()" id="resultsBack">← Back to Games</button>
     </div>
@@ -371,7 +378,7 @@
     <button type="button" class="heb-key" onclick="hebType('ז')">ז</button><button type="button" class="heb-key" onclick="hebType('ס')">ס</button><button type="button" class="heb-key" onclick="hebType('ב')">ב</button><button type="button" class="heb-key" onclick="hebType('ה')">ה</button><button type="button" class="heb-key" onclick="hebType('נ')">נ</button><button type="button" class="heb-key" onclick="hebType('מ')">מ</button><button type="button" class="heb-key" onclick="hebType('צ')">צ</button><button type="button" class="heb-key" onclick="hebType('ת')">ת</button><button type="button" class="heb-key" onclick="hebType('ץ')">ץ</button>
   </div>
   <div class="heb-kb-row">
-    <button type="button" class="heb-key" onclick="hebType('ּ')" title="דגש">ּ</button><button type="button" class="heb-key wide" onclick="hebType(' ')">Space</button><button type="button" class="heb-key wide" onclick="hebBackspace()">⌫</button>
+    <button type="button" class="heb-key" onclick="hebType('ּ')" title="דגש">ּ</button><button type="button" class="heb-key wide" onclick="hebType(' ')">Space</button><button type="button" class="heb-key wide" onclick="hebBackspace()">⌫</button><button type="button" class="heb-key go" onclick="hebEnter()" aria-label="Submit answer">↵</button>
   </div>
 </div>
 
@@ -396,13 +403,16 @@ const STR = {
     meta: (n, t, dir) => `${n} words · ${t}s per word · ${dir}`,
     dirHeEn: 'Hebrew → English', dirEnHe: 'English → Hebrew', dirMixed: 'Mixed directions',
     pickerHint: 'Tap your name to begin:',
+    notListed: "My name isn't listed",
     nameLabel: 'Your name', namePh: 'Type your name…',
     codeLabel: 'Access code', codeHint: 'Ask your teacher for the 4-digit code.',
     start: 'Start Test →',
+    checking: 'Checking…',
     errTapName: 'Please tap your name first.',
     errTypeName: 'Please type your name first.',
     errNoCode: 'Please type the access code your teacher gave you.',
     errWrongCode: 'Wrong code. Ask your teacher and try again.',
+    errAlready: 'You already took this test. Ask your teacher if you need to retake it.',
     qOf: (i, n) => `Question ${i} of ${n}`,
     whatEn: 'What is the English meaning?', whatHe: 'What is the Hebrew/Aramaic?',
     hintShoresh: 'שורש — root', hintMilah: 'מילה — word',
@@ -416,7 +426,9 @@ const STR = {
     answeredMsg: n => `You answered ${n} question${n !== 1 ? 's' : ''}. Your teacher will give you your grade.`,
     youWrote: 'You wrote:', noAnswer: 'No answer / time expired',
     correctSr: 'Correct:', wrongSr: 'Wrong:',
-    saved: '✓ Saved'
+    saved: '✓ Saved',
+    saving: 'Saving…',
+    retrySave: '↻ Try saving again'
   },
   he: {
     langBtn: 'English',
@@ -432,13 +444,16 @@ const STR = {
     meta: (n, t, dir) => `${n} מילים · ${t} שנ׳ למילה · ${dir}`,
     dirHeEn: 'עברית → אנגלית', dirEnHe: 'אנגלית → עברית', dirMixed: 'כיוונים מעורבים',
     pickerHint: 'לחצו על השם שלכם כדי להתחיל:',
+    notListed: 'השם שלי לא ברשימה',
     nameLabel: 'השם שלך', namePh: 'הקלידו את שמכם…',
     codeLabel: 'קוד גישה', codeHint: 'בקשו מהמורה את הקוד בן 4 הספרות.',
     start: 'התחלת המבחן',
+    checking: 'בודק…',
     errTapName: 'קודם לחצו על השם שלכם.',
     errTypeName: 'קודם הקלידו את שמכם.',
     errNoCode: 'הקלידו את קוד הגישה שקיבלתם מהמורה.',
     errWrongCode: 'קוד שגוי. בדקו עם המורה ונסו שוב.',
+    errAlready: 'כבר עשיתם את המבחן הזה. פנו למורה אם צריך לעשות אותו שוב.',
     qOf: (i, n) => `שאלה ${i} מתוך ${n}`,
     whatEn: 'מה הפירוש באנגלית?', whatHe: 'מה המילה בעברית/ארמית?',
     hintShoresh: 'שורש', hintMilah: 'מילה',
@@ -452,7 +467,9 @@ const STR = {
     answeredMsg: n => `עניתם על ${n} שאלות. המורה ייתן לכם את הציון.`,
     youWrote: 'כתבתם:', noAnswer: 'ללא תשובה / נגמר הזמן',
     correctSr: 'נכון:', wrongSr: 'שגוי:',
-    saved: '✓ נשמר'
+    saved: '✓ נשמר',
+    saving: 'שומר…',
+    retrySave: '↻ נסו לשמור שוב'
   }
 };
 let LANG = localStorage.getItem('gg_test_lang') === 'he' ? 'he' : 'en';
@@ -507,6 +524,7 @@ function applyLang() {
   }
 
   setTxt('pickerHint', t('pickerHint'));
+  setTxt('notListedBtn', t('notListed'));
   setTxt('nameLabel', t('nameLabel'));
   document.getElementById('nameInput').placeholder = t('namePh');
   setTxt('codeLabel', t('codeLabel'));
@@ -537,6 +555,7 @@ function applyLang() {
     setTxt('resultSub', t('answeredMsg')(results.length));
     renderResultRows();
     if (saveState === 'ok') setTxt('savedBadge', t('saved'));
+    setTxt('retryBtn', t('retrySave'));
   }
 }
 
@@ -589,17 +608,42 @@ function setHebFab(visible) {
 function toggleHebKb() {
   const kb = document.getElementById('hebKb');
   kb.classList.toggle('open');
-  document.getElementById('hebFab').setAttribute('aria-expanded', kb.classList.contains('open'));
+  const open = kb.classList.contains('open');
+  document.getElementById('hebFab').setAttribute('aria-expanded', open);
+  document.body.classList.toggle('kb-open', open);
+  if (open) scrollSubmitAboveKb();
 }
 
 function openHebKb() {
   document.getElementById('hebKb').classList.add('open');
   document.getElementById('hebFab').setAttribute('aria-expanded', 'true');
+  document.body.classList.add('kb-open');
+  scrollSubmitAboveKb();
+}
+
+// Scroll so the Submit button sits above the fixed keyboard panel
+function scrollSubmitAboveKb() {
+  setTimeout(() => {
+    const btn = document.getElementById('submitBtn');
+    const kb = document.getElementById('hebKb');
+    if (!btn || !kb.classList.contains('open')) return;
+    const btnR = btn.getBoundingClientRect();
+    const kbTop = kb.getBoundingClientRect().top;
+    if (btnR.bottom > kbTop - 8) window.scrollBy(0, btnR.bottom - (kbTop - 8));
+  }, 150);
 }
 
 function closeHebKb() {
   document.getElementById('hebKb').classList.remove('open');
   document.getElementById('hebFab').setAttribute('aria-expanded', 'false');
+  document.body.classList.remove('kb-open');
+}
+
+// ↵ key on the virtual keyboard: submit the answer (or advance after feedback)
+function hebEnter() {
+  if (!document.getElementById('screenQ').classList.contains('active')) return;
+  if (!answered) submitAnswer();
+  else nextQuestion();
 }
 
 function hebType(char) {
@@ -640,6 +684,11 @@ async function loadTestFromDB(testId) {
     const wordIds = Array.isArray(test.word_ids) ? test.word_ids : [];
     const { data: wordRows, error: wordErr } = await sb.from('words').select('*').in('id', wordIds);
     if (wordErr) throw wordErr;
+    let blockLabel = '';
+    try {
+      const { data: blk } = await sb.from('blocks').select('label').eq('id', test.block_id).single();
+      blockLabel = blk?.label || '';
+    } catch(e) {}
     testData = {
       id: test.id,
       blockId: test.block_id,
@@ -648,7 +697,7 @@ async function loadTestFromDB(testId) {
       status: test.status,
       wordIds: wordIds,
       words: wordRows || [],
-      blockLabel: ''
+      blockLabel
     };
     requireCode = true;
     await initTestUI();
@@ -717,6 +766,16 @@ function selectStudent(btn) {
   if (requireCode && codeEl) codeEl.focus();
 }
 
+// Fallback for a student whose name is missing from the roster
+function useFreeName() {
+  studentName = '';
+  studentId = null;
+  document.getElementById('rosterPicker').style.display = 'none';
+  document.getElementById('fallbackInput').style.display = '';
+  clearFormError();
+  document.getElementById('nameInput').focus();
+}
+
 // ── Init ──────────────────────────────────────────────────
 applyLang();
 const testId = new URLSearchParams(location.search).get('test');
@@ -743,7 +802,7 @@ function clearFormError() {
   document.getElementById('codeInput').classList.remove('err');
 }
 
-function startTest() {
+async function startTest() {
   clearFormError();
 
   const rosterVisible = document.getElementById('rosterPicker').style.display !== 'none';
@@ -769,6 +828,26 @@ function startTest() {
     if (given !== accessCode(testData.id)) { showFormError(t('errWrongCode'), codeEl); return; }
   }
 
+  // One submission per student per test (the teacher can delete a result to allow a retake)
+  if (requireCode && sb) {
+    const startBtn = document.getElementById('startBtn');
+    startBtn.disabled = true; startBtn.textContent = t('checking');
+    try {
+      let q = sb.from('test_results').select('id').eq('test_id', testData.id).limit(1);
+      q = studentId ? q.eq('student_id', studentId) : q.eq('student_name', studentName);
+      const { data: dup } = await q;
+      if (dup && dup.length) {
+        showFormError(t('errAlready'), null);
+        shakeEl(document.querySelector('#screenName .card'));
+        return;
+      }
+    } catch(e) {
+      // network hiccup — let the student start rather than block the test
+    } finally {
+      startBtn.disabled = false; startBtn.textContent = t('start');
+    }
+  }
+
   idx = 0; results = [];
   showQuestion();
   show('screenQ');
@@ -781,6 +860,7 @@ function startTest() {
 function normalize(s) {
   return String(s||'').toLowerCase().trim()
     .replace(/[֑-ׇ]/g, '')   // strip ALL Hebrew nikud + cantillation
+    .replace(/[ךםןףץ]/g, c => ({'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'}[c])) // final letters → regular (הלך = הלכ)
     .replace(/[.'"׳״]/g, '')           // remove dots & quote marks entirely (shoresh: ב.ו.א → בוא)
     .replace(/[,;:!?()\-]/g, ' ')      // other punctuation → space
     .replace(/\s+/g, ' ')
@@ -959,12 +1039,21 @@ function showResults() {
 
   show('screenResults');
   ggConfetti(90);
-  saveResultToDB(correct, total);
+  pendingResultId = crypto.randomUUID();  // stable id → a retry can never create a duplicate row
+  saveResultToDB();
 }
 
-async function saveResultToDB(correct, total) {
+let pendingResultId = null;
+
+async function saveResultToDB() {
   const badge = document.getElementById('savedBadge');
+  const retryBtn = document.getElementById('retryBtn');
   if (!sb || !testData || !testData.id) return;
+  const correct = results.filter(r => r.isCorrect).length;
+  const total = results.length;
+  badge.textContent = t('saving');
+  badge.className = 'saved-badge visible';
+  retryBtn.style.display = 'none';
   try {
     const answers = results.map(r => ({
       word_id: r.word.id,
@@ -973,7 +1062,7 @@ async function saveResultToDB(correct, total) {
       dir: r.dir
     }));
     const { error } = await sb.from('test_results').insert({
-      id: crypto.randomUUID(),
+      id: pendingResultId,
       test_id: testData.id,
       student_name: studentName,
       student_id: studentId || null,
@@ -982,7 +1071,8 @@ async function saveResultToDB(correct, total) {
       answers,
       submitted_at: new Date().toISOString()
     });
-    if (error) throw error;
+    // 23505 = duplicate key: a previous attempt actually made it through — that's a success
+    if (error && error.code !== '23505') throw error;
     saveState = 'ok';
     badge.textContent = t('saved');
     badge.className = 'saved-badge visible';
@@ -990,6 +1080,8 @@ async function saveResultToDB(correct, total) {
     saveState = 'err';
     badge.textContent = '⚠ ' + (e.message || e.code || JSON.stringify(e));
     badge.className = 'saved-badge visible error';
+    retryBtn.textContent = t('retrySave');
+    retryBtn.style.display = '';
   }
 }
 
@@ -1010,7 +1102,7 @@ function show(id) {
 }
 
 function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function shuffle(arr) {

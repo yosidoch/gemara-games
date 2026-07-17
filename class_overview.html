@@ -183,7 +183,7 @@ function accessCode(id) {
 
 // ── Utilities ─────────────────────────────────────────────
 function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function pctColor(pct) {
@@ -292,7 +292,7 @@ function renderResults(results) {
     return;
   }
 
-  const avg = Math.round(results.reduce((s, r) => s + (r.score / r.total * 100), 0) / results.length);
+  const avg = Math.round(results.reduce((s, r) => s + (r.total ? r.score / r.total * 100 : 0), 0) / results.length);
   const col = pctColor(avg);
 
   avgCard.innerHTML = `<div class="avg-card">
@@ -314,7 +314,7 @@ function renderResults(results) {
       </tr></thead>
       <tbody>
         ${results.map(r => {
-          const pct = Math.round(r.score / r.total * 100);
+          const pct = r.total ? Math.round(r.score / r.total * 100) : 0;
           const c = pctColor(pct);
           return `<tr>
             <td style="font-weight:600" dir="auto">${esc(r.student_name || T('אנונימי','Anonymous'))}</td>
