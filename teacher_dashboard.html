@@ -385,11 +385,7 @@
         <label><input type="radio" name="scoreDisplay" value="both" /> <span data-en="Both">שניהם</span></label>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeMdl('testModal')" data-en="Cancel">ביטול</button>
-      <button class="btn btn-ghost" onclick="saveTestDraft()" data-en="💾 Save as Draft">💾 שמירה כטיוטה</button>
-      <button class="btn btn-purple" onclick="startTestNow()" data-en="▶ Start Test Now">▶ הפעלת המבחן עכשיו</button>
-    </div>
+    <div class="modal-footer" id="testModalFooter"></div>
   </div>
 </div>
 
@@ -518,6 +514,8 @@ let bulkBlockId = null;
 let testBlockId = null;
 let testDir = 'he_to_en';
 let testWordSel = {};
+let editingTestId = null;
+let wordSearchQuery = '';
 let activeTab = 'words';
 let lastFocusEl = null;
 let students = [];          // [{id, name, nickname}]
@@ -737,6 +735,7 @@ function selectBlock(id) {
   activeId = id;
   activeTab = 'words';
   editingWordId = null;
+  wordSearchQuery = '';
   resultsFilter = null;
   renderBlockList();
   renderDetail(id);
@@ -834,12 +833,11 @@ function renderDetail(id) {
       </div>
 
       <div id="tcWords" role="tabpanel" aria-labelledby="tabWords">
-        ${!words.length ? `<div class="empty-state"><div class="ei" aria-hidden="true">📝</div><p>${T('אין עדיין מילים. השתמשו ב"+ הוספת מילה" או ב"↑ העלאה בכמות".', 'No words yet. Use "+ Add Word" or "↑ Bulk Upload".')}</p></div>` : `
-        <div style="overflow-x:auto"><table class="word-table"><thead><tr>
-          <th style="width:36px">#</th><th>${T('עברית / ארמית', 'Hebrew / Aramaic')}</th><th style="width:88px">${T('סוג', 'Type')}</th><th>${T('אנגלית', 'English')}</th><th style="width:100px"><span class="visually-hidden">${T('פעולות', 'Actions')}</span></th>
-        </tr></thead><tbody>
-          ${words.map((w,i) => wordRow(w, i+1, b.id)).join('')}
-        </tbody></table></div>`}
+        ${words.length ? `<div class="form-group" style="max-width:320px">
+          <label for="wordSearchInput" class="visually-hidden">${T('חיפוש מילים', 'Search words')}</label>
+          <input type="text" id="wordSearchInput" placeholder="${T('🔍 חיפוש מילה…', '🔍 Search words…')}" value="${esc(wordSearchQuery)}" oninput="onWordSearchInput('${b.id}')" />
+        </div>` : ''}
+        <div id="wordsTableWrap">${renderWordsTableHTML(words, b.id)}</div>
       </div>
 
       <div id="tcAdd" role="tabpanel" aria-labelledby="tabAdd" style="display:none">
@@ -912,6 +910,30 @@ document.addEventListener('keydown', e => {
   tabs[next].focus();
   tabs[next].click();
 });
+
+// ── Word search/filter ────────────────────────────────────
+function getFilteredWords(words) {
+  const q = wordSearchQuery.trim().toLowerCase();
+  if (!q) return words;
+  return words.filter(w => (w.hebrew||'').toLowerCase().includes(q) || (w.english||'').toLowerCase().includes(q));
+}
+
+function renderWordsTableHTML(words, blockId) {
+  if (!words.length) return `<div class="empty-state"><div class="ei" aria-hidden="true">📝</div><p>${T('אין עדיין מילים. השתמשו ב"+ הוספת מילה" או ב"↑ העלאה בכמות".', 'No words yet. Use "+ Add Word" or "↑ Bulk Upload".')}</p></div>`;
+  const filtered = getFilteredWords(words);
+  if (!filtered.length) return `<div class="empty-state"><div class="ei" aria-hidden="true">🔍</div><p>${T('לא נמצאו מילים תואמות לחיפוש.', 'No words match your search.')}</p></div>`;
+  return `<div style="overflow-x:auto"><table class="word-table"><thead><tr>
+    <th style="width:36px">#</th><th>${T('עברית / ארמית', 'Hebrew / Aramaic')}</th><th style="width:88px">${T('סוג', 'Type')}</th><th>${T('אנגלית', 'English')}</th><th style="width:100px"><span class="visually-hidden">${T('פעולות', 'Actions')}</span></th>
+  </tr></thead><tbody>
+    ${filtered.map((w,i) => wordRow(w, i+1, blockId)).join('')}
+  </tbody></table></div>`;
+}
+
+function onWordSearchInput(blockId) {
+  wordSearchQuery = document.getElementById('wordSearchInput').value;
+  const b = block(blockId);
+  document.getElementById('wordsTableWrap').innerHTML = renderWordsTableHTML(b.words||[], blockId);
+}
 
 // ── Word row ──────────────────────────────────────────────
 function wordRow(w, idx, blockId) {
@@ -1093,26 +1115,38 @@ async function confirmBulk() {
 }
 
 // ── Test generation ───────────────────────────────────────
-function openTestModal(blockId) {
+function openTestModal(blockId, testId) {
   testBlockId = blockId;
-  testDir = 'he_to_en';
+  editingTestId = testId || null;
   const b = block(blockId);
+  const editingTest = editingTestId ? (b.tests||[]).find(t => t.id === editingTestId) : null;
+  testDir = editingTest ? editingTest.direction : 'he_to_en';
   testWordSel = {};
-  (b.words||[]).forEach(w => testWordSel[w.id] = true);
+  (b.words||[]).forEach(w => testWordSel[w.id] = editingTest ? editingTest.wordIds.includes(w.id) : true);
 
   document.getElementById('testWordList').innerHTML = (b.words||[]).map(w => `
-    <label class="wsr" id="wsr-${w.id}">
-      <input type="checkbox" checked id="chk-${w.id}" onchange="togWord('${w.id}', this.checked)" />
+    <label class="wsr${testWordSel[w.id] ? '' : ' off'}" id="wsr-${w.id}">
+      <input type="checkbox" ${testWordSel[w.id] ? 'checked' : ''} id="chk-${w.id}" onchange="togWord('${w.id}', this.checked)" />
       <span class="word-he" lang="he" style="font-size:17px;flex:1">${esc(w.hebrew)}</span>
       <span class="type-badge type-${w.type}" style="flex-shrink:0">${w.type === 'shoresh' ? T('שורש', 'Root') : T('מילה', 'Word')}</span>
       <span class="en-cell" style="color:var(--muted);font-size:13px;min-width:120px">${esc(w.english)}</span>
     </label>`).join('');
 
-  document.getElementById('testTimer').value = 30;
-  setDir('he_to_en');
-  const fracRadio = document.querySelector('input[name="scoreDisplay"][value="fraction"]');
-  if (fracRadio) fracRadio.checked = true;
+  document.getElementById('testTimer').value = editingTest ? editingTest.timerPerWord : 30;
+  setDir(testDir);
+  const scoreVal = editingTest ? (editingTest.scoreDisplay || 'fraction') : 'fraction';
+  const scRadio = document.querySelector(`input[name="scoreDisplay"][value="${scoreVal}"]`);
+  if (scRadio) scRadio.checked = true;
   updateWordSelCount();
+
+  document.getElementById('testModalTitle').textContent = editingTest ? T('עריכת מבחן', 'Edit Test') : T('יצירת מבחן', 'Create a Test');
+  document.getElementById('testModalFooter').innerHTML = editingTest ? `
+      <button class="btn btn-ghost" onclick="closeMdl('testModal')">${T('ביטול', 'Cancel')}</button>
+      <button class="btn btn-primary" onclick="saveTestEdits()">${T('💾 שמירת שינויים', '💾 Save Changes')}</button>` : `
+      <button class="btn btn-ghost" onclick="closeMdl('testModal')">${T('ביטול', 'Cancel')}</button>
+      <button class="btn btn-ghost" onclick="saveTestDraft()">${T('💾 שמירה כטיוטה', '💾 Save as Draft')}</button>
+      <button class="btn btn-purple" onclick="startTestNow()">${T('▶ הפעלת המבחן עכשיו', '▶ Start Test Now')}</button>`;
+
   openMdl('testModal');
 }
 
@@ -1150,6 +1184,18 @@ async function buildTest(status) {
   if (!wordIds.length) { toast(T('יש לבחור לפחות מילה אחת', 'Select at least one word'), 'err'); return null; }
   const timer = parseInt(document.getElementById('testTimer').value) || 30;
   const scoreDisplay = document.querySelector('input[name="scoreDisplay"]:checked')?.value || 'fraction';
+
+  if (editingTestId) {
+    const { error } = await sb.from('tests').update({
+      timer_per_word: timer, direction: testDir, status, word_ids: wordIds, score_display: scoreDisplay
+    }).eq('id', editingTestId);
+    if (error) { toast(T('עדכון המבחן נכשל: ', 'Updating the test failed: ') + (error.message || error.code || JSON.stringify(error)), 'err'); return null; }
+    const t = (block(testBlockId).tests||[]).find(x => x.id === editingTestId);
+    if (t) { t.timerPerWord = timer; t.direction = testDir; t.status = status; t.wordIds = wordIds; t.scoreDisplay = scoreDisplay; }
+    saveLocal();
+    return t;
+  }
+
   const t = { id: uid(), blockId: testBlockId, timerPerWord: timer, direction: testDir, status, wordIds, scoreDisplay, createdAt: new Date().toISOString() };
 
   const { error } = await sb.from('tests').insert({
@@ -1163,6 +1209,16 @@ async function buildTest(status) {
   block(testBlockId).tests.push(t);
   saveLocal();
   return t;
+}
+
+async function saveTestEdits() {
+  const t = await buildTest('draft');
+  if (!t) return;
+  closeMdl('testModal');
+  editingTestId = null;
+  activeTab = 'tests';
+  renderDetail(testBlockId); renderBlockList();
+  toast(T('המבחן עודכן!', 'Test updated!'));
 }
 
 async function saveTestDraft() {
@@ -1252,7 +1308,11 @@ function testCard(t) {
   const code = accessCode(t.id);
 
   let mainAction = '';
-  if (t.status === 'draft') mainAction = `<button class="btn btn-purple btn-sm" onclick="runTest('${t.id}','${t.blockId}')">${T('▶ הפעלה', '▶ Start')}</button>`;
+  let editAction = '';
+  if (t.status === 'draft') {
+    mainAction = `<button class="btn btn-purple btn-sm" onclick="runTest('${t.id}','${t.blockId}')">${T('▶ הפעלה', '▶ Start')}</button>`;
+    editAction = `<button class="btn btn-ghost btn-sm" onclick="openTestModal('${t.blockId}','${t.id}')" aria-label="${T('עריכת המבחן', 'Edit test')}" title="${T('עריכת המבחן', 'Edit test')}">✏️</button>`;
+  }
   else if (t.status === 'active') mainAction = `<button class="btn btn-red btn-sm" onclick="closeTest('${t.id}','${t.blockId}')">${T('⏹ סיום המבחן', '⏹ End Test')}</button>`;
   else mainAction = `<button class="btn btn-ghost btn-sm" onclick="runTest('${t.id}','${t.blockId}')">${T('↻ פתיחה מחדש', '↻ Reopen')}</button>`;
 
@@ -1265,6 +1325,7 @@ function testCard(t) {
       <span class="access-code" title="${T('קוד הגישה שהתלמידים מקלידים', 'The code students must type')}"><small>${T('קוד', 'CODE')}</small> ${code}</span>
       <span class="test-status ${t.status}">${statusLbl}</span>
       <button class="btn btn-ghost btn-sm" onclick="copyTestLink('${t.id}')" aria-label="${T('העתקת קישור לתלמידים', 'Copy student link')}" title="${T('העתקת קישור לתלמידים', 'Copy student link')}">📋</button>
+      ${editAction}
       ${mainAction}
       <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteTest('${t.id}','${t.blockId}')" aria-label="${T('מחיקת המבחן', 'Delete test')}">✕</button>
     </div>
@@ -1625,6 +1686,9 @@ async function loadAndRenderResults(blockId) {
 
     const studentMap = {};
     students.forEach(s => { studentMap[s.id] = s.nickname || s.name; });
+    const wordMap = {};
+    (b.words||[]).forEach(w => wordMap[w.id] = w);
+    const missed = computeMissedWords(data, wordMap);
 
     tc.innerHTML = filterBar + `
       <div class="results-avg">
@@ -1634,7 +1698,14 @@ async function loadAndRenderResults(blockId) {
           <div style="font-size:26px;font-weight:800">${avg}%</div>
         </div>
         <span style="margin-inline-start:auto;font-size:13px;color:var(--muted)">${data.length === 1 ? T('הגשה אחת', '1 submission') : T(data.length + ' הגשות', data.length + ' submissions')}</span>
+        <button class="btn btn-ghost btn-sm" onclick="exportResultsCSV('${blockId}')">${T('⬇ ייצוא CSV', '⬇ Export CSV')}</button>
       </div>
+      ${missed.length ? `<div class="card" style="margin-bottom:16px"><div class="card-body" style="padding:14px 18px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">${T('📉 המילים שהכי הרבה טעו בהן', '📉 Most often missed words')}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${missed.map(m => `<span class="badge" style="background:var(--red-soft);color:var(--red)" title="${esc(m.word?.english||'')}">${esc(m.word?.hebrew||'?')} · ${m.wrong}/${m.total}</span>`).join('')}
+        </div>
+      </div></div>` : ''}
       <div style="overflow-x:auto"><table class="word-table">
         <thead><tr>
           <th>${T('תלמיד/ה', 'Student')}</th>
@@ -1666,6 +1737,47 @@ async function loadAndRenderResults(blockId) {
   } catch(e) {
     tc.innerHTML = `<div class="empty-state"><div class="ei" aria-hidden="true">⚠️</div><p>${T('טעינת התוצאות נכשלה.', 'Loading results failed.')}</p></div>`;
   }
+}
+
+function computeMissedWords(results, wordMap) {
+  const stats = {};
+  results.forEach(r => {
+    (r.answers||[]).forEach(a => {
+      if (!stats[a.word_id]) stats[a.word_id] = { wrong: 0, total: 0 };
+      stats[a.word_id].total++;
+      if (!a.correct) stats[a.word_id].wrong++;
+    });
+  });
+  return Object.entries(stats)
+    .map(([wordId, s]) => ({ wordId, ...s, word: wordMap[wordId] }))
+    .filter(x => x.wrong > 0)
+    .sort((a, c) => c.wrong - a.wrong)
+    .slice(0, 8);
+}
+
+function exportResultsCSV(blockId) {
+  if (!lastResults || !lastResults.length) return toast(T('אין תוצאות לייצוא', 'No results to export'), 'err');
+  const studentMap = {};
+  students.forEach(s => { studentMap[s.id] = s.nickname || s.name; });
+  const csvEsc = v => `"${String(v).replace(/"/g, '""')}"`;
+  const lines = [['Student', 'Score', 'Total', 'Percent', 'Status', 'Date'].join(',')];
+  lastResults.forEach(r => {
+    const name = (r.student_id && studentMap[r.student_id]) ? studentMap[r.student_id] : (r.student_name || 'Anonymous');
+    const pct = r.total ? Math.round(r.score / r.total * 100) : 0;
+    const status = r.finalized ? 'Finalized' : 'Pending';
+    const date = (r.completed_at || '').slice(0, 10);
+    lines.push([csvEsc(name), r.score, r.total, pct, status, date].join(','));
+  });
+  const b = block(blockId);
+  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `results_block${b?.block_number ?? 'x'}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 async function deleteResult(resultId, blockId) {
