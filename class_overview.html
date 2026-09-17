@@ -172,6 +172,7 @@ const testId = new URLSearchParams(location.search).get('test');
 let testRow = null;
 let lastResultsData = null;   // cached for re-render on language switch
 let errState = null;          // 'noid' | 'nodb' | 'notfound'
+let students = [];            // roster, so we can project nicknames instead of full names
 
 // Access code: same derivation as the dashboard and student test page
 function accessCode(id) {
@@ -316,8 +317,10 @@ function renderResults(results) {
         ${results.map(r => {
           const pct = r.total ? Math.round(r.score / r.total * 100) : 0;
           const c = pctColor(pct);
+          const student = students.find(s => s.id === r.student_id);
+          const displayName = (student && (student.nickname || student.name)) || r.student_name || T('אנונימי','Anonymous');
           return `<tr>
-            <td style="font-weight:600" dir="auto">${esc(r.student_name || T('אנונימי','Anonymous'))}</td>
+            <td style="font-weight:600" dir="auto">${esc(displayName)}</td>
             <td dir="ltr" style="text-align:${LANG === 'he' ? 'right' : 'left'}">${r.score}/${r.total}</td>
             <td><span style="font-weight:700;color:${c.text}">${pct}%</span></td>
             <td>
@@ -362,6 +365,12 @@ async function init() {
     renderError('notfound');
     return;
   }
+
+  // Roster, so the projected board can show nicknames instead of full names
+  try {
+    const { data } = await sb.from('students').select('*');
+    students = data || [];
+  } catch(e) {}
 
   // Initial fetch
   await fetchAndRender();
